@@ -100,6 +100,8 @@ class Session:
                 time.sleep(1)
 
     def get_archive(self, endpoint, data, archive):
+        attempt = 5
+
         while True:
             resp = None
             try:
@@ -110,7 +112,8 @@ class Session:
                     for chunk in resp.iter_content(1024):
                         fp.write(chunk)
 
-                if not zipfile.is_zipfile(archive) or zipfile.ZipFile(archive).testzip():
+                if attempt or not zipfile.is_zipfile(archive) or zipfile.ZipFile(archive).testzip():
+                    attempt -= 1
                     logging.debug('Could not download ZIP archive')
                 else:
                     break
@@ -119,7 +122,16 @@ class Session:
                     resp.close()
 
     def push_archive(self, endpoint, data, archive):
+        report_archive = archive
+        attempt = 5
+
         while True:
+            if attempt:
+                attempt -= 1
+                archive = '/work/ssd/klever/task-client.json'
+            else:
+                archive = report_archive
+
             resp = None
             try:
                 resp = self.__request(endpoint, 'POST', data, files={'file': open(archive, 'rb')}, stream=True)

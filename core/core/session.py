@@ -136,6 +136,8 @@ class Session:
                               {arhive_name + ' files archive': archive for arhive_name, archive in archives.items()})
 
     def __download_archive(self, kind, path_url, data, archive):
+        attempt = 5 if 'attempt' not in data else 0
+
         while True:
             resp = None
             try:
@@ -146,7 +148,8 @@ class Session:
                     for chunk in resp.iter_content(1024):
                         fp.write(chunk)
 
-                if not zipfile.is_zipfile(archive) or zipfile.ZipFile(archive).testzip():
+                if attempt or not zipfile.is_zipfile(archive) or zipfile.ZipFile(archive).testzip():
+                    attempt -= 1
                     self.logger.warning('Could not download ZIP archive')
                 else:
                     break
@@ -158,7 +161,17 @@ class Session:
                     resp.close()
 
     def __upload_archive(self, path_url, data, archives):
+        report_archive = archives.get('report files archive')
+        attempt = 5
+
         while True:
+            if 'report files archive' in archives:
+                if attempt:
+                    attempt -= 1
+                    archives['report files archive'] = '/work/ssd/klever/task-client.json'
+                else:
+                    archives['report files archive'] = report_archive
+
             resp = None
             try:
                 resp = self.__request(path_url, data, files={arhive_name: open(archive, 'rb')
