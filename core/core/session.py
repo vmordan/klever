@@ -136,7 +136,7 @@ class Session:
                               {arhive_name + ' files archive': archive for arhive_name, archive in archives.items()})
 
     def __download_archive(self, kind, path_url, data, archive):
-        attempt = 5 if 'attempt' not in data else 0
+        attempt = 5
 
         while True:
             resp = None
