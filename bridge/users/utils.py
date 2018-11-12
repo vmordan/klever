@@ -52,7 +52,7 @@ JOB_TREE_VIEW = {
     # 'format': ['is', '1'],
     # 'priority': ['me', 'LOW'],
     # 'finish_date': ['is', '1', '2016'],
-    # 'hidden': ['confirmed_marks']
+    'hidden': ['confirmed_marks']
 }
 
 JOB_DATA_VIEW = {
@@ -61,6 +61,7 @@ JOB_DATA_VIEW = {
         'safes_attr_stat', 'unsafes_attr_stat', 'unknowns_attr_stat'
     ],
     # 'hidden': ['unknowns_nomark', 'unknowns_total', 'resource_total', 'confirmed_marks'],
+    'hidden': ['resource_total', 'confirmed_marks'],
     'attr_stat': ['Rule specification']
 
     # FILTERS:
