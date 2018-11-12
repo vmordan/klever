@@ -329,16 +329,16 @@ class ErrorTrace:
                                 # Don't forget to increase counter.
                                 line += 1
 
-                                if kind in ('AUX_FUNC', 'AUX_FUNC_CALLBACK'):
+                                if kind in ('AUX_FUNC', 'AUX_FUNC_CALLBACK', 'MODEL_FUNC'):
                                     func_name = comment
                                 else:
                                     match = re.search(r'(ldv_\w+)', func_decl)
                                     if match:
                                         func_name = match.group(1)
-                                    else:
-                                        raise ValueError(
-                                            'Auxiliary/model function definition is not specified in {!r}'.format(
-                                                func_decl))
+                                    #else:
+                                    #    raise ValueError(
+                                    #        'Auxiliary/model function definition is not specified in {!r}'.format(
+                                    #            func_decl))
 
                                 # Try to get names for formal arguments (in form "type name") that is required for
                                 # removing auxiliary function calls.
