@@ -51,8 +51,11 @@ USER_ROLES = (
 )
 
 JOB_CLASSES = (
-    ('0', _('Verification of Linux kernel modules')),
-    ('3', _('Validation on commits in Linux kernel Git repositories')),
+    ('0', _('Root')),
+)
+
+JOB_DESCS = (
+    ('0', _('Root report')),
 )
 
 # If you change it change values also in comparison.html
@@ -190,7 +193,6 @@ TASK_STATUS = (
 
 MARKS_COMPARE_ATTRS = {
     JOB_CLASSES[0][0]: ['Rule specification', 'Verification object'],
-    JOB_CLASSES[1][0]: ['Rule specification', 'Verification object'],
 }
 
 

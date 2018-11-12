@@ -25,7 +25,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.utils.translation import override, ungettext_lazy
 
-from bridge.vars import JOB_CLASSES, SCHEDULER_TYPE, USER_ROLES, JOB_ROLES
+from bridge.vars import JOB_CLASSES, SCHEDULER_TYPE, USER_ROLES, JOB_ROLES, JOB_DESCS
 from bridge.utils import file_get_or_create, unique_id, BridgeException
 
 import marks.SafeUtils as SafeUtils
@@ -80,7 +80,6 @@ class Population:
         self.__populate_functions()
         if len(Job.objects.filter(parent=None)) < len(JOB_CLASSES):
             self.__populate_jobs()
-        self.__populate_default_jobs()
         self.__populate_unknown_marks()
         self.__populate_tags()
         self.__populate_unsafe_marks()
@@ -192,7 +191,7 @@ class Population:
                         cnt += 1
                         args['name'] = "%s #%s" % (JOB_CLASSES[i][1], cnt)
 
-                    args['description'] = "<h3>%s</h3>" % JOB_CLASSES[i][1]
+                    args['description'] = "<h3>%s</h3>" % JOB_DESCS[i][1]
                     args['type'] = JOB_CLASSES[i][0]
                     create_job(args)
                     self.changes['jobs'] = True
