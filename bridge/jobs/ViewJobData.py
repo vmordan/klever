@@ -172,13 +172,6 @@ class ViewJobData:
             {'component': x, 'val': '-', 'instances': instances[x]} for x in sorted(instances) if x not in res_data
         ))
 
-        if 'hidden' not in self.view or 'resource_total' not in self.view['hidden']:
-            res_total = self.report.resources_cache.filter(component=None).first()
-            if res_total is not None:
-                rd = get_resource_data(self.user.extended.data_format, self.user.extended.accuracy, res_total)
-                resource_data.append({
-                    'component': _('Total'), 'val': "%s %s %s" % (rd[0], rd[1], rd[2]), 'instances': ''
-                })
         return resource_data
 
     def __unknowns_info(self):
