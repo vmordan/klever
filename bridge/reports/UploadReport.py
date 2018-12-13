@@ -56,13 +56,14 @@ class CheckArchiveError(Exception):
 
 
 class UploadReport:
-    def __init__(self, job, data, archives=None, attempt=0):
+    def __init__(self, job, data, archives=None, attempt=0, source_archives={}):
         self.error = None
         self.job = job
         self.archives = archives
         self.attempt = attempt
         self.data = {}
         self.ordered_attrs = []
+        self.source_archives = source_archives
         try:
             self.__check_data(data)
             self.__check_archives(self.data['id'])
@@ -607,7 +608,13 @@ class UploadReport:
         res = CheckErrorTraces(et_archs, self.archives[self.data['sources']])
 
         source = ErrorTraceSource(root=self.root)
-        source.add_sources(REPORT_ARCHIVE['sources'], self.archives[self.data['sources']], True)
+        if self.data['sources'] not in self.source_archives.keys():
+            # Copy source archive into media directory.
+            source.add_sources(REPORT_ARCHIVE['sources'], self.archives[self.data['sources']], True)
+            self.source_archives[self.data['sources']] = source
+        else:
+            # Get cached source archive.
+            source = self.source_archives[self.data['sources']]
 
         cnt = 1
         unsafes = []

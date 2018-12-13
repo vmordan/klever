@@ -958,6 +958,7 @@ class UploadReportsWithoutDecision:
         self._user = user
         self._reports_dir = reports_dir
         self._data = self.__read_reports_data()
+        self.source_archives = dict()
         self.__prepare_job()
         try:
             self.__upload_children(None)
@@ -1028,6 +1029,6 @@ class UploadReportsWithoutDecision:
 
         # Uploading report
         with OpenFiles(*files, rel_path=self._reports_dir) as archives:
-            res = UploadReport(self._job, report, archives=archives)
+            res = UploadReport(self._job, report, archives=archives, source_archives=self.source_archives)
         if res.error is not None:
             raise ValueError(res.error)
