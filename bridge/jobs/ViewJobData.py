@@ -149,9 +149,12 @@ class ViewJobData:
         instances = {}
         for c_name, total, in_progress in ComponentInstances.objects.filter(report=self.report)\
                 .order_by('component__name').values_list('component__name', 'total', 'in_progress'):
-            instances[c_name] = ' (%s/%s)' % (total - in_progress, total)
+            instances[c_name] = str(total)
 
         res_data = {}
+        cpu_time = {}
+        memory = {}
+        wall_time = {}
         resource_filters = {}
 
         if 'resource_component' in self.view:
@@ -160,17 +163,17 @@ class ViewJobData:
 
         for cr in self.report.resources_cache.filter(~Q(component=None) & Q(**resource_filters))\
                 .select_related('component'):
-            if cr.component.name not in res_data:
-                res_data[cr.component.name] = {}
+            if cr.component.name not in cpu_time:
+                cpu_time[cr.component.name] = {}
+                memory[cr.component.name] = {}
+                wall_time[cr.component.name] = {}
             rd = get_resource_data(self.user.extended.data_format, self.user.extended.accuracy, cr)
-            res_data[cr.component.name] = "%s %s %s" % (rd[0], rd[1], rd[2])
 
-        resource_data = [
-            {'component': x, 'val': res_data[x], 'instances': instances.get(x, '')} for x in sorted(res_data)
-        ]
-        resource_data.extend(list(
-            {'component': x, 'val': '-', 'instances': instances[x]} for x in sorted(instances) if x not in res_data
-        ))
+            wall_time[cr.component.name] = rd[0]
+            cpu_time[cr.component.name] = rd[1]
+            memory[cr.component.name] = rd[2]
+
+        resource_data = [{'component': x, 'instances': instances[x], 'cpu': cpu_time[x], 'mem': memory[x], 'wall': wall_time[x]} for x in sorted(cpu_time)]
 
         return resource_data
 
