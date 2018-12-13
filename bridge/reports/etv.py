@@ -559,7 +559,7 @@ class GetSource:
         if file_name.startswith('/'):
             file_name = file_name[1:]
         try:
-            source_content = ArchiveFileContent(self.report.source, 'archive', file_name).content.decode('utf8')
+            source_content = ArchiveFileContent(self.report.source, 'archive', file_name).content.decode('utf8', errors="ignore")
         except Exception as e:
             raise BridgeException(_("Error while extracting source from archive: %(error)s") % {'error': str(e)})
         cnt = 1
@@ -905,7 +905,7 @@ def etv_callstack(unsafe_id=None, file_name='test.txt'):
         unsafe = ReportUnsafe.objects.get(id=unsafe_id)
     else:
         unsafe = ReportUnsafe.objects.all().first()
-    content = ArchiveFileContent(unsafe, 'error_trace', ERROR_TRACE_FILE).content.decode('utf8')
+    content = ArchiveFileContent(unsafe, 'error_trace', ERROR_TRACE_FILE).content.decode('utf8', errors="ignore")
     data = json.loads(content)
     trace = ''
     double_returns = set()
