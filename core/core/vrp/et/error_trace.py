@@ -237,10 +237,6 @@ class ErrorTrace:
         return new_edge
 
     def remove_edge_and_target_node(self, edge):
-        # Do not delete edge with a warning
-        if 'warn' in edge:
-            raise ValueError('Cannot delete edge with warning: {!r}'.format(edge['source']))
-
         source = edge['source node']
         target = edge['target node']
 
