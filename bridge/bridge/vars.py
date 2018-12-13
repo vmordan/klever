@@ -207,3 +207,5 @@ ASSOCIATION_TYPE = (
     ('1', _('Confirmed')),
     ('2', _('Unconfirmed'))
 )
+
+ROOT_REPORT = "Root report"

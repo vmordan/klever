@@ -16,7 +16,6 @@
 #
 
 import os
-import json
 from types import FunctionType
 
 from django.conf import settings
@@ -25,8 +24,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.utils.translation import ungettext_lazy
 
-from bridge.vars import SCHEDULER_TYPE, USER_ROLES, JOB_ROLES
-from bridge.utils import logger, file_get_or_create, unique_id, BridgeException
+from bridge.vars import SCHEDULER_TYPE, USER_ROLES, JOB_ROLES, ROOT_REPORT
+from bridge.utils import file_get_or_create, unique_id, BridgeException
 
 import marks.SafeUtils as SafeUtils
 import marks.UnsafeUtils as UnsafeUtils
@@ -86,12 +85,12 @@ class Population:
         self.__populate_functions()
         self.changes['jobs'] = self.__populate_jobs()
         self.changes['tags'] = self.__populate_tags()
-        self.__populate_unknown_marks()
-        self.__populate_unsafe_marks()
-        self.__populate_safe_marks()
-        sch_crtd1 = Scheduler.objects.get_or_create(type=SCHEDULER_TYPE[0][0])[1]
-        sch_crtd2 = Scheduler.objects.get_or_create(type=SCHEDULER_TYPE[1][0])[1]
-        self.changes['schedulers'] = (sch_crtd1 or sch_crtd2)
+        # self.__populate_unknown_marks()
+        # self.__populate_unsafe_marks()
+        # self.__populate_safe_marks()
+        # sch_crtd1 = Scheduler.objects.get_or_create(type=SCHEDULER_TYPE[0][0])[1]
+        # sch_crtd2 = Scheduler.objects.get_or_create(type=SCHEDULER_TYPE[1][0])[1]
+        # self.changes['schedulers'] = (sch_crtd1 or sch_crtd2)
 
     def __populate_functions(self):
         conversions = {}
@@ -188,63 +187,14 @@ class Population:
             job_name = "%s #%s" % (name, cnt)
         return job_name
 
+    # Create a single empty root report.
     def __populate_jobs(self):
-        created_jobs = []
-
-        # Directory "specifications" and files "program fragmentation.json" and "verifier profiles.json" should be added
-        # for all preset jobs.
-        specs_children = self.__get_dir(os.path.join(self.jobs_dir, 'specifications'), 'specifications')
-        program_fragmentation = self.__get_file(os.path.join(self.jobs_dir, 'program fragmentation.json'),
-                                                'program fragmentation.json')
-        verifier_profiles = self.__get_file(os.path.join(self.jobs_dir, 'verifier profiles.json'),
-                                            'verifier profiles.json')
-
-        for dirpath, dirnames, filenames in os.walk(self.jobs_dir):
-            # Do not traverse within specific directories. Directory "specifications" should be placed within the root
-            # preset jobs directory, directory "staging" can be placed anywhere.
-            if os.path.basename(dirpath) == 'specifications' or os.path.basename(dirpath) == 'staging':
-                dirnames[:] = []
-                filenames[:] = []
-                continue
-
-            # Directories without preset job settings file serve to keep ones with that file and specific ones.
-            job_settings_file = os.path.join(dirpath, JOB_SETTINGS_FILE)
-            if not os.path.exists(job_settings_file):
-                continue
-
-            # Do not traverse within directories with preset job settings file.
-            dirnames[:] = []
-
-            with open(job_settings_file, encoding='utf8') as fp:
-                try:
-                    job_settings = json.load(fp)
-                except Exception as e:
-                    logger.exception(e)
-                    raise BridgeException('Settings file of preset job "{0}" is not valid JSON file'.format(dirpath))
-
-            if 'description' not in job_settings:
-                raise BridgeException('Preset job "{0}" does not have description'.format(dirpath))
-
-            try:
-                job_name = self.__check_job_name(job_settings.get('name'))
-            except BridgeException as e:
-                raise BridgeException('{0} (preset job "{1}"'.format(str(e), dirpath))
-
-            job = JobForm(self.manager, None, 'copy').save({
-                'identifier': job_settings.get('identifier'),
-                'name': job_name,
-                'description': job_settings['description'],
-                'global_role': JOB_ROLES[1][0],
-                'file_data': json.dumps([{
-                    'type': 'root',
-                    'text': 'Root',
-                    'children':
-                        [specs_children, program_fragmentation, verifier_profiles] + self.__get_children(dirpath)
-                }], ensure_ascii=False)
-            })
-
-            created_jobs.append([job.name, job.identifier])
-        return created_jobs
+        root_job = JobForm(self.manager, None, 'copy').save({
+            'identifier': None,
+            'name': self.__check_job_name(ROOT_REPORT),
+            'description': "<h3>{}</h3>".format(ROOT_REPORT),
+            'global_role': JOB_ROLES[1][0]})
+        return [[root_job.name, root_job.identifier]]
 
     def __get_file(self, path, fname):
         with open(path, mode='rb') as fp:
@@ -290,11 +240,6 @@ class Population:
         if num_of_new > 0:
             created_tags.append(ungettext_lazy(
                 '%(count)d new unsafe tag uploaded.', '%(count)d new unsafe tags uploaded.', num_of_new
-            ) % {'count': num_of_new})
-        num_of_new = self.__create_tags('safe')
-        if num_of_new > 0:
-            created_tags.append(ungettext_lazy(
-                '%(count)d new safe tag uploaded.', '%(count)d new safe tags uploaded.', num_of_new
             ) % {'count': num_of_new})
         return created_tags
 
