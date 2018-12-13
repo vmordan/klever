@@ -26,9 +26,10 @@ from users.models import View
 DEF_NUMBER_OF_ELEMENTS = 500
 
 JOB_TREE_VIEW = {
-    'columns': ['name', 'role', 'author', 'date', 'status', 'unsafe:total', 'problem:total', 'safe:total'],
-    # order: [up|down, title|date|start|finish]
-    'order': ['up', 'date'],
+    'columns': ['name', 'finish', 'unsafe:bug', 'unsafe:false_positive',
+                'unsafe:unknown', 'unsafe:unassociated', 'unsafe:total',
+                'safe:total', 'problem:total'],    # order: [up|down, title|date|start|finish]
+    'order': ['up', 'start'],
 
     # FILTERS:
     # title: [iexact|istartswith|icontains, <any text>]
