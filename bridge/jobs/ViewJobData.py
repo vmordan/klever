@@ -264,20 +264,26 @@ class ViewJobData:
 
             color = None
             safe_name = 'safe:'
+            style = None
             if verdict == SAFE_VERDICTS[0][0]:
                 safe_name += SAFES[2]
                 color = COLORS['purple']
+                style = 'purple-link'
             elif verdict == SAFE_VERDICTS[1][0]:
                 safe_name += SAFES[1]
                 color = COLORS['orange']
+                style = 'orange-link'
             elif verdict == SAFE_VERDICTS[2][0]:
                 safe_name += SAFES[0]
                 color = COLORS['red']
+                style = 'red-pale-link'
             elif verdict == SAFE_VERDICTS[3][0]:
                 safe_name += SAFES[3]
                 color = COLORS['red']
+                style = 'purple-link'
             elif verdict == SAFE_VERDICTS[4][0]:
                 safe_name += SAFES[4]
+                style = 'black-link'
                 value = [total]
                 if len(href) == 2:
                     del href[0]
@@ -287,7 +293,8 @@ class ViewJobData:
                     'title': TITLES[safe_name],
                     'value': value,
                     'color': color,
-                    'href': href
+                    'href': href,
+                    'style': style
                 }
 
         safes_data = []
@@ -316,23 +323,30 @@ class ViewJobData:
 
             color = None
             unsafe_name = 'unsafe:'
+            style = None
             if verdict == UNSAFE_VERDICTS[0][0]:
                 unsafe_name += UNSAFES[3]
                 color = COLORS['purple']
+                style = 'purple-link'
             elif verdict == UNSAFE_VERDICTS[1][0]:
                 unsafe_name += UNSAFES[0]
                 color = COLORS['red']
+                style = 'red-pale-link'
             elif verdict == UNSAFE_VERDICTS[2][0]:
                 unsafe_name += UNSAFES[1]
                 color = COLORS['red']
+                style = 'red-pale-link'
             elif verdict == UNSAFE_VERDICTS[3][0]:
                 unsafe_name += UNSAFES[2]
                 color = COLORS['orange']
+                style = 'orange-link'
             elif verdict == UNSAFE_VERDICTS[4][0]:
                 unsafe_name += UNSAFES[4]
                 color = COLORS['red']
+                style = 'purple-link'
             elif verdict == UNSAFE_VERDICTS[5][0]:
                 unsafe_name += UNSAFES[5]
+                style = 'red-link'
                 value = [total]
                 if len(href) == 2:
                     del href[0]
@@ -342,7 +356,8 @@ class ViewJobData:
                     'title': TITLES[unsafe_name],
                     'value': value,
                     'color': color,
-                    'href': href
+                    'href': href,
+                    'style': style
                 }
         unsafes_data = []
         for unsafe_name in UNSAFES:

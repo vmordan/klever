@@ -65,7 +65,8 @@ window.inittree = function(table, column, expanded, collapsed) {
                 expanded_parents.push(tt_id);
             }
             else {
-                new_element.append($('<i>', {class: collapsed, style: 'cursor: pointer', id: 'tt_expander_' + tt_id}));
+                new_element.append($('<i>', {class: expanded, style: 'cursor: pointer', id: 'tt_expander_' + tt_id}));
+                expanded_parents.push(tt_id);
             }
             tree_cell.prepend(new_element.html());
             if (tt_par_id && expanded_parents.indexOf(tt_par_id) === -1) {

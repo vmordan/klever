@@ -75,6 +75,81 @@ body {
     color: #fff16c;
 }
 
+.green-link:link {
+    color: #1bbf19;
+}
+
+.green-link:visited {
+    color: #1bbf19;
+}
+
+.green-link:hover {
+    color: #00ff00;
+}
+
+.red-pale-link:link {
+    color: #ca2e2a;
+}
+
+.red-pale-link:visited {
+    color: #ca2e2a;
+}
+
+.red-pale-link:hover {
+    color: #ff2e2a;
+}
+
+.red-link:link {
+    color: #ff0000;
+    font-weight:bold;
+}
+
+.red-link:visited {
+    color: #ff0000;
+    font-weight:bold;
+}
+
+.red-link:hover {
+    color: #ff0080;
+    font-weight:bold;
+}
+
+.black-link:link {
+    color: #000000;
+}
+
+.black-link:visited {
+    color: #000000;
+}
+
+.black-link:hover {
+    color: #4d4d4d;
+}
+
+.orange-link:link {
+    color: #e67300;
+}
+
+.orange-link:visited {
+    color: #e67300;
+}
+
+.orange-link:hover {
+    color: #ff9800;
+}
+
+.purple-link:link {
+    color: #ea58e8;
+}
+
+.purple-link:visited {
+    color: #ea58e8;
+}
+
+.purple-link:hover {
+    color: #ff00ff;
+}
+
 .fake-link:hover {
     color: #ffbbfa;
 }

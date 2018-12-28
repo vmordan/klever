@@ -29,6 +29,7 @@ from django.utils.timezone import now, pytz
 from bridge.vars import JOB_STATUS, USER_ROLES, JOB_ROLES, JOB_WEIGHT, SAFE_VERDICTS, UNSAFE_VERDICTS, ASSOCIATION_TYPE
 from bridge.utils import logger, BridgeException, file_get_or_create, get_templated_text
 from users.notifications import Notify
+from reports.models import ComponentResource
 
 from jobs.models import Job, JobHistory, FileSystem, UserRole, JobFile
 from reports.models import ReportComponent, ReportSafe, ReportUnsafe, ReportUnknown, ReportAttr
@@ -159,7 +160,18 @@ def get_job_children(user, job):
     children = []
     for child in job.children.order_by('change_date'):
         if JobAccess(user, child).can_view():
-            children.append({'pk': child.pk, 'name': child.name})
+            report = ReportComponent.objects.filter(root__job=child, parent=None).first()
+            if report:
+                res = ComponentResource.objects.filter(report__root=report.root, report__parent=None, component__name="Core") \
+                    .annotate(root_id=F('report__root_id')).first()
+                (wall, cpu, mem) = get_resource_data('hum', 2, res)
+                unsafes = len(ReportUnsafe.objects.filter(root=report.root))
+                safes = len(ReportSafe.objects.filter(root=report.root))
+                unknowns = len(ReportUnknown.objects.filter(root=report.root))
+            else:
+                (wall, cpu, mem, unsafes, safes, unknowns) = ('-', '-', '-', '-', '-', '-')
+            children.append({'pk': child.pk, 'name': child.name, 'wall': wall, 'cpu': cpu, 'mem': mem,
+                             'safes': safes, 'unsafes': unsafes, 'unknowns': unknowns})
     return children
 
 

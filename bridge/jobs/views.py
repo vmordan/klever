@@ -36,7 +36,7 @@ from bridge.vars import VIEW_TYPES, JOB_STATUS, PRIORITY, JOB_WEIGHT, USER_ROLES
 from bridge.utils import logger, file_get_or_create, extract_archive, BridgeException
 
 from users.models import User
-from reports.models import ReportComponent
+from reports.models import ReportComponent, ReportAttr
 from reports.UploadReport import UploadReport, CollapseReports
 from reports.comparison import can_compare
 from reports.utils import FilesForCompetitionArchive
@@ -79,6 +79,23 @@ class JobPage(LoggedCallMixin, Bview.DataViewMixin, DetailView):
             logger.error("There is a job without versions")
             raise BridgeException()
         report = ReportComponent.objects.filter(root__job=self.object, parent=None).first()
+        attrs = {}
+        if report:
+            for attr in ReportAttr.objects.filter(report=report).\
+                    values_list('attr__name__name', 'attr__value'):
+                name = attr[0]
+                val = attr[1]
+                if name not in attrs:
+                    attrs[name] = set()
+                attrs[name].add(val)
+        for attr in ReportAttr.objects.filter(report__root__job=self.object,
+                                              attr__name__name__in=["Rule specification", "Subsystem"]).\
+                values_list('attr__name__name', 'attr__value'):
+            name = attr[0]
+            val = attr[1]
+            if name not in attrs:
+                attrs[name] = set()
+            attrs[name].add(val)
 
         return {
             'job': self.object, 'job_access': job_access, 'created_by': versions.first_version.change_author,
@@ -87,7 +104,8 @@ class JobPage(LoggedCallMixin, Bview.DataViewMixin, DetailView):
             'parents': jobs.utils.get_job_parents(self.request.user, self.object),
             'children': jobs.utils.get_job_children(self.request.user, self.object),
             'progress': GetJobsProgresses(self.request.user, [self.object.id]).data[self.object.id],
-            'reportdata': ViewJobData(self.request.user, self.get_view(VIEW_TYPES[2]), report)
+            'reportdata': ViewJobData(self.request.user, self.get_view(VIEW_TYPES[2]), report),
+            'attrs': attrs
         }
 
 

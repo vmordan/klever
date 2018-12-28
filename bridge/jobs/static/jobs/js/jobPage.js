@@ -351,3 +351,11 @@ $(document).ready(function () {
         check_status(interval);
     }, 3000);
 });
+
+function show_resource_table_body() {
+    if (document.getElementById("resource_table_body").hidden) {
+        document.getElementById("resource_table_body").hidden = false;
+    } else {
+        document.getElementById("resource_table_body").hidden = true;
+    }
+}

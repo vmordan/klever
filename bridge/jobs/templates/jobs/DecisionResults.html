@@ -17,199 +17,241 @@
 
 {% load i18n %}
 
-{% if reportdata.totals.unsafes > 0 or reportdata.totals.safes > 0 %}
-    <div class="ui grid">
+{% if reportdata.totals.unsafes > 0 or reportdata.totals.safes > 0 or reportdata.totals.unknowns > 0 or reportdata.data.resources|length or children %}
+<div class="ten wide column">
+    {% if reportdata.totals.unsafes > 0 or reportdata.totals.safes > 0 or reportdata.totals.unknowns > 0 %}
+    <div class="ui equal width grid">
         {% if reportdata.totals.unsafes > 0 %}
-            <div class="eight wide column">
-                <h4 class="header ui violet">
-                    {% if not reportdata.view.hidden or 'confirmed_marks' not in reportdata.view.hidden %}
-                        <span>{% trans 'Unsafes' %}: </span>
-                        {% if reportdata.totals.unsafes_confirmed > 0 %}
-                            <a href="{% url 'reports:unsafes' reportdata.report.id %}?confirmed=1">{{ reportdata.totals.unsafes_confirmed }}</a>
-                        {% else %}<span>0</span>{% endif %}
-                    {% else %}
-                        {% trans 'Unsafes' %}
-                    {% endif %}
-                    (<a href="{% url 'reports:unsafes' reportdata.report.id %}">{{ reportdata.totals.unsafes }}</a>)
-                </h4>
-                {% if reportdata.data.unsafes|length %}
-                    <div class="ui list">
-                        {% for v in reportdata.data.unsafes %}
-                            <div class="item">
-                                <i class="pointing right mini icon"></i>
-                                <div class="content">
-                                    <span{% if v.color %} style="color:{{ v.color }};"{% endif %}>{{ v.title }}: </span>
-                                    {% if v.href.0 %}<a href="{{ v.href.0 }}">{{ v.value.0 }}</a>{% else %}<span>{{ v.value.0 }}</span>{% endif %}
-                                    {% if v.value|length == 2 %}
-                                        ({% if v.href.1 %}<a href="{{ v.href.1 }}">{{ v.value.1 }}</a>{% else %}<span>{{ v.value.1 }}</span>{% endif %})
-                                    {% endif %}
+        <div class="column">
+            <h4 class="header ui red">
+                <a href="{% url 'reports:unsafes' reportdata.report.id %}" class="ui red button fluid" style="font-size:18px" title="{% trans 'Show list' %}">
+                    {% trans 'Unsafes' %}: {{ reportdata.totals.unsafes }}
+                </a>
+            </h4>
+            <div class="ui styled accordion fluid">
+                <div class="active title">
+                    <i class="dropdown icon"></i>{% trans 'Details' %}
+                </div>
+                <div class="content active">
+                    <div style="overflow-x:auto;">
+                        {% if reportdata.data.unsafes|length %}
+                        <div class="ui list">
+                            {% for v in reportdata.data.unsafes %}
+                                <div class="item red">
+                                    <i class="pointing right mini icon"></i>
+                                    <div class="content">
+                                        <span{% if v.color %} style="color:{{ v.color }};"{% endif %}>
+                                        {% if v.href.0 %}<a class="{{ v.style }}" href="{{ v.href.0 }}">
+                                        {{ v.title }}: {{ v.value.0 }}</a>{% endif %}
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
-                        {% endfor %}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
                     </div>
-                {% endif %}
-                {% if reportdata.data.tags_unsafe|length %}
-                    <h5 class="header ui orange">{% trans 'Tags' %}</h5>
-                    <div class="ui list">
-                        {% for t in reportdata.data.tags_unsafe %}
-                            <div class="item" style="padding-left: {{ t.padding }}px;">
-                                <i class="tag tiny orange icon"></i>
-                                <div class="content">
-                                    <span{% if t.description != '' %} id="tag_description_id_{{ t.id }}" class="tag-description-popup" data-variation="very wide" data-content="{{ t.description }}"{% endif %}>{{ t.name }}: </span><a href="{{ t.href }}">{{ t.number }}</a>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-                {% if reportdata.data.unsafes_attr_stat|length %}
-                    <h5 class="header">{% trans 'Statistics of' %} "{{ reportdata.view.attr_stat.0 }}"</h5>
-                    <div class="ui small list">
-                        {% for uas in reportdata.data.unsafes_attr_stat %}
-                            <div class="item">
-                                <i class="pointing right mini icon"></i>
-                                <div class="content">{{ uas.0 }}: <a href="{{ uas.2 }}">{{ uas.1 }}</a></div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
+                </div>
             </div>
+            {% if reportdata.data.tags_unsafe|length %}
+            <div class="ui styled accordion">
+                <div class="title">
+                    <i class="dropdown icon"></i>{% trans 'Tags' %}
+                </div>
+                <div class="content">
+                    <div style="overflow-x:auto;">
+                        <div class="ui list">
+                            {% for t in reportdata.data.tags_unsafe %}
+                                <div class="item" style="padding-left: {{ t.padding }}px;">
+                                    <i class="tag tiny red icon"></i>
+                                    <div class="content">
+                                        <span{% if t.description != '' %} id="tag_description_id_{{ t.id }}" class="tag-description-popup" data-variation="very wide" data-content="{{ t.description }}"{% endif %}><a class="red-pale-link" href="{{ t.href }}">{{ t.name }}: {{ t.number }}</a></span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
         {% endif %}
 
         {% if reportdata.totals.safes > 0 %}
-            <div class="eight wide column">
-                <h4 class="header ui violet">
-                    {% if not reportdata.view.hidden or 'confirmed_marks' not in reportdata.view.hidden %}
-                        <span>{% trans 'Safes' %}: </span>
-                        {% if reportdata.totals.safes_confirmed > 0 %}
-                            <a href="{% url 'reports:safes' reportdata.report.id %}?confirmed=1">{{ reportdata.totals.safes_confirmed }}</a>
-                        {% else %}<span>0</span>{% endif %}
-                    {% else %}
-                        {% trans 'Safes' %}
-                    {% endif %}
-                    (<a href="{% url 'reports:safes' reportdata.report.id %}">{{ reportdata.totals.safes }}</a>)
-                </h4>
-                {% if reportdata.data.safes|length %}
-                    <div class="ui list">
-                        {% for v in reportdata.data.safes %}
-                            <div class="item">
-                                <i class="pointing right mini icon"></i>
-                                <div class="content">
-                                    <span{% if v.color %} style="color:{{ v.color }};"{% endif %}>{{ v.title }}: </span>
-                                    {% if v.href.0 %}<a href="{{ v.href.0 }}">{{ v.value.0 }}</a>{% else %}<span>{{ v.value.0 }}</span>{% endif %}
-                                    {% if v.value|length == 2 %}
-                                        ({% if v.href.1 %}<a href="{{ v.href.1 }}">{{ v.value.1 }}</a>{% else %}<span>{{ v.value.1 }}</span>{% endif %})
-                                    {% endif %}
+        <div class="column">
+            <h4 class="header ui green">
+                <a href="{% url 'reports:safes' reportdata.report.id %}" class="ui green button fluid" style="font-size:18px">{% trans 'Safes' %}: {{ reportdata.totals.safes }}</a>
+            </h4>
+
+            <div class="ui styled accordion">
+                <div class="title">
+                    <i class="dropdown icon"></i>{% trans 'Details' %}
+                </div>
+                <div class="content">
+                    <div style="overflow-x:auto;">
+                        {% if reportdata.data.safes|length %}
+                        <div class="ui list">
+                            {% for v in reportdata.data.safes %}
+                                <div class="item">
+                                    <i class="pointing right mini icon"></i>
+                                    <div class="content">
+                                        {% if v.href.0 %}<a class="{{ v.style }}" href="{{ v.href.0 }}">
+                                        {{ v.title }}: {{ v.value.0 }}</a>{% endif %}
+                                    </div>
                                 </div>
-                            </div>
-                        {% endfor %}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
                     </div>
-                {% endif %}
-                {% if reportdata.data.tags_safe|length %}
-                    <h5 class="header ui green">{% trans 'Tags' %}</h5>
-                    <div class="ui list">
-                        {% for t in reportdata.data.tags_safe %}
-                            <div class="item" style="padding-left: {{ t.padding }}px;">
-                                <i class="tag green icon"></i>
-                                <div class="content">
-                                    <span{% if t.description != '' %} id="tag_description_id_{{ t.id }}" class="tag-description-popup" data-variation="very wide" data-content="{{ t.description }}"{% endif %}>{{ t.name }}: </span><a href="{{ t.href }}">{{ t.number }}</a>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-                {% if reportdata.data.safes_attr_stat|length %}
-                    <h5 class="header">{% trans 'Statistics of' %} "{{ reportdata.view.attr_stat.0 }}"</h5>
-                    <div class="ui small list">
-                        {% for sas in reportdata.data.safes_attr_stat %}
-                            <div class="item">
-                                <i class="pointing right mini icon"></i>
-                                <div class="content">{{ sas.0 }}: <a href="{{ sas.2 }}">{{ sas.1 }}</a></div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
+                </div>
             </div>
+            {% if reportdata.data.tags_safe|length %}
+            <div class="ui styled accordion">
+                <div class="title">
+                    <i class="dropdown icon"></i>{% trans 'Tags' %}
+                </div>
+                <div class="content">
+                    <div style="overflow-x:auto;">
+                        <div class="ui list">
+                            {% for t in reportdata.data.tags_safe %}
+                                <div class="item" style="padding-left: {{ t.padding }}px;">
+                                    <i class="tag green icon"></i>
+                                    <div class="content">
+                                        <span{% if t.description != '' %} id="tag_description_id_{{ t.id }}" class="tag-description-popup" data-variation="very wide" data-content="{{ t.description }}"{% endif %}><a href="{{ t.href }}" class="green-link">{{ t.name }}: {{ t.number }}</a></span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if reportdata.totals.unknowns > 0 %}
+        <div class="column">
+            <h4 class="header ui orange"><a href="{% url 'reports:unknowns' reportdata.report.id %}" class="ui orange button fluid" style="font-size:18px">{% trans 'Unknowns' %}: {{ reportdata.totals.unknowns }}</a></h4>
+            {% if reportdata.data.unknowns|length %}
+            <div class="ui styled accordion">
+                <div class="title">
+                    <i class="dropdown icon"></i>{% trans 'Components' %}
+                </div>
+                <div class="content">
+                    <div style="overflow-x:auto;">
+                        <div class="ui small list">
+                            {% for comp in reportdata.data.unknowns %}
+                                <div class="item">
+                                    <i class="cube mini icon"></i>
+                                    <div class="content">{% for probl in comp.problems %}{% if probl.problem == 'total' %} <a href="{{ probl.href }}" class="orange-link">{{ comp.component }}: {{ probl.num }}</a>{% endif %}{% endfor %}</div>
+                                </div>
+                                <div class="item">
+                                    <div class="ui list">
+                                        {% for probl in comp.problems %}
+                                            {% if probl.problem != 'total' %}
+                                                <div class="item" style="margin-left: 20px;">
+                                                    <i class="pointing right mini icon"></i>
+                                                    <div class="content"><a href="{{ probl.href }}" class="orange-link">{{ probl.problem }}: {{ probl.num }}</a></div>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
         {% endif %}
     </div>
-{% endif %}
+    {% endif %}
 
-{% if reportdata.data.resources|length or reportdata.totals.unknowns > 0 %}
+    {% if reportdata.data.resources|length %}
     <div class="ui grid">
         {% if reportdata.data.resources|length %}
-            <div class="ui nine wide column">
-                {% if reportdata.data.resources|length %}
-                    <h4 class="header ui violet">{% trans 'Consumed resources' %}
-                    </h4>
-                    <table border="1">
-                    <div class="ui list">
-                        <tr bgcolor="#d3d3d3">
-                            <td align="left">Component</td>
-                            <td align="center">Instances</td>
-                            <td align="center">CPU time</td>
-                            <td align="center">Memory</td>
-                            <td align="center">Wall time</td>
-                        </tr>
-                    <div class="ui list">
-                        {% for res_data in reportdata.data.resources %}
-                            <div class="item">
-                                <div class="content">
-                                    <tr>
-                                    {% if reportdata.report.component.name == res_data.component %}
-                                        <td><strong style="color: #86188c;">{{ res_data.component }}</strong></td>
-                                    {% else %}
-                                        <td>{{ res_data.component }}</td>
-                                    {% endif %}
-                                        <td align="center"><span style="color: darkblue">{{ res_data.instances }}</span></td>
-                                        <td align="right"><span style="color: darkblue"> <strong>{{ res_data.cpu }}</strong></span></td>
-                                        <td align="right"><span style="color: darkblue"> {{ res_data.mem }}</span></td>
-                                        <td align="right"><span style="color: darkblue"> {{ res_data.wall }}</span></td>
-                                    </tr>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
+        <div class="column">
+            <h3>{% trans 'Consumed resources' %}</h3>
+            <table class="ui celled selectable compact purple table striped">
+                <thead>
+                <tr bgcolor="#d3d3d3" onclick="show_resource_table_body()" title="{% trans 'Show/Hide' %}">
+                    <td>{% trans 'Component' %}</td>
+                    <td class="center aligned">{% trans 'Instances' %}</td>
+                    <td class="center aligned">{% trans 'CPU time' %}</td>
+                    <td class="center aligned">{% trans 'Memory' %}</td>
+                    <td class="center aligned">{% trans 'Wall time' %}</td>
+                </tr>
+                </thead>
+                <div class="content">
+                <tbody id="resource_table_body" hidden>
+                    {% for res_data in reportdata.data.resources %}
+                        {% if reportdata.report.component.name != res_data.component %}
+                            <tr>
+                                <td>{{ res_data.component }}</td>
+                                <td class="center aligned"><span style="color: darkblue"> {{ res_data.instances }}</span></td>
+                                <td class="right aligned"><span style="color: darkblue"> <strong>{{ res_data.cpu }}</strong></span></td>
+                                <td class="right aligned"><span style="color: darkblue"> {{ res_data.mem }}</span></td>
+                                <td class="center aligned"><span style="color: darkblue" > {{ res_data.wall }}</span></td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+                </div>
+                <tfoot style="background-color:lightgray;">
+                {% for res_data in reportdata.data.resources %}
+                    <tr>
+                    {% if reportdata.report.component.name == res_data.component %}
+                        <td><strong style="color: #86188c;">{% trans 'Overall' %}</strong></td>
+                        <td class="center aligned"><span style="color: darkblue"> {{ res_data.instances }}</span></td>
+                        <td class="right aligned"><span style="color: darkblue"> <strong>{{ res_data.cpu }}</strong></span></td>
+                        <td class="right aligned"><span style="color: darkblue"> {{ res_data.mem }}</span></td>
+                        <td class="center aligned"><span style="color: darkblue" > {{ res_data.wall }}</span></td>
+                    {% endif %}
+                    </tr>
+                {% endfor %}
+                </tfoot>
             </table>
-        {% endif %}
-        {% if reportdata.totals.unknowns > 0 %}
-            <div class="seven wide column">
-                <h4 class="header ui violet">{% trans 'Unknowns' %} (<a href="{% url 'reports:unknowns' reportdata.report.id %}">{{ reportdata.totals.unknowns }}</a>)</h4>
-                {% if reportdata.data.unknowns|length %}
-                    <div class="ui small list">
-                        {% for comp in reportdata.data.unknowns %}
-                            <div class="item">
-                                <i class="cube mini icon"></i>
-                                <div class="content">{{ comp.component }}{% for probl in comp.problems %}{% if probl.problem == 'total' %} (<a href="{{ probl.href }}">{{ probl.num }}</a>){% endif %}{% endfor %}</div>
-                            </div>
-                            <div class="item">
-                                <div class="ui list">
-                                    {% for probl in comp.problems %}
-                                        {% if probl.problem != 'total' %}
-                                            <div class="item" style="margin-left: 20px;">
-                                                <i class="pointing right mini icon"></i>
-                                                <div class="content">{{ probl.problem }}: <a href="{{ probl.href }}">{{ probl.num }}</a></div>
-                                            </div>
-                                        {% endif %}
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-                {% if reportdata.data.unknowns_attr_stat|length %}
-                    <h5 class="header">{% trans 'Statistics of' %} "{{ reportdata.view.attr_stat.0 }}"</h5>
-                    <div class="ui small list">
-                        {% for fas in reportdata.data.unknowns_attr_stat %}
-                            <div class="item">
-                                <i class="pointing right mini icon"></i>
-                                <div class="content">{{ fas.0 }}: <a href="{{ fas.2 }}">{{ fas.1 }}</a></div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
+        </div>
         {% endif %}
     </div>
+    {% endif %}
+
+    {% if children %}
+    <div class="ui grid">
+        <div class="column">
+            <h3>{% trans 'Children' %}</h3>
+            <table class="ui celled selectable compact purple table striped">
+                <thead>
+                <tr bgcolor="#d3d3d3">
+                    <td>{% trans 'Name' %}</td>
+                    <td class="center aligned">{% trans 'Unsafes' %}</td>
+                    <td class="center aligned">{% trans 'Safes' %}</td>
+                    <td class="center aligned">{% trans 'Unknowns' %}</td>
+                    <td class="center aligned">{% trans 'Wall time' %}</td>
+                    <td class="center aligned">{% trans 'CPU time' %}</td>
+                    <td class="center aligned">{% trans 'Memory' %}</td>
+                </tr>
+                </thead>
+                <tbody>
+                    {% for child in children %}
+                        {% if child.pk %}
+                            <tr class="center aligned">
+                                <td><a style="display:block;" href="{% url 'jobs:job' child.pk %}">{{ child.name }}</a></td>
+                                <td><a style="display:block;" href="{% url 'jobs:job' child.pk %}">{{ child.unsafes }}</a></td>
+                                <td><a style="display:block;" href="{% url 'jobs:job' child.pk %}">{{ child.safes }}</a></td>
+                                <td><a style="display:block;" href="{% url 'jobs:job' child.pk %}">{{ child.unknowns }}</a></td>
+                                <td><a style="display:block;" href="{% url 'jobs:job' child.pk %}">{{ child.wall }}</a></td>
+                                <td><a style="display:block;" href="{% url 'jobs:job' child.pk %}">{{ child.cpu }}</a></td>
+                                <td><a style="display:block;" href="{% url 'jobs:job' child.pk %}">{{ child.mem }}</a></td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+
+</div>
 {% endif %}
-<br><br>
