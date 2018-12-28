@@ -63,7 +63,7 @@ JOB_DATA_VIEW = {
         'safes_attr_stat', 'unsafes_attr_stat', 'unknowns_attr_stat'
     ],
     'hidden': ['resource_total', 'confirmed_marks'],
-    'attr_stat': ['Requirement']
+    'attr_stat': ['Rule specification']
 
     # FILTERS:
     # unknown_component: [iexact|istartswith|icontains, <any text>]
@@ -91,7 +91,7 @@ REPORT_CHILDREN_VIEW = {
 
 UNSAFES_VIEW = {
     'elements': [DEF_NUMBER_OF_ELEMENTS],
-    'columns': ['marks_number', 'total_similarity', 'report_verdict', 'tags',
+    'columns': ['report_verdict', 'tags',
                 'verifiers:cpu', 'verifiers:wall', 'verifiers:memory'],
     # order: [up|down, attr|parent_cpu|parent_wall|parent_memory, <any text, not empty for attr only>]
     # 'order': ['down', 'attr', 'Requirement'],
@@ -106,7 +106,7 @@ UNSAFES_VIEW = {
 }
 
 SAFES_VIEW = {
-    'columns': ['marks_number', 'report_verdict', 'tags', 'verifiers:cpu', 'verifiers:wall', 'verifiers:memory'],
+    'columns': ['report_verdict', 'tags', 'verifiers:cpu', 'verifiers:wall', 'verifiers:memory'],
     'elements': [DEF_NUMBER_OF_ELEMENTS],
     # order: [up|down, attr|parent_cpu|parent_wall|parent_memory, <any text, not empty for attr only>]
     # 'order': ['down', 'attr', 'Requirement'],
@@ -121,7 +121,7 @@ SAFES_VIEW = {
 }
 
 UNKNOWNS_VIEW = {
-    'columns': ['component', 'marks_number', 'problems', 'verifiers:cpu', 'verifiers:wall', 'verifiers:memory'],
+    'columns': ['component', 'problems', 'verifiers:cpu', 'verifiers:wall', 'verifiers:memory'],
     'elements': [DEF_NUMBER_OF_ELEMENTS],
     # order: [up|down, component|attr|parent_cpu|parent_wall|parent_memory, <any text, not empty for attr only>]
     'order': ['down', 'component', ''],
@@ -136,7 +136,7 @@ UNKNOWNS_VIEW = {
 
 UNSAFE_MARKS_VIEW = {
     'elements': [DEF_NUMBER_OF_ELEMENTS],
-    'columns': ['num_of_links', 'total_similarity', 'verdict', 'tags', 'status', 'author', 'format'],
+    'columns': ['verdict', 'tags', 'status', 'author'],
     # order: [up|down, change_date|num_of_links|attr|total_similarity, <any text, empty if not attr>]
     'order': ['up', 'change_date', ''],
 
@@ -159,7 +159,7 @@ UNSAFE_MARKS_VIEW = {
 
 SAFE_MARKS_VIEW = {
     'elements': [DEF_NUMBER_OF_ELEMENTS],
-    'columns': ['num_of_links', 'verdict', 'tags', 'status', 'author', 'format'],
+    'columns': ['verdict', 'tags', 'status', 'author'],
     # order: [up|down, change_date|num_of_links|attr, <any text, empty if not attr>]
     'order': ['up', 'change_date', ''],
 
@@ -182,7 +182,7 @@ SAFE_MARKS_VIEW = {
 
 UNKNOWN_MARKS_VIEW = {
     'elements': [DEF_NUMBER_OF_ELEMENTS],
-    'columns': ['num_of_links', 'status', 'component', 'author', 'format', 'pattern'],
+    'columns': ['status', 'component', 'author', 'pattern'],
     # order: [up|down, change_date|num_of_links|attr|component, <any text, empty if not attr>]
     'order': ['up', 'change_date'],
 
@@ -203,7 +203,7 @@ UNKNOWN_MARKS_VIEW = {
 }
 
 UNSAFE_ASS_MARKS_VIEW = {
-    'columns': ['verdict', 'similarity', 'status', 'source', 'tags', 'ass_type', 'ass_author', 'description'],
+    'columns': ['verdict', 'similarity', 'status', 'tags', 'ass_type', 'ass_author', 'description'],
 
     # FILTERS:
     # verdict: <list of identifiers from MARK_UNSAFE>
@@ -219,7 +219,7 @@ UNSAFE_ASS_MARKS_VIEW = {
 }
 
 SAFE_ASS_MARKS_VIEW = {
-    'columns': ['verdict', 'status', 'source', 'tags', 'ass_type', 'ass_author', 'description'],
+    'columns': ['verdict', 'status', 'tags', 'ass_type', 'ass_author', 'description'],
 
     # FILTERS:
     # verdict: <list of identifiers from MARK_UNSAFE>
@@ -233,7 +233,7 @@ SAFE_ASS_MARKS_VIEW = {
 }
 
 UNKNOWN_ASS_MARKS_VIEW = {
-    'columns': ['status', 'source', 'ass_type', 'ass_author', 'description'],
+    'columns': ['status', 'ass_type', 'ass_author', 'description'],
 
     # FILTERS:
     # status: <list of identifiers from MARK_STATUS>
@@ -246,7 +246,7 @@ UNKNOWN_ASS_MARKS_VIEW = {
 
 UNSAFE_MARK_ASS_REPORTS_VIEW = {
     'elements': [DEF_NUMBER_OF_ELEMENTS],
-    'columns': ['job', 'similarity', 'ass_type', 'ass_author', 'likes'],
+    'columns': ['job', 'similarity', 'ass_author'],
 
     # FILTERS:
     # similarity: <sublist from ['0', '50', '100']>
@@ -259,7 +259,7 @@ UNSAFE_MARK_ASS_REPORTS_VIEW = {
 
 SAFE_MARK_ASS_REPORTS_VIEW = {
     'elements': [DEF_NUMBER_OF_ELEMENTS],
-    'columns': ['job', 'ass_type', 'ass_author', 'likes'],
+    'columns': ['job', 'ass_author'],
 
     # FILTERS:
     # ass_type: <list of identifiers from ASSOCIATION_TYPE>
@@ -270,7 +270,7 @@ SAFE_MARK_ASS_REPORTS_VIEW = {
 
 UNKNOWN_MARK_ASS_REPORTS_VIEW = {
     'elements': [DEF_NUMBER_OF_ELEMENTS],
-    'columns': ['job', 'ass_type', 'ass_author', 'likes'],
+    'columns': ['job', 'ass_author'],
 
     # FILTERS:
     # ass_type: <list of identifiers from ASSOCIATION_TYPE>
@@ -280,7 +280,7 @@ UNKNOWN_MARK_ASS_REPORTS_VIEW = {
 }
 
 SAFE_ASSOCIATION_CHANGES_VIEW = {
-    'columns': ['change_kind', 'sum_verdict', 'tags', 'job', 'format'],
+    'columns': ['sum_verdict', 'tags', 'job'],
     # FILTERS:
     'hidden': ['unchanged']
     # change_kind: <sublist from ['changed', 'new', 'deleted']>
@@ -291,7 +291,7 @@ SAFE_ASSOCIATION_CHANGES_VIEW = {
     # attr: [<Attr name>, iexact|istartswith, <Attr value>]
 }
 UNSAFE_ASSOCIATION_CHANGES_VIEW = {
-    'columns': ['change_kind', 'sum_verdict', 'tags', 'job', 'format'],
+    'columns': ['sum_verdict', 'tags', 'job'],
     # FILTERS:
     'hidden': ['unchanged']
     # change_kind: <sublist from ['changed', 'new', 'deleted']>
@@ -302,7 +302,7 @@ UNSAFE_ASSOCIATION_CHANGES_VIEW = {
     # attr: [<Attr name>, iexact|istartswith, <Attr value>]
 }
 UNKNOWN_ASSOCIATION_CHANGES_VIEW = {
-    'columns': ['change_kind', 'job', 'format', 'problems'],
+    'columns': ['job', 'problems'],
     # FILTERS:
     # change_kind: <sublist from ['changed', 'new', 'deleted']>
     # job_title: [iexact|istartswith|icontains, <any text>]
