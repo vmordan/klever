@@ -24,15 +24,18 @@
 {% block jobs_head_block %}<script src="{% static 'jobs/js/jobtree.js' %}"></script>{% endblock %}
 
 {% block body_block %}
+    <div class="tableScroll" id="jobtable">
+        {% include 'jobs/treeTable.html' %}
+    </div>
+
+    {% if user.extended.role == '2' %}
     <div class="ui text small menu">
         <div class="ui dropdown item">
-            <i class="ui check square outline icon"></i>{% trans 'Selected jobs' %}
+            <i class="ui check square outline icon"></i>{% trans 'Actions with selected jobs' %}
             <i class="dropdown icon"></i>
             <div class="menu">
                 <div id="compare_reports_btn" class="item"><i class="ui columns icon"></i>{% trans 'Compare reports' %}</div>
-                <div id="compare_files_btn" class="item"><i class="ui columns icon"></i>{% trans 'Compare files' %}</div>
                 <div id="download_selected_jobs" class="item"><i class="ui download icon"></i>{% trans 'Download' %}</div>
-
                 {# Only managers can upload trees (USER_ROLES[2][0]) #}
                 <div id="download_selected_trees" class="item{% if user.extended.role != '2' %} disabled{% endif %}"><i class="ui sitemap icon"></i>{% trans 'Download with children' %}</div>
                 <div id="show_remove_jobs_popup" class="item"><i class="ui remove icon"></i>{% trans 'Delete' %}</div>
@@ -47,10 +50,7 @@
     <div id="view_form_segment_{{ TableData.view.type }}" class="ui form yellow segment" style="display: none">
         {% include TableData.view.template with view=TableData.view selected_columns=TableData.selected_columns available_columns=TableData.available_columns %}
     </div>
-
-    <div class="tableScroll" id="jobtable">
-        {% include 'jobs/treeTable.html' %}
-    </div>
+    {% endif %}
 
     <div id="remove_jobs_popup" class="ui basic modal">
         <div class="ui icon header">
