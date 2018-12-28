@@ -53,14 +53,16 @@
     <div class="ui grid">
         <div class="seven wide column">
 
-            {# Versions #}
-            <label for="job_version_selector" class="purple-title">{% trans 'Previous versions' %}</label>
-            <select id="job_version_selector" class="ui dropdown fluid">
-                {% for jv in versions %}
-                    <option value="{{ jv.version }}"{% if jv.version == version %} selected{% endif %}>{{ jv.title }}</option>
-                {% endfor %}
-            </select>
-            <br>
+            <div style="display:none;">
+                {# Versions #}
+                <label for="job_version_selector" class="purple-title">{% trans 'Previous versions' %}</label>
+                <select id="job_version_selector" class="ui dropdown fluid">
+                    {% for jv in versions %}
+                        <option value="{{ jv.version }}"{% if jv.version == version %} selected{% endif %}>{{ jv.title }}</option>
+                    {% endfor %}
+                </select>
+                <br>
+            </div>
 
             {# Title, parent and description #}
             <div class="ui violet segment" style="margin-bottom: 0;">
@@ -82,7 +84,7 @@
             </div>
 
             {# Files table #}
-            <div id="filestree"></div>
+            <div id="filestree" style="display:none;"></div>
 
             {# Roles #}
             <div id="user_roles_form" style="margin-top: 10px;margin-bottom: 10px;"></div>
@@ -100,7 +102,7 @@
             <button id="save_job_btn" type="submit" class="ui olive button">{% trans 'Save' %}</button>
             <a href="{% url 'jobs:job' job_id %}" class="ui violet button" style="float: right">{% trans 'Cancel' %}</a>
         </div>
-        <div class="nine wide column">
+        <div class="nine wide column" style="display:none;">
             {# File editor #}
             <h5 class="purple-title">&nbsp;<span id="editor_filename"></span> <span id="editor_unsaved" style="display:none;">({% trans 'unsaved' %})</span><i id="editor_help_icon" class="ui help blue link icon" style="float: right"></i></h5>
             <div id="editfile_area"></div>
