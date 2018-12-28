@@ -36,46 +36,54 @@
 
 {% block body_block %}
     <div class="ui grid">
-        <div class="five wide column">
-            <span class="purple-title">{% trans 'Job' %}: </span>
-            <a href="{% url 'jobs:job' report.root.job.pk %}">{{ report.root.job.name }}</a>
-        </div>
-        <div class="four wide column">
-            {% if report.root.user %}
-                <span class="purple-title">{% trans 'Author' %}: </span>
-                <a href="{% url 'users:show_profile' report.root.user.id %}">{{ report.root.user.get_full_name }}</a>
+        <div class="nine wide column">
+            <a href="{% url 'jobs:job' report.root.job.pk %}" class="ui tiny green button" title="{{ report.root.job.name }}">{% trans 'Back to report' %}</a>
+            {% if root_report_id %}
+                <a href="{% url 'reports:unsafes' root_report_id %}" class="ui tiny purple button">{% trans 'List of all error traces' %}</a>
+                <a href="{% url 'reports:unsafes' root_report_id %}?verdict=5" class="ui tiny red button">{% trans 'List of unmarked error traces' %}</a>
             {% endif %}
         </div>
-        <div class="six wide column">
-            <div class="ui breadcrumb">
-                <a class="section parent-popup" href="{{ parents.0.href }}" data-variation="very wide">{{ parents.0.title }}</a>
+        <div class="seven wide column right floated right aligned">
+            {% if resources %}
+                <i class="ui tiny inverted violet button parent-popup" data-variation="very wide">{% trans 'Consumed resources' %}</i>
                 <div class="ui special popup">
-                    <div class="header">{{ parents.0.title }}</div>
                     <div class="content">
-                        {% for attr in parents.0.attrs %}
-                            <span class="purple-subtitle">{{ attr.0 }}: </span>{{ attr.1|safe }}<br><br>
-                        {% endfor %}
+                        <span class="purple-subtitle">{% trans 'Wall time' %}: </span>{{ resources.wall_time }}<br>
+                        <span class="purple-subtitle">{% trans 'CPU time' %}: </span>{{ resources.cpu_time }}<br>
+                        <span class="purple-subtitle">{% trans 'Memory' %}: </span>{{ resources.memory }}<br>
                     </div>
                 </div>
-                {% for parent in parents|slice:"1:" %}
-                    <i class="right arrow icon divider"></i>
-                    <a class="section parent-popup" href="{{ parent.href }}" data-variation="very wide">{{ parent.title }}</a>
-                    <div class="ui special popup">
-                        <div class="header">{{ parent.title }}</div>
-                        <div class="content">
-                            {% for attr in parent.attrs %}
-                                <span class="purple-subtitle">{{ attr.0 }}: </span>{{ attr.1|safe }}<br>
+            {% endif %}
+            <i class="ui tiny inverted violet button parent-popup" data-variation="very wide">{% trans 'Attributes' %}</i>
+            <div class="ui special popup">
+                <div class="content">
+                    <table class="ui celled compact purple table">
+                        <tbody>
+                            {% for a_id, a_name, a_value, a_data in SelfAttrsData %}
+                                <tr>
+                                    <td class="collapsing">{{ a_name }}</td>
+                                    <td class="collapsing">
+                                        {% if a_data %}
+                                            <a class="attr-data-href" href="#" data-attr-id="{{ a_id }}">{{ a_value }}</a>
+                                        {% else %}
+                                            <span>{{ a_value }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
                             {% endfor %}
-                        </div>
-                    </div>
-                {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
+            {% with parents|last as parent %}
+                {% if parent.has_coverage %}
+                    <a href="{% if user.extended.coverage_data %}{% url 'reports:coverage' report.parent_id %}{% else %}{% url 'reports:coverage_light' report.parent_id %}{% endif %}" class="ui pink button">{% trans 'Coverage' %}</a>
+                {% endif %}
+            {% endwith %}
+            {% if report_type == 'unsafe' %}
+                    <a class="ui tiny white button" href="{% url 'reports:unsafe_fullscreen' report.trace_id %}">{% trans 'Full screen mode' %}</a>
+            {% endif %}
         </div>
-        {% if report_type == 'unsafe' %}
-            <div class="one wide column right aligned">
-                <a class="ui icon basic mini button" href="{% url 'reports:unsafe_fullscreen' report.trace_id %}"><i class="maximize icon"></i></a>
-            </div>
-        {% endif %}
     </div>
 
     {# Specific content of the report #}
@@ -92,82 +100,38 @@
     {% endif %}
 
     <div class="ui grid">
-        <div class="seven wide column">
-            {% if resources %}
-                <i class="ui computer violet link icon parent-popup" data-variation="very wide"></i>
-                <div class="ui special popup">
-                    <div class="header">{% trans 'Consumed resources' %}</div>
-                    <div class="content">
-                        <span class="purple-subtitle">{% trans 'Wall time' %}: </span>{{ resources.wall_time }}<br>
-                        <span class="purple-subtitle">{% trans 'CPU time' %}: </span>{{ resources.cpu_time }}<br>
-                        <span class="purple-subtitle">{% trans 'Memory' %}: </span>{{ resources.memory }}<br>
-                    </div>
-                </div>
+        <div class="three wide column">
+            <h2>{% trans 'Applied marks' %}</h2>
+        </div>
+        <div class="twelve wide column">
+            {% if MarkTable.can_mark %}
+                <a id="create_light_mark_btn" class="ui red button inverted"><i class="empty star icon"></i> {% trans 'Create default mark' %}</a>
+                <a href="{% url 'marks:mark_form' report_type report.pk 'create' %}" class="ui red button"><i class="star icon"></i> {% trans 'Create extended mark' %}</a>
             {% endif %}
-
-            <div class="ui tiny buttons" style="float: right;">
-                {% with parents|last as parent %}
-                    {% if parent.has_coverage %}
-                        <a href="{% if user.extended.coverage_data %}{% url 'reports:coverage' report.parent_id %}{% else %}{% url 'reports:coverage_light' report.parent_id %}{% endif %}" class="ui pink button">{% trans 'Coverage' %}</a>
-                    {% endif %}
-                {% endwith %}
-                <button id="show_leaf_attributes" class="ui violet button">{% trans 'Attributes' %}</button>
-            </div>
-
-            {% if report_type == 'unsafe' %}{% include 'reports/ETVButtons.html' %}{% endif %}
-            <br><br>
-            <div id="leaf_attributes" style="display: none">
-                <table class="ui celled compact purple table">
-                    <tbody>
-                        {% for a_id, a_name, a_value, a_data in SelfAttrsData %}
-                            <tr>
-                                <th class="collapsing">{{ a_name }}</th>
-                                <td class="collapsing">
-                                    {% if a_data %}
-                                        <a class="attr-data-href" href="#" data-attr-id="{{ a_id }}">{{ a_value }}</a>
-                                    {% else %}
-                                        <span>{{ a_value }}</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="ui grid bottom-attached">
-                <div class="eight wide column bottom aligned header-row">
-                    <span>{% trans 'Associated marks' %}</span>
-                    {% if MarkTable.can_mark %}
-                        <div class="ui dropdown">
-                            <i class="plus blue icon"></i>
-                            <div class="ui menu">
-                                <div class="header">{% trans 'Create mark' %}</div>
-                                <a id="create_light_mark_btn" class="item"><i class="empty star icon"></i> {% trans 'Lightweight' %}</a>
-                                <a href="{% url 'marks:mark_form' report_type report.pk 'create' %}" class="item"><i class="star icon"></i> {% trans 'Fullweight' %}</a>
-                            </div>
-                        </div>
-                    {% endif %}
-                </div>
-                <div class="eight wide column right aligned">
-                    <button id="view_show_form_btn_{{ MarkTable.view.type }}" class="ui tiny violet right labeled icon button">{{ MarkTable.view.viewtitle }}<i class="right chevron icon"></i></button>
-                </div>
-            </div>
         </div>
         <div class="nine wide column">
             {% if MarkTable.can_mark %}
                 <div id="inline_mark_form" style="display: none"></div>
             {% endif %}
-            <div id="view_form_segment_{{ MarkTable.view.type }}" class="ui form yellow segment" style="margin-top: 0;display:none;">
-                {% include MarkTable.view.template with view=MarkTable.view verdicts=MarkTable.verdicts statuses=MarkTable.statuses ass_types=MarkTable.ass_types selected_columns=MarkTable.selected_columns available_columns=MarkTable.available_columns %}
-            </div>
         </div>
     </div>
     <input id="report_pk" type="hidden" value="{{ report.pk }}">
     <input id="report_type" type="hidden" value="{{ report_type }}">
-    {% include 'reports/AssociatedMarksTable.html' with MarkTable=MarkTable %}
-    <br>
-
+    <div class="ui grid">
+        <div class="column">
+        {% include 'reports/AssociatedMarksTable.html' with MarkTable=MarkTable %}
+        </div>
+    </div>
+    {% if user.extended.role == '2' %}
+    <div class="ui grid">
+        <div class="eight wide column left aligned">
+            <button id="view_show_form_btn_{{ MarkTable.view.type }}" class="ui tiny violet right labeled icon button">{{ MarkTable.view.viewtitle }}<i class="right chevron icon"></i></button>
+        </div>
+        <div id="view_form_segment_{{ MarkTable.view.type }}" class="ui form yellow segment" style="margin-top: 0;display:none;">
+            {% include MarkTable.view.template with view=MarkTable.view verdicts=MarkTable.verdicts statuses=MarkTable.statuses ass_types=MarkTable.ass_types selected_columns=MarkTable.selected_columns available_columns=MarkTable.available_columns %}
+        </div>
+    </div>
+    {% endif %}
     <div id="file_content_modal" class="ui dinamic large modal">
         <div class="content">
             <div class="ui grid">
@@ -179,6 +143,48 @@
                 </div>
             </div>
             <div class="filecontent ui olive segment" id="file_content" style="height:75vh;"></div>
+        </div>
+    </div>
+    <div class="ui grid">
+        <div class="five wide column left aligned">
+            <div class="ui breadcrumb">
+                {% trans 'Components' %}:
+                <a class="section parent-popup" href="{{ parents.0.href }}" data-variation="very wide">{{ parents.0.title }}</a>
+                <div class="ui special popup">
+                    <div class="header">{{ parents.0.title }}</div>
+                    <div class="content">
+                        <table class="ui celled compact purple table">
+                            <tbody>
+                                {% for attr in parents.0.attrs %}
+                                    <tr>
+                                        <td><span class="purple-subtitle">{{ attr.0 }}: </span></td>
+                                        <td>{{ attr.1|safe }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% for parent in parents|slice:"1:" %}
+                    <i class="right arrow icon divider"></i>
+                    <a class="section parent-popup" href="{{ parent.href }}" data-variation="very wide">{{ parent.title }}</a>
+                    <div class="ui special popup">
+                        <div class="header">{{ parent.title }}</div>
+                        <div class="content">
+                            <table class="ui celled compact purple table">
+                                <tbody>
+                                    {% for attr in parent.attrs %}
+                                        <tr>
+                                            <td><span class="purple-subtitle">{{ attr.0 }}: </span></td>
+                                            <td>{{ attr.1|safe }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
         </div>
     </div>
 {% endblock %}

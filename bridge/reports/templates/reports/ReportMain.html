@@ -31,8 +31,80 @@
 {% block body_block %}
 
 <div class="ui grid">
+    <div class="ten wide column">
+        <div class="ui breadcrumb">
+            <a class="section parent-popup" href="{{ parents.0.href }}" data-variation="very wide">{{ parents.0.title }}</a>
+            <div class="ui special popup">
+                <div class="header">{{ parents.0.title }}</div>
+                <div class="content">
+                    {% for attr in parents.0.attrs %}
+                        <span class="purple-subtitle">{{ attr.0 }}: </span>{{ attr.1|safe }}<br><br>
+                    {% endfor %}
+                </div>
+            </div>
+            {% for parent in parents|slice:"1:" %}
+                <i class="right arrow icon divider"></i>
+                <a class="section parent-popup" href="{{ parent.href }}" data-variation="very wide">{{ parent.title }}</a>
+                <div class="ui special popup">
+                    <div class="header">{{ parent.title }}</div>
+                    <div class="content">
+                        {% for attr in parent.attrs %}
+                            <span class="purple-subtitle">{{ attr.0 }}: </span>{{ attr.1|safe }}<br>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="ui teal segment">
+            <h3 class="header ui violet italic">{% trans 'Children' %}</h3>
+            {% include TableData.view.template with view=TableData.view %}
+            {% if TableData.table_data.values|length %}
+                <div>
+                    {% if TableData.table_data.values.has_previous %}
+                        <i class="ui arrow left blue link icon page-link-icon" data-page-number="{{ TableData.table_data.values.previous_page_number }}"></i>
+                    {% endif %}
+                    <span>{% blocktrans with n1=TableData.table_data.values.number n2=TableData.table_data.values.paginator.num_pages %}Page {{ n1 }} of {{ n2 }}{% endblocktrans %}</span>
+                    {% if TableData.table_data.values.has_next %}
+                        <i class="ui arrow right blue link icon page-link-icon" data-page-number="{{ TableData.table_data.values.next_page_number }}"></i>
+                    {% endif %}
+                </div>
+                <div style="overflow: auto;max-height: 40vh;">
+                    <table class="ui celled compact teal table selectable alternate-color">
+                        <thead>
+                            {% for column_row in TableData.table_data.header %}
+                                <tr>
+                                {% for coldata in column_row %}
+                                    <th colspan="{{ coldata.columns }}" rowspan="{{ coldata.rows }}">{{ coldata.title }}</th>
+                                {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </thead>
+                        <tbody>
+                            {% for v in TableData.table_data.values %}
+                                <tr>
+                                    <td class="collapsing"><a href="{% url 'reports:component' v.pk %}">{{ v.component.name }}</a></td>
+                                    {% for attr in v.attrs %}
+                                        <td class="collapsing"><span>{{ attr }}</span></td>
+                                    {% endfor %}
+                                </tr>
+                            {%  endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <h3 class="italic" style="text-align:center;color: #7b7f8c;">{% trans 'There is no children, please wait for them or change the view' %}</h3>
+            {% endif %}
+        </div>
+        <div class="ui orange segment">
+            <h3 class="header ui violet italic">{% trans 'Statistics on component and its children' %}</h3>
+            {% include reportdata.view.template with view=reportdata.view %}
+            <br>
+            {% include 'jobs/DecisionResults.html' %}
+        </div>
+    </div>
+
     <div class="six wide column">
-        <table class="ui selectable compact inverted violet table attached">
+        <table class="ui selectable compact inverted blue table attached">
             <tbody>
                 <tr id="component_name_tr" data-variation="very wide">
                     <th colspan="2" class="center aligned header">
@@ -149,78 +221,6 @@
             {% if report.covnum > 0 %}
                 <a href="{% if user.extended.coverage_data %}{% url 'reports:coverage' report.id %}{% else %}{% url 'reports:coverage_light' report.id %}{% endif %}" class="ui violet button">{% trans 'Coverage' %}</a>
             {% endif %}
-        </div>
-    </div>
-
-    <div class="ten wide column">
-        <div class="ui breadcrumb">
-            <a class="section parent-popup" href="{{ parents.0.href }}" data-variation="very wide">{{ parents.0.title }}</a>
-            <div class="ui special popup">
-                <div class="header">{{ parents.0.title }}</div>
-                <div class="content">
-                    {% for attr in parents.0.attrs %}
-                        <span class="purple-subtitle">{{ attr.0 }}: </span>{{ attr.1|safe }}<br><br>
-                    {% endfor %}
-                </div>
-            </div>
-            {% for parent in parents|slice:"1:" %}
-                <i class="right arrow icon divider"></i>
-                <a class="section parent-popup" href="{{ parent.href }}" data-variation="very wide">{{ parent.title }}</a>
-                <div class="ui special popup">
-                    <div class="header">{{ parent.title }}</div>
-                    <div class="content">
-                        {% for attr in parent.attrs %}
-                            <span class="purple-subtitle">{{ attr.0 }}: </span>{{ attr.1|safe }}<br>
-                        {% endfor %}
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-        <div class="ui teal segment">
-            <h3 class="header ui violet italic">{% trans 'Children' %}</h3>
-            {% include TableData.view.template with view=TableData.view %}
-            {% if TableData.table_data.values|length %}
-                <div>
-                    {% if TableData.table_data.values.has_previous %}
-                        <i class="ui arrow left blue link icon page-link-icon" data-page-number="{{ TableData.table_data.values.previous_page_number }}"></i>
-                    {% endif %}
-                    <span>{% blocktrans with n1=TableData.table_data.values.number n2=TableData.table_data.values.paginator.num_pages %}Page {{ n1 }} of {{ n2 }}{% endblocktrans %}</span>
-                    {% if TableData.table_data.values.has_next %}
-                        <i class="ui arrow right blue link icon page-link-icon" data-page-number="{{ TableData.table_data.values.next_page_number }}"></i>
-                    {% endif %}
-                </div>
-                <div style="overflow: auto;max-height: 40vh;">
-                    <table class="ui celled compact teal table selectable alternate-color">
-                        <thead>
-                            {% for column_row in TableData.table_data.header %}
-                                <tr>
-                                {% for coldata in column_row %}
-                                    <th colspan="{{ coldata.columns }}" rowspan="{{ coldata.rows }}">{{ coldata.title }}</th>
-                                {% endfor %}
-                                </tr>
-                            {% endfor %}
-                        </thead>
-                        <tbody>
-                            {% for v in TableData.table_data.values %}
-                                <tr>
-                                    <td class="collapsing"><a href="{% url 'reports:component' v.pk %}">{{ v.component.name }}</a></td>
-                                    {% for attr in v.attrs %}
-                                        <td class="collapsing"><span>{{ attr }}</span></td>
-                                    {% endfor %}
-                                </tr>
-                            {%  endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <h3 class="italic" style="text-align:center;color: #7b7f8c;">{% trans 'There is no children, please wait for them or change the view' %}</h3>
-            {% endif %}
-        </div>
-        <div class="ui orange segment">
-            <h3 class="header ui violet italic">{% trans 'Statistics on component and its children' %}</h3>
-            {% include reportdata.view.template with view=reportdata.view %}
-            <br>
-            {% include 'jobs/DecisionResults.html' %}
         </div>
     </div>
 </div>
