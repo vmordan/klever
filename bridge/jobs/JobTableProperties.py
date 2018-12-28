@@ -345,10 +345,11 @@ class TableTree:
         resource_columns = []
         for c_id, c_name in ComponentResource.objects.filter(**filters).exclude(component=None)\
                 .values_list('component_id', 'component__name').distinct().order_by('component__name'):
-            column = 'resource:component_{0}'.format(c_id)
-            self._titles[column] = c_name
-            resource_columns.append(column)
-        resource_columns.append('resource:total')
+            if c_name == "Core":
+                for resource, translation in {"cpu": _("CPU time"), "wall": _("Wall time"), "mem": _("Memory")}.items():
+                    column = 'resource:{}_{}'.format(resource, c_id)
+                    self._titles[column] = translation
+                    resource_columns.append(column)
 
         return resource_columns
 
@@ -455,7 +456,9 @@ class TableTree:
             table_rows.append({
                 'id': job['id'], 'parent': job['parent'],
                 'black': job['id'] not in self._job_ids,
-                'values': row_values
+                'values': row_values,
+                "type": Job.objects.get(pk=job['id']).format
+
             })
         return table_rows
 
@@ -676,11 +679,10 @@ class TableTree:
                 .annotate(root_id=F('report__root_id')):
             job_id = self._roots[cr.root_id]
             rd = get_resource_data(data_format, accuracy, cr)
-            resourses_value = "%s %s %s" % (rd[0], rd[1], rd[2])
-            if cr.component_id is None:
-                self._values_data[job_id]['resource:total'] = resourses_value
-            else:
-                self._values_data[job_id]['resource:component_' + str(cr.component_id)] = resourses_value
+            if cr.component_id is not None:
+                self._values_data[job_id]['resource:wall_' + str(cr.component_id)] = rd[0]
+                self._values_data[job_id]['resource:cpu_' + str(cr.component_id)] = rd[1]
+                self._values_data[job_id]['resource:mem_' + str(cr.component_id)] = rd[2]
 
     def __collect_roles(self):
         user_role = self._user.extended.role
