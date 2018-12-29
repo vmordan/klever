@@ -16,31 +16,21 @@
 #
 
 import os
-from types import FunctionType
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Q
 from django.utils.translation import ungettext_lazy
 
-from bridge.vars import SCHEDULER_TYPE, USER_ROLES, JOB_ROLES, ROOT_REPORT
-from bridge.utils import file_get_or_create, unique_id, BridgeException
-
 import marks.SafeUtils as SafeUtils
-import marks.UnsafeUtils as UnsafeUtils
 import marks.UnknownUtils as UnknownUtils
-
-from users.models import Extended
-from jobs.models import Job, JobFile
-from marks.models import MarkUnsafeCompare, MarkUnsafeConvert, ErrorTraceConvertionCache
-from service.models import Scheduler
-
+import marks.UnsafeUtils as UnsafeUtils
+from bridge.utils import file_get_or_create, unique_id, BridgeException
+from bridge.vars import USER_ROLES, JOB_ROLES, ROOT_REPORT
 from jobs.jobForm import JobForm
-from marks.ConvertTrace import ConvertTrace
-from marks.CompareTrace import CompareTrace, CONVERSION
+from jobs.models import Job, JobFile
 from marks.tags import CreateTagsFromFile
-
+from users.models import Extended
 
 JOB_SETTINGS_FILE = 'settings.json'
 
@@ -82,47 +72,7 @@ class Population:
                 Extended.objects.get(user=self.user)
             except ObjectDoesNotExist:
                 extend_user(self.user)
-        self.__populate_functions()
         self.changes['jobs'] = self.__populate_jobs()
-        self.changes['tags'] = self.__populate_tags()
-        # self.__populate_unknown_marks()
-        # self.__populate_unsafe_marks()
-        # self.__populate_safe_marks()
-        # sch_crtd1 = Scheduler.objects.get_or_create(type=SCHEDULER_TYPE[0][0])[1]
-        # sch_crtd2 = Scheduler.objects.get_or_create(type=SCHEDULER_TYPE[1][0])[1]
-        # self.changes['schedulers'] = (sch_crtd1 or sch_crtd2)
-
-    def __populate_functions(self):
-        conversions = {}
-        for func_name in [x for x, y in ConvertTrace.__dict__.items()
-                          if type(y) == FunctionType and not x.startswith('_')]:
-            description = self.__correct_description(getattr(ConvertTrace, func_name).__doc__)
-            func, crtd = MarkUnsafeConvert.objects.get_or_create(name=func_name)
-            if crtd or description != func.description:
-                self.changes['functions'] = True
-                func.description = description
-                func.save()
-            conversions[func_name] = func
-        MarkUnsafeConvert.objects.filter(~Q(name__in=list(conversions))).delete()
-
-        comparisons = []
-        for func_name in [x for x, y in CompareTrace.__dict__.items()
-                          if type(y) == FunctionType and not x.startswith('_')]:
-            comparisons.append(func_name)
-            description = self.__correct_description(getattr(CompareTrace, func_name).__doc__)
-
-            conversion = CONVERSION.get(func_name, func_name)
-            if conversion not in conversions:
-                raise BridgeException('Convert function "%s" for comparison "%s" does not exist' %
-                                      (conversion, func_name))
-
-            func, crtd = MarkUnsafeCompare.objects.get_or_create(name=func_name, convert=conversions[conversion])
-            if crtd or description != func.description:
-                self.changes['functions'] = True
-                func.description = description
-                func.save()
-        MarkUnsafeCompare.objects.filter(~Q(name__in=comparisons)).delete()
-        ErrorTraceConvertionCache.objects.all().delete()
 
     def __correct_description(self, descr):
         self.__is_not_used()
