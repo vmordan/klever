@@ -46,6 +46,10 @@ class NewMark:
         self.edited_error_trace = args.get(TAG_EDITED_ERROR_TRACE, "")
         self.conversion_function = args.get(TAG_CONVERSION_FUNCTION, DEFAULT_CONVERSION_FUNCTION)
         self.comparison_function = args.get(TAG_COMPARISON_FUNCTION, DEFAULT_COMPARISON_FUNCTION)
+        if 'similarity_threshold' in args:
+            self.similarity_threshold = int(args['similarity_threshold']) / 100
+        else:
+            self.similarity_threshold = 0.0
         if mark_unsafe:
             self.__check_mark_applicability(mark_unsafe)
 
@@ -60,7 +64,8 @@ class NewMark:
             self.edited_error_trace = error_trace_pretty_parse(self.edited_error_trace)
         # Check that mark is applicable to the error trace itself.
         converted_error_trace = get_or_convert_error_trace(mark_unsafe, self.conversion_function)
-        if not compare_error_traces(self.edited_error_trace, converted_error_trace, self.comparison_function):
+        if compare_error_traces(self.edited_error_trace, converted_error_trace, self.comparison_function) < \
+                self.similarity_threshold:
             raise BridgeException(_("Mark cannot be applied to the initial error trace"), response_type='json')
         self.error_trace_id = dump_converted_error_trace(self.edited_error_trace)
 
@@ -117,7 +122,8 @@ class NewMark:
         except Exception:
             mark.delete()
             raise
-        self.changes = ConnectMarks([mark], prime_id=report.id).changes.get(mark.id, {})
+        self.changes = ConnectMarks([mark], prime_id=report.id, similarity_threshold=self.similarity_threshold).\
+            changes.get(mark.id, {})
         self.__get_tags_changes(RecalculateTags(list(self.changes)).changes)
         update_confirmed_cache([report])
         return mark
@@ -162,7 +168,7 @@ class NewMark:
 
         if recalculate_cache:
             if do_recalc:
-                changes = ConnectMarks([mark]).changes
+                changes = ConnectMarks([mark], similarity_threshold=self.similarity_threshold).changes
             else:
                 changes = self.__create_changes(mark)
                 if recalc_verdicts:
@@ -281,10 +287,11 @@ class NewMark:
 
 
 class ConnectMarks:
-    def __init__(self, marks, prime_id=None):
+    def __init__(self, marks, prime_id=None, similarity_threshold=0.0):
         self._marks = marks
         self._prime_id = prime_id
         self.changes = {}
+        self.similarity_threshold = similarity_threshold
         self.conversion_functions = {}
         self.comparison_functions = {}
         self.edited_error_trace = {}
@@ -371,6 +378,8 @@ class ConnectMarks:
                     converted_error_trace = get_or_convert_error_trace(unsafe, self.conversion_functions[mark_id])
                     compare_result = compare_error_traces(self.edited_error_trace[mark_id], converted_error_trace,
                                                           self.comparison_functions[mark_id])
+                    if compare_result < self.similarity_threshold:
+                        continue
 
                 except BridgeException as e:
                     compare_error = str(e)

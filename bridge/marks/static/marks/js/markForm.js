@@ -68,6 +68,7 @@ function collect_markdata() {
         mark_data['edited_error_trace'] = $('#converted_error_trace').val();
         mark_data['conversion_function'] = JSON.parse($('#conversion_function').val().replace(/\'/g, '"')).name;
         mark_data['comparison_function'] = JSON.parse($('#comparison_function').val().replace(/\'/g, '"')).name;
+        mark_data['similarity_threshold'] = $('#similarity_threshold').val();
     }
     return JSON.stringify(mark_data);
 }
