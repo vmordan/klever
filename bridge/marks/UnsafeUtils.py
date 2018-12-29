@@ -15,37 +15,54 @@
 # limitations under the License.
 #
 
-import os
 import json
-from io import BytesIO
+import time
 
-from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import F
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
-from bridge.vars import USER_ROLES, UNKNOWN_ERROR, UNSAFE_VERDICTS, MARK_UNSAFE, MARK_STATUS, MARK_TYPE,\
-    ASSOCIATION_TYPE
-from bridge.utils import logger, unique_id, file_checksum, file_get_or_create, BridgeException
-
-from users.models import User
+from bridge.utils import logger, BridgeException
+from bridge.utils import unique_id
+from bridge.vars import UNKNOWN_ERROR, UNSAFE_VERDICTS
+from bridge.vars import USER_ROLES, MARK_STATUS, MARK_UNSAFE, MARK_TYPE, ASSOCIATION_TYPE
+from marks.models import ConvertedTraces
+from marks.models import MarkUnsafe, MarkUnsafeHistory, MarkUnsafeReport, MarkUnsafeAttr, \
+    MarkUnsafeTag, UnsafeTag, UnsafeReportTag, ReportUnsafeTag
+from reports.mea import error_trace_pretty_parse, \
+    compare_error_traces, TAG_CONVERSION_FUNCTION, TAG_COMPARISON_FUNCTION, TAG_EDITED_ERROR_TRACE, \
+    get_or_convert_error_trace, dump_converted_error_trace, DEFAULT_CONVERSION_FUNCTION, DEFAULT_COMPARISON_FUNCTION
 from reports.models import ReportComponentLeaf, ReportAttr, ReportUnsafe, Attr, AttrName
-from marks.models import MarkUnsafe, MarkUnsafeHistory, MarkUnsafeReport, MarkUnsafeAttr,\
-    MarkUnsafeTag, UnsafeTag, UnsafeReportTag, ReportUnsafeTag,\
-    MarkUnsafeCompare, ConvertedTraces, UnsafeAssociationLike
-from marks.ConvertTrace import GetConvertedErrorTrace, ET_FILE_NAME
-from marks.CompareTrace import CompareTrace, CheckTraceFormat
+from users.models import User
 
 
 class NewMark:
-    def __init__(self, user, args):
+    def __init__(self, user, args, mark_unsafe=None):
         self._user = user
         self._args = args
+
+        # Specific information
+        self.edited_error_trace = args.get(TAG_EDITED_ERROR_TRACE, "")
+        self.conversion_function = args.get(TAG_CONVERSION_FUNCTION, DEFAULT_CONVERSION_FUNCTION)
+        self.comparison_function = args.get(TAG_COMPARISON_FUNCTION, DEFAULT_COMPARISON_FUNCTION)
+        if mark_unsafe:
+            self.__check_mark_applicability(mark_unsafe)
+
         self.changes = {}
         self._comparison = None
         self.__check_args()
+
+    def __check_mark_applicability(self, mark_unsafe):
+        if not self.edited_error_trace:
+            self.edited_error_trace = get_or_convert_error_trace(mark_unsafe, self.conversion_function)
+        else:
+            self.edited_error_trace = error_trace_pretty_parse(self.edited_error_trace)
+        # Check that mark is applicable to the error trace itself.
+        converted_error_trace = get_or_convert_error_trace(mark_unsafe, self.conversion_function)
+        if not compare_error_traces(self.edited_error_trace, converted_error_trace, self.comparison_function):
+            raise BridgeException(_("Mark cannot be applied to the initial error trace"), response_type='json')
+        self.error_trace_id = dump_converted_error_trace(self.edited_error_trace)
 
     def __check_args(self):
         if not isinstance(self._args, dict):
@@ -58,14 +75,6 @@ class NewMark:
             raise ValueError('Unsupported status: %s' % self._args.get('status'))
         if not isinstance(self._args.get('comment'), str):
             self._args['comment'] = ''
-
-        if 'compare_id' not in self._args:
-            raise ValueError('compare_id is required')
-        try:
-            self._comparison = MarkUnsafeCompare.objects.get(id=self._args['compare_id'])
-        except ObjectDoesNotExist:
-            logger.exception("Get MarkUnsafeCompare(pk=%s)" % self._args['compare_id'])
-            raise BridgeException(_('The error traces comparison function was not found'))
 
         if self._user.extended.role != USER_ROLES[2][0]:
             self._args['is_modifiable'] = MarkUnsafe._meta.get_field('is_modifiable').default
@@ -94,15 +103,16 @@ class NewMark:
         self._args['tags'] = tags
 
     def create_mark(self, report):
-        error_trace = GetConvertedErrorTrace(self._comparison.convert, report).converted
         mark = MarkUnsafe.objects.create(
             identifier=unique_id(), author=self._user, change_date=now(), format=report.root.job.format,
-            job=report.root.job, description=str(self._args.get('description', '')), function=self._comparison,
-            verdict=self._args['verdict'], status=self._args['status'], is_modifiable=self._args['is_modifiable']
+            job=report.root.job, description=str(self._args.get('description', '')),
+            verdict=self._args['verdict'], status=self._args['status'], is_modifiable=self._args['is_modifiable'],
+            comparison_function=self.comparison_function, conversion_function=self.conversion_function,
+            report=report
         )
 
         try:
-            markversion = self.__create_version(mark, error_trace)
+            markversion = self.__create_version(mark, self.error_trace_id)
             self.__create_attributes(markversion.id, report)
         except Exception:
             mark.delete()
@@ -113,16 +123,6 @@ class NewMark:
         return mark
 
     def change_mark(self, mark, recalculate_cache=True):
-        error_trace = None
-        if 'error_trace' in self._args and isinstance(self._args['error_trace'], str):
-            try:
-                et_json = json.loads(self._args['error_trace'])
-                CheckTraceFormat(self._comparison.name, et_json)
-            except Exception as e:
-                logger.exception(e)
-                raise BridgeException(_('Converted error trace has wrong format. Inspect logs for more info.'))
-            error_trace = BytesIO(json.dumps(et_json, ensure_ascii=False, sort_keys=True, indent=4).encode('utf8'))
-
         last_v = MarkUnsafeHistory.objects.get(mark=mark, version=F('mark__version'))
 
         mark.author = self._user
@@ -138,17 +138,20 @@ class NewMark:
             recalc_verdicts = True
 
         do_recalc = False
-        if mark.function != self._comparison:
-            mark.function = self._comparison
+        if mark.conversion_function != self.conversion_function:
+            mark.conversion_function = self.conversion_function
             do_recalc = True
 
-        if error_trace is not None and file_checksum(error_trace) != last_v.error_trace.hash_sum:
+        if mark.comparison_function != self.comparison_function:
+            mark.comparison_function = self.comparison_function
             do_recalc = True
-            error_trace = file_get_or_create(error_trace, ET_FILE_NAME, ConvertedTraces)[0]
-        else:
-            error_trace = last_v.error_trace
 
-        markversion = self.__create_version(mark, error_trace)
+        with last_v.error_trace.file as fp:
+            old_trace = json.loads(fp.read().decode('utf8'))
+        if self.edited_error_trace != old_trace:
+            do_recalc = True
+
+        markversion = self.__create_version(mark, self.error_trace_id)
 
         try:
             do_recalc |= self.__create_attributes(markversion.id, last_v)
@@ -158,9 +161,6 @@ class NewMark:
         mark.save()
 
         if recalculate_cache:
-            if do_recalc or not self._args.get('autoconfirm', False):
-                MarkUnsafeReport.objects.filter(mark_id=mark.id).update(type=ASSOCIATION_TYPE[0][0])
-                UnsafeAssociationLike.objects.filter(association__mark=mark).delete()
             if do_recalc:
                 changes = ConnectMarks([mark]).changes
             else:
@@ -182,17 +182,16 @@ class NewMark:
                 raise BridgeException(_("The mark with identifier specified in the archive already exists"))
         else:
             self._args['identifier'] = unique_id()
-        error_trace = file_get_or_create(BytesIO(json.dumps(
-            json.loads(self._args['error_trace']), ensure_ascii=False, sort_keys=True, indent=4
-        ).encode('utf8')), ET_FILE_NAME, ConvertedTraces)[0]
+        self.error_trace_id = dump_converted_error_trace(self._args['error_trace'])
         mark = MarkUnsafe.objects.create(
             identifier=self._args['identifier'], author=self._user, change_date=now(), format=self._args['format'],
-            type=MARK_TYPE[2][0], function=self._comparison, description=str(self._args.get('description', '')),
-            verdict=self._args['verdict'], status=self._args['status'], is_modifiable=self._args['is_modifiable']
+            type=MARK_TYPE[2][0], description=str(self._args.get('description', '')),
+            verdict=self._args['verdict'], status=self._args['status'], is_modifiable=self._args['is_modifiable'],
+            comparison_function=self.comparison_function, conversion_function=self.conversion_function
         )
 
         try:
-            markversion = self.__create_version(mark, error_trace)
+            markversion = self.__create_version(mark, self.error_trace_id)
             self.__create_attributes(markversion.id)
         except Exception:
             mark.delete()
@@ -210,7 +209,8 @@ class NewMark:
         markversion = MarkUnsafeHistory.objects.create(
             mark=mark, version=mark.version, status=mark.status, verdict=mark.verdict,
             author=mark.author, change_date=mark.change_date, comment=self._args['comment'],
-            error_trace=error_trace, function=mark.function, description=mark.description
+            error_trace=error_trace, description=mark.description, comparison_function=self.comparison_function,
+            conversion_function=self.conversion_function
         )
         MarkUnsafeTag.objects.bulk_create(
             list(MarkUnsafeTag(tag_id=t_id, mark_version=markversion) for t_id in self._args['tags'])
@@ -285,8 +285,9 @@ class ConnectMarks:
         self._marks = marks
         self._prime_id = prime_id
         self.changes = {}
-        self._functions = {}
-        self._patterns = {}
+        self.conversion_functions = {}
+        self.comparison_functions = {}
+        self.edited_error_trace = {}
 
         self._marks_attrs = self.__get_marks_attrs()
         self._unsafes_attrs = self.__get_unsafes_attrs()
@@ -322,11 +323,12 @@ class ConnectMarks:
             if mark_id not in marks_attrs:
                 marks_attrs[mark_id] = set()
             marks_attrs[mark_id].add(attr_id)
-        for m_id, f_name, pattern_id in MarkUnsafeHistory.objects\
+        for m_id, comparison_name, conversion_name, pattern_id in MarkUnsafeHistory.objects\
                 .filter(mark_id__in=marks_attrs, version=F('mark__version'))\
-                .values_list('mark_id', 'function__name', 'error_trace_id'):
-            self._functions[m_id] = f_name
-            self._patterns[m_id] = pattern_id
+                .values_list('mark_id', 'comparison_function', 'conversion_function', 'error_trace_id'):
+            self.comparison_functions[m_id] = comparison_name
+            self.conversion_functions[m_id] = conversion_name
+            self.edited_error_trace[m_id] = pattern_id
         return marks_attrs
 
     def __clear_connections(self):
@@ -346,24 +348,30 @@ class ConnectMarks:
                     marks_reports[mark_id].add(unsafe_id)
                     unsafes_ids.add(unsafe_id)
             if len(marks_reports[mark_id]) == 0:
-                del self._patterns[mark_id]
-                del self._functions[mark_id]
+                del self.edited_error_trace[mark_id]
+                del self.comparison_functions[mark_id]
+                del self.conversion_functions[mark_id]
         patterns = {}
-        for converted in ConvertedTraces.objects.filter(id__in=set(self._patterns.values())):
+        for converted in ConvertedTraces.objects.filter(id__in=set(self.edited_error_trace.values())):
             with converted.file as fp:
-                patterns[converted.id] = fp.read().decode('utf8')
-        for m_id in self._patterns:
-            self._patterns[m_id] = patterns[self._patterns[m_id]]
+                patterns[converted.id] = json.loads(fp.read().decode('utf8'))
+        for m_id in self.edited_error_trace:
+            self.edited_error_trace[m_id] = patterns[self.edited_error_trace[m_id]]
 
         new_markreports = []
+
+        time_start = time.process_time()
         for unsafe in ReportUnsafe.objects.filter(id__in=unsafes_ids):
-            for mark_id in self._patterns:
+            for mark_id in self.edited_error_trace:
                 if unsafe.id not in marks_reports[mark_id]:
                     continue
                 compare_error = None
                 compare_result = 0
                 try:
-                    compare_result = CompareTrace(self._functions[mark_id], self._patterns[mark_id], unsafe).result
+                    converted_error_trace = get_or_convert_error_trace(unsafe, self.conversion_functions[mark_id])
+                    compare_result = compare_error_traces(self.edited_error_trace[mark_id], converted_error_trace,
+                                                          self.comparison_functions[mark_id])
+
                 except BridgeException as e:
                     compare_error = str(e)
                 except Exception as e:
@@ -387,6 +395,8 @@ class ConnectMarks:
                         'kind': '+', 'result2': compare_result, 'verdict1': unsafe.verdict
                     }
         MarkUnsafeReport.objects.bulk_create(new_markreports)
+        time_start = time.process_time() - time_start
+        print("Filtering time is {}".format(time_start))
 
     def __update_verdicts(self):
         unsafe_verdicts = {}
@@ -447,10 +457,12 @@ class ConnectReport:
             if mark_id not in marks_attrs:
                 marks_attrs[mark_id] = set()
             marks_attrs[mark_id].add(attr_id)
-        for m_id, f_name, pattern_id, verdict in MarkUnsafeHistory.objects\
+        for m_id, f_comparison, f_conversion, edited_error_trace, verdict, report in MarkUnsafeHistory.objects\
                 .filter(mark_id__in=marks_attrs, version=F('mark__version'))\
-                .values_list('mark_id', 'function__name', 'error_trace_id', 'verdict'):
-            self._marks[m_id] = {'function': f_name, 'pattern': pattern_id, 'verdict': verdict}
+                .values_list('mark_id', 'comparison_function', 'conversion_function', 'error_trace_id', 'verdict',
+                             'mark__report'):
+            self._marks[m_id] = {'comparison_functions': f_comparison, 'conversion_functions': f_conversion,
+                                 'edited_error_trace': edited_error_trace, 'verdict': verdict, 'report': report}
         return marks_attrs
 
     def __connect(self):
@@ -460,18 +472,22 @@ class ConnectReport:
                 del self._marks[mark_id]
                 continue
         patterns = {}
-        for converted in ConvertedTraces.objects.filter(id__in=set(self._marks[mid]['pattern'] for mid in self._marks)):
+        for converted in ConvertedTraces.objects.filter(
+                id__in=set(self._marks[mid]['edited_error_trace'] for mid in self._marks)):
             with converted.file as fp:
                 patterns[converted.id] = fp.read().decode('utf8')
         for m_id in self._marks:
-            self._marks[m_id]['pattern'] = patterns[self._marks[m_id]['pattern']]
+            self._marks[m_id]['edited_error_trace'] = patterns[self._marks[m_id]['edited_error_trace']]
 
         for mark_id in self._marks:
             compare_result = 0
             compare_error = None
             try:
-                compare = CompareTrace(self._marks[mark_id]['function'], self._marks[mark_id]['pattern'], self._unsafe)
-                compare_result = compare.result
+                converted_error_trace = get_or_convert_error_trace(self._unsafe,
+                                                                   self._marks[mark_id]['conversion_functions'])
+                compare_result = compare_error_traces(self._marks[mark_id]['edited_error_trace'], converted_error_trace,
+                                                      self._marks[mark_id]['comparison_functions'])
+                # raise BridgeException(_("OK"), response_type='json')
             except BridgeException as e:
                 compare_error = str(e)
             except Exception as e:
@@ -630,186 +646,6 @@ class RecalculateConnections:
             ConnectReport(unsafe)
             unsafes.append(unsafe)
         RecalculateTags(unsafes)
-
-
-class PopulateMarks:
-    def __init__(self, manager):
-        self.total = 0
-        self._author = manager
-        self._dbtags = {}
-        self._functions = dict(MarkUnsafeCompare.objects.values_list('name', 'id'))
-        self._tagnames = {}
-        self._marks_data = {}
-        self.__current_tags()
-        self._marks = self.__get_data()
-        self.__get_attrnames()
-        self.__get_attrs()
-        self.created = self.__create_marks()
-        self.__create_related()
-        changes = ConnectMarks(self.created.values()).changes
-        reports = []
-        for m_id in changes:
-            reports.extend(changes[m_id])
-        RecalculateTags(reports)
-
-    def __current_tags(self):
-        for t_id, parent_id, t_name in UnsafeTag.objects.values_list('id', 'parent_id', 'tag'):
-            self._dbtags[t_id] = parent_id
-            self._tagnames[t_name] = t_id
-
-    def __get_tags(self, tags_data):
-        tags = set()
-        for t in tags_data:
-            if t not in self._tagnames:
-                raise BridgeException(_('Corrupted preset unsafe mark: not enough tags in the system'))
-            t_id = self._tagnames[t]
-            tags.add(t_id)
-            while self._dbtags[t_id] is not None:
-                t_id = self._dbtags[t_id]
-                tags.add(t_id)
-        return tags
-
-    def __get_attrnames(self):
-        attrnames = {}
-        for a in AttrName.objects.all():
-            attrnames[a.name] = a.id
-        for mid in self._marks_data:
-            for a in self._marks_data[mid]['attrs']:
-                if a['attr'] in attrnames:
-                    a['attr'] = attrnames[a['attr']]
-                else:
-                    newname = AttrName.objects.get_or_create(name=a['attr'])[0]
-                    a['attr'] = newname.id
-                    attrnames[newname.name] = newname.id
-
-    def __get_attrs(self):
-        attrs_in_db = {}
-        for a in Attr.objects.all():
-            attrs_in_db[(a.name_id, a.value)] = a.id
-        attrs_to_create = []
-        for mid in self._marks_data:
-            for a in self._marks_data[mid]['attrs']:
-                if (a['attr'], a['value']) not in attrs_in_db:
-                    attrs_to_create.append(Attr(name_id=a['attr'], value=a['value']))
-                    attrs_in_db[(a['attr'], a['value'])] = None
-        if len(attrs_to_create) > 0:
-            Attr.objects.bulk_create(attrs_to_create)
-            self.__get_attrs()
-        else:
-            for mid in self._marks_data:
-                for a in self._marks_data[mid]['attrs']:
-                    a['attr'] = attrs_in_db[(a['attr'], a['value'])]
-                    del a['value']
-
-    def __create_marks(self):
-        marks_in_db = {}
-        for ma in MarkUnsafeAttr.objects.values('mark_id', 'attr_id', 'is_compare'):
-            if ma['mark_id'] not in marks_in_db:
-                marks_in_db[ma['mark_id']] = set()
-            marks_in_db[ma['mark_id']].add((ma['attr_id'], ma['is_compare']))
-        marks_to_create = []
-        for mark in self._marks:
-            attr_set = set((a['attr'], a['is_compare']) for a in self._marks_data[mark.identifier]['attrs'])
-            if any(attr_set == marks_in_db[x] for x in marks_in_db):
-                del self._marks_data[mark.identifier]
-                continue
-            marks_to_create.append(mark)
-        MarkUnsafe.objects.bulk_create(marks_to_create)
-
-        created_marks = {}
-        marks_versions = []
-        for mark in MarkUnsafe.objects.filter(versions=None):
-            created_marks[mark.identifier] = mark
-            marks_versions.append(MarkUnsafeHistory(
-                mark=mark, verdict=mark.verdict, status=mark.status, description=mark.description,
-                version=mark.version, author=mark.author, change_date=mark.change_date, comment='',
-                function_id=self._marks_data[mark.identifier]['f_id'],
-                error_trace=file_get_or_create(
-                    self._marks_data[mark.identifier]['error trace'], ET_FILE_NAME, ConvertedTraces
-                )[0]
-            ))
-        MarkUnsafeHistory.objects.bulk_create(marks_versions)
-        return created_marks
-
-    def __create_related(self):
-        versions = {}
-        for mh in MarkUnsafeHistory.objects.filter(mark__in=self.created.values()).select_related('mark'):
-            versions[mh.mark.identifier] = mh.id
-
-        new_tags = []
-        for mid in self._marks_data:
-            for tid in self._marks_data[mid]['tags']:
-                new_tags.append(MarkUnsafeTag(tag_id=tid, mark_version_id=versions[mid]))
-        MarkUnsafeTag.objects.bulk_create(new_tags)
-        new_attrs = []
-        for mid in self._marks_data:
-            for a in self._marks_data[mid]['attrs']:
-                new_attrs.append(MarkUnsafeAttr(mark_id=versions[mid], attr_id=a['attr'], is_compare=a['is_compare']))
-        MarkUnsafeAttr.objects.bulk_create(new_attrs)
-
-    def __get_data(self):
-        presets_dir = os.path.join(settings.BASE_DIR, 'marks', 'presets', 'unsafes')
-
-        new_marks = []
-        for mark_settings in [os.path.join(presets_dir, x) for x in os.listdir(presets_dir)]:
-            identifier = os.path.splitext(os.path.basename(mark_settings))[0]
-            try:
-                MarkUnsafe.objects.get(identifier=identifier)
-                # The mark was already uploaded
-                continue
-            except ObjectDoesNotExist:
-                pass
-
-            with open(mark_settings, encoding='utf8') as fp:
-                data = json.load(fp)
-            if not isinstance(data, dict):
-                raise BridgeException(_('Corrupted preset unsafe mark: wrong format'))
-
-            if settings.POPULATE_JUST_PRODUCTION_PRESETS and not data.get('production'):
-                # Do not populate non-production marks
-                continue
-
-            if any(x not in data for x in ['status', 'verdict', 'is_modifiable', 'description', 'attrs', 'tags']):
-                raise BridgeException(_('Corrupted preset unsafe mark: not enough data'))
-            if not isinstance(data['attrs'], list) or not isinstance(data['tags'], list):
-                raise BridgeException(_('Corrupted preset unsafe mark: attributes or tags is not a list'))
-            if any(not isinstance(x, dict) for x in data['attrs']):
-                raise BridgeException(_('Corrupted preset unsafe mark: one of attributes has wrong format'))
-            if any(x not in y for x in ['attr', 'value', 'is_compare'] for y in data['attrs']):
-                raise BridgeException(_('Corrupted preset unsafe mark: one of attributes does not have enough data'))
-            if data['status'] not in list(x[0] for x in MARK_STATUS):
-                raise BridgeException(_('Corrupted preset unsafe mark: wrong mark status'))
-            if data['verdict'] not in list(x[0] for x in UNSAFE_VERDICTS):
-                raise BridgeException(_('Corrupted preset unsafe mark: wrong mark verdict'))
-            if not isinstance(data['description'], str):
-                raise BridgeException(_('Corrupted preset unsafe mark: wrong description'))
-            if not isinstance(data['is_modifiable'], bool):
-                raise BridgeException(_('Corrupted preset unsafe mark: is_modifiable must be bool'))
-            if 'error trace' not in data:
-                raise BridgeException(_('Corrupted preset unsafe mark: error trace is required'))
-            if 'comparison' not in data:
-                raise BridgeException(_('Corrupted preset unsafe mark: comparison function name is required'))
-            if data['comparison'] not in self._functions:
-                raise BridgeException(_('Preset unsafe mark comparison fucntion is not supported'))
-
-            new_marks.append(MarkUnsafe(
-                identifier=identifier, author=self._author, change_date=now(), is_modifiable=data['is_modifiable'],
-                verdict=data['verdict'], status=data['status'], description=data['description'], type=MARK_TYPE[1][0],
-                function_id=self._functions[data['comparison']]
-            ))
-            self._marks_data[identifier] = {
-                'f_id': self._functions[data['comparison']],
-                'tags': self.__get_tags(data['tags']),
-                'attrs': data['attrs'],
-                'error trace': BytesIO(json.dumps(
-                    data['error trace'], ensure_ascii=False, sort_keys=True, indent=4
-                ).encode('utf8'))
-            }
-            self.total += 1
-        return new_marks
-
-    def __is_not_used(self):
-        pass
 
 
 def delete_marks(marks):

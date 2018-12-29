@@ -64,8 +64,10 @@ function collect_markdata() {
         mark_data['tags'] = get_tags_values();
         if (obj_type === 'unsafe') mark_data['compare_id'] = $("#compare_function").val();
     }
-    if (obj_type === 'unsafe' && action == 'edit') {
-        mark_data['error_trace'] = $('#mark_error_trace').val();
+    if (obj_type === 'unsafe') {
+        mark_data['edited_error_trace'] = $('#converted_error_trace').val();
+        mark_data['conversion_function'] = JSON.parse($('#conversion_function').val().replace(/\'/g, '"')).name;
+        mark_data['comparison_function'] = JSON.parse($('#comparison_function').val().replace(/\'/g, '"')).name;
     }
     return JSON.stringify(mark_data);
 }
@@ -80,6 +82,26 @@ function set_action_on_func_change() {
         $('#convert_function_description').text(data['convert_desc']);
         $('#convert_function_name').text(data['convert_name']);
     });
+}
+
+function conversion_function_change(new_function) {
+    obj = JSON.parse(new_function.replace(/\'/g, '"'));
+    $('#conversion_function_description').text(obj.desc);
+    $.post(
+        '/marks/get_converted_trace/' + $('#report_id').val() +'/', {"conversion": obj.name},
+        function (data) {
+            if (data.error) {
+                err_notify(data.error);
+                return false;
+            }
+            $('#converted_error_trace').val(data['converted_error_trace']);
+        }
+    );
+}
+
+function comparison_function_change(new_function) {
+    obj = JSON.parse(new_function.replace(/\'/g, '"'));
+    $('#comparison_function_description').text(obj.desc);
 }
 
 function test_unknown_function() {
@@ -130,7 +152,7 @@ $(document).ready(function () {
     $('#test_unknown_mark').click(test_unknown_function);
 
     $('#save_mark_btn').click(function () {
-        $(this).addClass('disabled');
+        //$(this).addClass('disabled');
         $.post('', {data: collect_markdata()}, function (data) {
             if (data.error) {
                 $('#save_mark_btn').removeClass('disabled');

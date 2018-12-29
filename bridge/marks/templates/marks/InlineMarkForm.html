@@ -69,7 +69,13 @@
             </div>
         </div>
     {% else %}
-        <h4 class="header ui pink">{% trans 'Tags' %}</h4>
+        <h4 class="header ui pink">{% trans 'Tags' %} ({% trans 'choose required tag from' %}
+            {% if markdata.type == 'unsafe' %}
+                <a href="{% url 'marks:tags' 'unsafe' %}">{% trans 'unsafe tags tree' %}</a>)
+            {% else %}
+                <a href="{% url 'marks:tags' 'safe' %}">{% trans 'safe tags tree' %}</a>)
+            {% endif %}
+        </h4>
         {% include 'marks/MarkTags.html' with tags=tags.table available=tags.available selected=tags.selected %}
     {% endif %}
     <h4 class="ui pink header">{% trans 'Description' %}</h4>

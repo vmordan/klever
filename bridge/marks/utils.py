@@ -197,7 +197,7 @@ class NewMark:
         if isinstance(self._inst, (ReportSafe, MarkSafe)):
             return SafeUtils.NewMark(self._user, self._data)
         elif isinstance(self._inst, (ReportUnsafe, MarkUnsafe)):
-            return UnsafeUtils.NewMark(self._user, self._data)
+            return UnsafeUtils.NewMark(self._user, self._data, self._inst)
         elif isinstance(self._inst, (ReportUnknown, MarkUnknown)):
             return UnknownUtils.NewMark(self._user, self._data)
         else:

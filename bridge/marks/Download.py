@@ -15,23 +15,20 @@
 # limitations under the License.
 #
 
-import os
 import json
+import os
 import zipfile
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
-from bridge.utils import logger, BridgeException
-from bridge.ZipGenerator import ZipStream, CHUNK_SIZE
-
-from marks.models import MarkSafe, MarkUnsafe, MarkUnknown, SafeTag, UnsafeTag, MarkUnsafeCompare
-
 import marks.SafeUtils as SafeUtils
-import marks.UnsafeUtils as UnsafeUtils
 import marks.UnknownUtils as UnknownUtils
+import marks.UnsafeUtils as UnsafeUtils
+from bridge.ZipGenerator import ZipStream, CHUNK_SIZE
+from bridge.utils import logger, BridgeException
+from marks.models import MarkSafe, MarkUnsafe, MarkUnknown, SafeTag, UnsafeTag
 
 
 class MarkArchiveGenerator:
@@ -71,9 +68,10 @@ class MarkArchiveGenerator:
                 version_data['verdict'] = markversion.verdict
 
                 if self.type == 'unsafe':
-                    version_data['function'] = markversion.function.name
+                    version_data['conversion_function'] = markversion.conversion_function
+                    version_data['comparison_function'] = markversion.comparison_function
                     with markversion.error_trace.file.file as fp:
-                        version_data['error_trace'] = fp.read().decode('utf8')
+                        version_data['error_trace'] = json.loads(fp.read().decode('utf8'))
 
             content = json.dumps(version_data, ensure_ascii=False, sort_keys=True, indent=4)
             for data in self.stream.compress_string('version-%s' % markversion.version, content):
@@ -159,15 +157,6 @@ class UploadMark:
         self.mark = self.__upload_mark(archive)
 
     def __upload_mark(self, archive):
-
-        def get_func_id(func_name):
-            try:
-                return MarkUnsafeCompare.objects.get(name=func_name).pk
-            except ObjectDoesNotExist:
-                raise BridgeException(
-                    _('The mark comparison function "%(fname)s" is not supported anymore') % {'fname': func_name}
-                )
-
         mark_data = None
         versions_data = {}
         with zipfile.ZipFile(archive, 'r') as zfp:
@@ -186,10 +175,6 @@ class UploadMark:
         if not isinstance(mark_data, dict):
             raise ValueError('Unsupported mark data type: %s' % type(mark_data))
         self.type = mark_data.get('mark_type')
-        if self.type == 'unsafe':
-            for v_id in versions_data:
-                if 'function' not in versions_data[v_id]:
-                    raise BridgeException(_('The mark archive is corrupted'))
 
         version_list = list(versions_data[v] for v in sorted(versions_data))
 
@@ -201,22 +186,16 @@ class UploadMark:
             tags_in_db = dict(UnsafeTag.objects.values_list('tag', 'id'))
             for version in version_list:
                 version['tags'] = list(tags_in_db[tname] for tname in version['tags'])
-                version['compare_id'] = get_func_id(version['function'])
-                del version['function']
         return self.__create_mark(mark_data, version_list)
 
     def __create_mark(self, mark_data, versions):
         mark_utils = {'safe': SafeUtils, 'unsafe': UnsafeUtils, 'unknown': UnknownUtils}
-        versions[0].update(mark_data)
-        res = mark_utils[self.type].NewMark(self._user, versions[0])
+        version = versions[len(versions) - 1]
+        version.update(mark_data)
+        res = mark_utils[self.type].NewMark(self._user, version)
+        res.conversion_function = version.get('conversion_function')
+        res.comparison_function = version.get('comparison_function')
         mark = res.upload_mark()
-        for version_data in versions[1:]:
-            version_data.update(mark_data)
-            try:
-                mark_utils[self.type].NewMark(self._user, version_data).change_mark(mark, False)
-            except Exception:
-                mark.delete()
-                raise
         if self.type == 'safe':
             SafeUtils.RecalculateTags(list(SafeUtils.ConnectMarks([mark]).changes.get(mark.id, {})))
         elif self.type == 'unsafe':

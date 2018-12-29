@@ -16,6 +16,7 @@
 #
 
 import json
+import re
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -25,28 +26,27 @@ from django.template.defaulttags import register
 from django.template.loader import get_template
 from django.urls import reverse
 from django.utils.decorators import method_decorator
-from django.utils.translation import ugettext as _, override
 from django.utils.timezone import pytz
+from django.utils.translation import ugettext as _, override
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import SingleObjectMixin, DetailView
 
 import bridge.CustomViews as Bview
-from tools.profiling import LoggedCallMixin
-from bridge.vars import USER_ROLES, MARK_STATUS, MARK_SAFE, MARK_UNSAFE, MARK_TYPE, ASSOCIATION_TYPE,\
-    VIEW_TYPES, PROBLEM_DESC_FILE
-from bridge.utils import logger, extract_archive, ArchiveFileContent, BridgeException
-
-from users.models import User
-from reports.models import ReportSafe, ReportUnsafe, ReportUnknown
-from marks.models import MarkSafe, MarkUnsafe, MarkUnknown, MarkSafeHistory, MarkUnsafeHistory, MarkUnknownHistory,\
-    MarkUnsafeCompare, UnsafeTag, SafeTag, SafeTagAccess, UnsafeTagAccess,\
-    MarkSafeReport, MarkUnsafeReport, MarkUnknownReport, MarkAssociationsChanges,\
-    SafeAssociationLike, UnsafeAssociationLike, UnknownAssociationLike
-
 import marks.utils as mutils
-from marks.tags import GetTagsData, GetParents, SaveTag, TagsInfo, CreateTagsFromFile, TagAccess
+from bridge.utils import logger, extract_archive, ArchiveFileContent, BridgeException
+from bridge.vars import USER_ROLES, MARK_STATUS, MARK_SAFE, MARK_UNSAFE, MARK_TYPE, ASSOCIATION_TYPE, \
+    VIEW_TYPES, PROBLEM_DESC_FILE
 from marks.Download import UploadMark, MarkArchiveGenerator, AllMarksGen, UploadAllMarks, PresetMarkFile
+from marks.models import MarkSafe, MarkUnsafe, MarkUnknown, MarkSafeHistory, MarkUnsafeHistory, MarkUnknownHistory, \
+    MarkUnsafeCompare, UnsafeTag, SafeTag, SafeTagAccess, UnsafeTagAccess, \
+    MarkSafeReport, MarkUnsafeReport, MarkUnknownReport, MarkAssociationsChanges, \
+    SafeAssociationLike, UnsafeAssociationLike, UnknownAssociationLike, ReportComponent
 from marks.tables import MarkData, MarkChangesTable, MarkReportsTable, MarksList, AssociationChangesTable
+from marks.tags import GetTagsData, GetParents, SaveTag, TagsInfo, CreateTagsFromFile, TagAccess
+from reports.mea import error_trace_pretty_print, get_or_convert_error_trace, COMPARISON_FUNCTIONS, CONVERSION_FUNCTIONS
+from reports.models import ReportSafe, ReportUnsafe, ReportUnknown
+from tools.profiling import LoggedCallMixin
+from users.models import User
 
 
 @register.filter
@@ -78,14 +78,31 @@ class MarkPage(LoggedCallMixin, Bview.DataViewMixin, DetailView):
                 title += ': ' + m.comment
             versions.append({'version': m.version, 'title': title})
 
+        desc = {}
+        markdata = MarkData(self.kwargs['type'], mark_version=history_set.first())
+        edited_error_trace = None
+        if self.kwargs['type'] == 'unsafe':
+            for func in COMPARISON_FUNCTIONS:
+                if func['name'] == self.object.comparison_function:
+                    desc["comparison"] = (func['desc'])
+            for func in CONVERSION_FUNCTIONS:
+                if func['name'] == self.object.conversion_function:
+                    desc["conversion"] = (func['desc'])
+            try:
+                edited_error_trace = error_trace_pretty_print(markdata.error_trace)
+            except:
+                # old traces are not supported -> take default trace
+                edited_error_trace = ""
         return {
             'mark': self.object, 'access': mutils.MarkAccess(self.request.user, mark=self.object),
             'versions': versions, 'report_id': self.request.GET.get('report_to_redirect'),
-            'markdata': MarkData(self.kwargs['type'], mark_version=history_set.first()),
+            'markdata': markdata,
+            'edited_error_trace': edited_error_trace,
             'ass_types': ASSOCIATION_TYPE, 'view_tags': True,
             'reports': MarkReportsTable(self.request.user, self.object,
                                         self.get_view(view_type_map[self.kwargs['type']]),
-                                        page=self.request.GET.get('page', 1))
+                                        page=self.request.GET.get('page', 1)),
+            'desc': desc
         }
 
 
@@ -97,8 +114,23 @@ class AssociationChangesView(LoggedCallMixin, Bview.DataViewMixin, DetailView):
     slug_url_kwarg = 'association_id'
 
     def get_context_data(self, **kwargs):
+        trace_id = None
+        root_report_id = None
+        job_id = None
+        if self.kwargs['type'] == "unsafe":
+            table = json.loads(self.object.table_data)
+            href = table['href']
+            m = re.search('/(\d+)/', href)
+            if m:
+                mark_id = m.group(1)
+                mark = MarkUnsafe.objects.get(id=mark_id)
+                component_report = ReportComponent.objects.get(parent=None, root=mark.report.root)
+                trace_id = mark.report.trace_id
+                job_id = mark.report.root.job.id
+                root_report_id = component_report.id
         view_type_map = {'safe': VIEW_TYPES[16], 'unsafe': VIEW_TYPES[17], 'unknown': VIEW_TYPES[18]}
-        return {'TableData': AssociationChangesTable(self.object, self.get_view(view_type_map[self.kwargs['type']]))}
+        return {'TableData': AssociationChangesTable(self.object, self.get_view(view_type_map[self.kwargs['type']])),
+                'job_id': job_id, 'trace_id': trace_id, 'root_report_id': root_report_id}
 
 
 @method_decorator(login_required, name='dispatch')
@@ -185,6 +217,17 @@ class MarkFormView(LoggedCallMixin, DetailView):
             if 'markdata' not in context:
                 raise BridgeException(_('The mark version was not found'))
             context['cancel_url'] = reverse('marks:mark', args=[self.kwargs['type'], self.object.id])
+            if self.kwargs['type'] == 'unsafe':
+                try:
+                    edited_error_trace = error_trace_pretty_print(context['markdata'].error_trace)
+                except:
+                    converted_error_trace = get_or_convert_error_trace(self.object, self.object.conversion_function)
+                    edited_error_trace = error_trace_pretty_print(converted_error_trace)
+                context['converted_error_trace'] = edited_error_trace
+                context['conversion_function'] = self.object.conversion_function
+                context['comparison_function'] = self.object.comparison_function
+                if self.object.report:
+                    context['report_id'] = self.object.report.id
         else:
             if self.kwargs['type'] == 'unknown':
                 try:
@@ -203,6 +246,17 @@ class MarkFormView(LoggedCallMixin, DetailView):
                 'reports:{0}'.format(self.kwargs['type']),
                 args=[self.object.trace_id if self.kwargs['type'] == 'unsafe' else self.object.id]
             )
+            if self.kwargs['type'] == 'unsafe':
+                try:
+                    conversion_function = context['markdata'].conversion[0]['name']
+                    comparison_function = context['markdata'].comparison[0]['name']
+                    converted_error_trace = get_or_convert_error_trace(self.object, conversion_function)
+                    context['converted_error_trace'] = error_trace_pretty_print(converted_error_trace)
+                    context['conversion_function'] = conversion_function
+                    context['comparison_function'] = comparison_function
+                    context['report_id'] = self.object.id
+                except Exception as e:
+                    logger.exception(e, stack_info=True)
         context['access'] = access
         return context
 
@@ -535,6 +589,20 @@ class GetFuncDescription(LoggedCallMixin, Bview.JsonDetailPostView):
             'convert_desc': self.object.convert.description,
             'convert_name': self.object.convert.name
         }
+
+
+class GetConvertedTrace(LoggedCallMixin, Bview.JsonDetailPostView):
+    model = ReportUnsafe
+
+    def get_context_data(self, **kwargs):
+        conversion_function = self.request.POST['conversion']
+        context = {}
+        try:
+            converted_error_trace = get_or_convert_error_trace(self.object, conversion_function)
+            context['converted_error_trace'] = error_trace_pretty_print(converted_error_trace)
+        except Exception as e:
+            logger.exception(e, stack_info=True)
+        return context
 
 
 class CheckUnknownMarkView(LoggedCallMixin, Bview.JsonDetailPostView):

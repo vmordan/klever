@@ -29,7 +29,17 @@
 
 {% block body_block %}
     <button type="button" class="ui tiny violet button" id="view_show_form_btn_{{ TableData.view.type }}" style="float:right;margin-right: 10px;">{{ TableData.view.viewtitle }}</button>
-    <a href="{{ TableData.href }}" class="ui tiny green button">{% trans 'Show mark' %}</a>
+    {% if job_id %}
+        <a href="{% url 'jobs:job' job_id %}" class="ui tiny green button">{% trans 'Back to report' %}</a>
+    {% endif %}
+    {% if trace_id %}
+        <a href="{% url 'reports:unsafe' trace_id %}" class="ui tiny violet button">{% trans 'Back to error trace' %}</a>
+    {% endif %}
+    {% if root_report_id %}
+        <a href="{% url 'reports:unsafes' root_report_id %}" class="ui tiny purple button">{% trans 'List of all error traces' %}</a>
+        <a href="{% url 'reports:unsafes' root_report_id %}?verdict=5" class="ui tiny red button">{% trans 'List of unmarked error traces' %}</a>
+    {% endif %}
+    <a href="{{ TableData.href }}" class="ui tiny olive button">{% trans 'Show mark' %}</a>
     <br>
     <div id="view_form_segment_{{ TableData.view.type }}" class="ui form yellow segment" style="display: none">
         {% include TableData.view.template with view=TableData.view selected_columns=TableData.selected_columns available_columns=TableData.available_columns verdicts=TableData.verdicts %}

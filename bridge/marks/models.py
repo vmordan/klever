@@ -157,7 +157,9 @@ class SafeAssociationLike(models.Model):
 # Unsafes tables
 class MarkUnsafe(Mark):
     verdict = models.CharField(max_length=1, choices=MARK_UNSAFE, default='0')
-    function = models.ForeignKey(MarkUnsafeCompare, models.CASCADE)
+    comparison_function = models.CharField(max_length=64, default='')
+    conversion_function = models.CharField(max_length=64, default='')
+    report = models.ForeignKey(ReportUnsafe, models.CASCADE, null=True)
 
     class Meta:
         db_table = 'mark_unsafe'
@@ -166,7 +168,8 @@ class MarkUnsafe(Mark):
 class MarkUnsafeHistory(MarkHistory):
     mark = models.ForeignKey(MarkUnsafe, models.CASCADE, related_name='versions')
     verdict = models.CharField(max_length=1, choices=MARK_UNSAFE)
-    function = models.ForeignKey(MarkUnsafeCompare, models.CASCADE)
+    comparison_function = models.CharField(max_length=64, default='')
+    conversion_function = models.CharField(max_length=64, default='')
     error_trace = models.ForeignKey(ConvertedTraces, models.CASCADE)
 
     class Meta:
@@ -354,7 +357,7 @@ class MarkAssociationsChanges(models.Model):
 
 class ErrorTraceConvertionCache(models.Model):
     unsafe = models.ForeignKey(ReportUnsafe, models.CASCADE)
-    function = models.ForeignKey(MarkUnsafeConvert, models.CASCADE)
+    function = models.CharField(max_length=64, default='')
     converted = models.ForeignKey(ConvertedTraces, models.CASCADE)
 
     class Meta:

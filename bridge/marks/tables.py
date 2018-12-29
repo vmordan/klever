@@ -19,31 +19,27 @@ import json
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models import F, Count, Case, When
+from django.db.models import F
 from django.template import loader
 from django.urls import reverse
-from django.utils.text import format_lazy
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _, ungettext_lazy
 
 from bridge.tableHead import Header
-from bridge.vars import MARK_SAFE, MARK_UNSAFE, MARK_STATUS, VIEW_TYPES, ASSOCIATION_TYPE, SAFE_VERDICTS,\
-    UNSAFE_VERDICTS
 from bridge.utils import unique_id, get_templated_text
-
-from reports.models import ReportSafe, ReportUnsafe, ReportUnknown
-from marks.models import MarkSafe, MarkUnsafe, MarkUnknown, MarkAssociationsChanges,\
-    MarkSafeAttr, MarkUnsafeAttr, MarkUnknownAttr,\
-    MarkUnsafeCompare, MarkSafeHistory, MarkUnsafeHistory, MarkUnknownHistory, ConvertedTraces, \
-    MarkSafeTag, MarkUnsafeTag, SafeAssociationLike, UnsafeAssociationLike, UnknownAssociationLike, UnknownProblem
-
-from users.utils import DEF_NUMBER_OF_ELEMENTS
+from bridge.vars import MARK_SAFE, MARK_UNSAFE, MARK_STATUS, VIEW_TYPES, ASSOCIATION_TYPE, SAFE_VERDICTS, \
+    UNSAFE_VERDICTS
 from jobs.utils import JobAccess
-from marks.utils import UNSAFE_COLOR, SAFE_COLOR, STATUS_COLOR, MarkAccess
-from marks.CompareTrace import DEFAULT_COMPARE
-from marks.tags import TagsInfo
+from marks.models import MarkSafe, MarkUnsafe, MarkUnknown, MarkAssociationsChanges, \
+    MarkSafeAttr, MarkUnsafeAttr, MarkUnknownAttr, \
+    MarkUnsafeCompare, MarkSafeHistory, MarkUnsafeHistory, MarkUnknownHistory, ConvertedTraces, \
+    MarkSafeTag, MarkUnsafeTag, UnknownProblem
 from marks.querysets import ListQuery
-
+from marks.tags import TagsInfo
+from marks.utils import UNSAFE_COLOR, SAFE_COLOR, STATUS_COLOR, MarkAccess
+from reports.mea import COMPARISON_FUNCTIONS, CONVERSION_FUNCTIONS
+from reports.models import ReportSafe, ReportUnsafe, ReportUnknown
+from users.utils import DEF_NUMBER_OF_ELEMENTS
 
 MARK_TITLES = {
     'mark_num': _('#'),
@@ -54,7 +50,7 @@ MARK_TITLES = {
     'status': _('Status'),
     'author': _('Last change author'),
     'change_date': _('Last change date'),
-    'ass_author': _('Association author'),
+    'ass_author': _('Author'),
     'report': _('Report'),
     'job': _('Job'),
     'format': _('Format'),
@@ -65,12 +61,10 @@ MARK_TITLES = {
     'component': _('Component'),
     'pattern': _('Problem pattern'),
     'checkbox': '',
-    'source': _('Source'),
-    'ass_type': _('Association type'),
+    'ass_type': _('Manually resolve'),
     'automatic': _('Automatic association'),
     'tags': _('Tags'),
-    'likes': format_lazy('{0}/{1}', _('Likes'), _('Dislikes')),
-    'buttons': '',
+    'buttons': _('Edit'),
     'description': _('Description'),
     'total_similarity': _('Total similarity'),
     'identifier': _('Identifier')
@@ -227,27 +221,14 @@ class ReportMarkTable:
     def __get_columns(self):
         columns = ['mark_num']
         columns.extend(self.view['columns'])
-        columns.append('likes')
         if self.can_mark:
             columns.append('buttons')
         return columns
 
     def __get_values(self):
         value_data = []
-        likes = {}
-        dislikes = {}
         cnt = 1
 
-        likes_model = {'safe': SafeAssociationLike, 'unsafe': UnsafeAssociationLike, 'unknown': UnknownAssociationLike}
-        for ass_like in likes_model[self.type].objects.filter(association__report=self.report):
-            if ass_like.dislike:
-                if ass_like.association_id not in dislikes:
-                    dislikes[ass_like.association_id] = []
-                dislikes[ass_like.association_id].append((ass_like.author.get_full_name(), ass_like.author_id))
-            else:
-                if ass_like.association_id not in likes:
-                    likes[ass_like.association_id] = []
-                likes[ass_like.association_id].append((ass_like.author.get_full_name(), ass_like.author_id))
         if self.type == 'unsafe':
             orders = ['-result', '-mark__change_date']
         else:
@@ -320,12 +301,6 @@ class ReportMarkTable:
                     href = reverse('users:show_profile', args=[mark_rep.author_id])
                 elif col == 'description' and len(mark_rep.mark.description) > 0:
                     val = mark_rep.mark.description
-                elif col == 'likes':
-                    val = (
-                        mark_rep.mark_id,
-                        list(sorted(likes.get(mark_rep.id, []))),
-                        list(sorted(dislikes.get(mark_rep.id, [])))
-                    )
                 elif col == 'buttons':
                     val = mark_rep.mark_id
                 elif col == 'change_date':
@@ -479,8 +454,10 @@ class MarkData:
         self.mark_version = mark_version
         self.verdicts = self.__verdict_info()
         self.statuses = self.__status_info()
-        if isinstance(self.mark_version, MarkUnsafeHistory) or isinstance(report, ReportUnsafe):
-            self.comparison, self.selected_func = self.__functions()
+
+        if self.type == 'unsafe':
+            self.conversion = CONVERSION_FUNCTIONS
+            self.comparison = COMPARISON_FUNCTIONS
         self.unknown_data = self.__unknown_info()
         self.attributes = self.__get_attributes(report)
 
@@ -566,22 +543,6 @@ class MarkData:
             statuses.append(status_data)
         return statuses
 
-    def __functions(self):
-        functions = []
-        selected_func = None
-        if self.type == 'unsafe':
-            for f in MarkUnsafeCompare.objects.order_by('name'):
-                func_data = {'id': f.id, 'name': f.name}
-                if isinstance(self.mark_version, MarkUnsafeHistory):
-                    if self.mark_version.function == f:
-                        func_data['selected'] = True
-                        selected_func = f
-                elif f.name == DEFAULT_COMPARE:
-                    func_data['selected'] = True
-                    selected_func = f
-                functions.append(func_data)
-        return functions, selected_func
-
 
 # Table data for showing links between the specified mark and reports
 class MarkReportsTable:
@@ -628,8 +589,8 @@ class MarkReportsTable:
 
     def __supported_columns(self):
         if self.type == 'unsafe':
-            return ['job', 'similarity', 'ass_type', 'ass_author', 'likes']
-        return ['job', 'ass_type', 'ass_author', 'likes']
+            return ['job', 'similarity', 'ass_type', 'ass_author']
+        return ['job', 'ass_type', 'ass_author']
 
     def __get_columns(self):
         columns = ['report']
@@ -637,18 +598,6 @@ class MarkReportsTable:
         return columns
 
     def __get_values(self):
-        likes = {}
-        dislikes = {}
-        if 'likes' in self.columns:
-            likes_model = {
-                'safe': SafeAssociationLike, 'unsafe': UnsafeAssociationLike, 'unknown': UnknownAssociationLike
-            }
-            for ass_id, l_num, dl_num in likes_model[self.type].objects.values('association_id')\
-                    .annotate(dislikes=Count(Case(When(dislike=True, then=1))),
-                              likes=Count(Case(When(dislike=False, then=1))))\
-                    .values_list('association_id', 'likes', 'dislikes'):
-                likes[ass_id] = l_num
-                dislikes[ass_id] = dl_num
 
         values = []
         cnt = 0
@@ -694,8 +643,6 @@ class MarkReportsTable:
                     if mark_report.author:
                         val = mark_report.author.get_full_name()
                         href = reverse('users:show_profile', args=[mark_report.author_id])
-                elif col == 'likes':
-                    val = '%s/%s' % (likes.get(mark_report.id, 0), dislikes.get(mark_report.id, 0))
                 values_str.append({'value': val, 'href': href, 'color': color})
             values.append(values_str)
         return values
