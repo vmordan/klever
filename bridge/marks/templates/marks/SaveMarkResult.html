@@ -39,7 +39,6 @@
         <a href="{% url 'reports:unsafes' root_report_id %}" class="ui tiny purple button">{% trans 'List of all error traces' %}</a>
         <a href="{% url 'reports:unsafes' root_report_id %}?verdict=5" class="ui tiny red button">{% trans 'List of unmarked error traces' %}</a>
     {% endif %}
-    <a href="{{ TableData.href }}" class="ui tiny olive button">{% trans 'Show mark' %}</a>
     <br>
     <div id="view_form_segment_{{ TableData.view.type }}" class="ui form yellow segment" style="display: none">
         {% include TableData.view.template with view=TableData.view selected_columns=TableData.selected_columns available_columns=TableData.available_columns verdicts=TableData.verdicts %}
@@ -78,4 +77,5 @@
         <h1 class="header" style="text-align:center;">{% trans 'No changes with total expert evaluations or the view has filtered all results' %}</h1>
     {% endif %}
     <br>
+    <a href="{{ TableData.href }}" class="ui tiny olive button" style="float:right;margin-right: 10px;">{% trans 'Show mark' %}</a>
 {% endblock %}
