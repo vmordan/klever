@@ -181,7 +181,10 @@ class MarkFormView(LoggedCallMixin, DetailView):
                 res.change_mark()
             else:
                 res.create_mark()
-            cache_id = MarkChangesTable(self.request.user, res.mark, res.changes).cache_id
+            job_id = None
+            if kwargs['type'] == 'unsafe':
+                job_id = res.mark.report.root.job.id
+            cache_id = MarkChangesTable(self.request.user, res.mark, res.changes, job_id).cache_id
         except BridgeException as e:
             raise BridgeException(str(e), response_type='json')
         except Exception as e:

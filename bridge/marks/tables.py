@@ -94,9 +94,10 @@ def result_color(result):
 
 
 class MarkChangesTable:
-    def __init__(self, user, mark, changes):
+    def __init__(self, user, mark, changes, target_root_report_id=None):
         self.mark = mark
         self.changes = changes
+        self.root_report_id = target_root_report_id
         self.__accessed_changes(user)
 
         if isinstance(mark, MarkUnsafe):
@@ -125,10 +126,20 @@ class MarkChangesTable:
         change_kinds = {'-': 'deleted', '=': 'changed', '+': 'new'}
         for report in self.changes:
             if report.id not in values:
+                similarity = 100
+                if 'result2' in self.changes[report]:
+                    similarity = self.changes[report]['result2']
+                    if not similarity:
+                        continue
+                    else:
+                        similarity = round(100 * similarity)
+                if self.root_report_id and report.root.job.id != self.root_report_id:
+                    continue
                 values[report.id] = {
                     'change_kind': change_kinds[self.changes[report]['kind']],
                     'job': [report.root.job.id, report.root.job.name],
-                    'format': report.root.job.format
+                    'format': report.root.job.format,
+                    'similarity': "{}%".format(similarity)
                 }
                 if self.mark_type == 'unknown':
                     if 'problems' in self.changes[report]:

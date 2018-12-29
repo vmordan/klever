@@ -291,7 +291,7 @@ SAFE_ASSOCIATION_CHANGES_VIEW = {
     # attr: [<Attr name>, iexact|istartswith, <Attr value>]
 }
 UNSAFE_ASSOCIATION_CHANGES_VIEW = {
-    'columns': ['sum_verdict', 'tags', 'job'],
+    'columns': ['sum_verdict', 'similarity'],
     # FILTERS:
     'hidden': ['unchanged']
     # change_kind: <sublist from ['changed', 'new', 'deleted']>
