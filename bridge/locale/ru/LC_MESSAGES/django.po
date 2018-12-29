@@ -1224,7 +1224,7 @@ msgstr "Создать копию"
 #: marks/templates/marks/EditUnknownMark.html:20
 #: marks/templates/marks/ViewMark.html:16
 msgid "Download"
-msgstr "Загрузить"
+msgstr "Сохранить"
 
 #: jobs/templates/jobs/viewJob.html:27
 msgid "Start decision"
@@ -1333,7 +1333,7 @@ msgstr "Пропуски целевых ошибок"
 
 #: jobs/utils.py:60
 msgid "Bugs"
-msgstr "Ошибки"
+msgstr "Реальные ошибки"
 
 #: jobs/utils.py:61
 msgid "Target bugs"
@@ -2439,7 +2439,7 @@ msgstr "Меню"
 #: templates/base.html:44 templates/base.html.py:51 templates/base.html:91
 #: templates/base.html.py:116
 msgid "Upload"
-msgstr "Загрузить на сервер"
+msgstr "Загрузить"
 
 #: templates/base.html:47
 msgid "Marks"
@@ -2891,3 +2891,171 @@ msgstr "Изменение"
 #: users/views.py:319
 msgid "Saved"
 msgstr "Сохранено"
+
+msgid "Continuous Verification web-interface"
+msgstr "Инструментарий для ведения непрерывной верификации"
+
+msgid "Copy"
+msgstr "Дублировать"
+
+msgid "Statistics of"
+msgstr "Статистика по"
+
+msgid "Instances"
+msgstr "Число запусков"
+
+msgid "CPU time"
+msgstr "Процессорное время"
+
+msgid "Memory"
+msgstr "Память"
+
+msgid "Wall time"
+msgstr "Астрономическое время"
+
+msgid "Actions with selected jobs"
+msgstr "Групповые действия с отчетами"
+
+msgid "Download with children"
+msgstr "Сохранить поддерево отчетов"
+
+msgid "Web-interface for Continuous Verification system"
+msgstr "Web-интерфейс инструментария для ведения непрерывной верификации"
+
+msgid "Report is empty"
+msgstr "Пустой отчет"
+
+msgid "RAM"
+msgstr "Память"
+
+msgid "Back to the reports tree"
+msgstr "Вернуться к дереву отчетов"
+
+msgid "components tree"
+msgstr "дерево компонентов"
+
+msgid "min"
+msgstr "мин"
+
+msgid "Back to report"
+msgstr "Вернуться к отчету"
+
+msgid "Back to error trace"
+msgstr "Вернуться к трассе ошибки"
+
+msgid "List of all error traces"
+msgstr "Список всех трасс ошибок"
+
+msgid "List of unmarked error traces"
+msgstr "Список неразмеченных трасс ошибок"
+
+msgid "Rule specification"
+msgstr "Правило"
+
+msgid "Applied marks"
+msgstr "Примененные оценки"
+
+msgid "Create default mark"
+msgstr "Создать обычную оценку"
+
+msgid "Create extended mark"
+msgstr "Создать расширенную оценку"
+
+msgid "choose required tag from"
+msgstr "необходимо выбрать из"
+
+msgid "unsafe tags tree"
+msgstr "дерева тегов для предупреждений об ошибке"
+
+msgid "safe tags tree"
+msgstr "дерева тегов для доказательств корректности"
+
+msgid "Create tag"
+msgstr "Создать тег"
+
+msgid "Users can modify"
+msgstr "Пользователи, которые могут изменять тег"
+
+msgid "Users can create children"
+msgstr "Пользователи, которые могут создавать теги-потомки для данного"
+
+msgid "Create new root tag"
+msgstr "Создать новый корневой тег"
+
+msgid "Download tags"
+msgstr "Сохранить теги"
+
+msgid "Upload tags"
+msgstr "Загрузить теги"
+
+msgid "Upload jobs tree"
+msgstr "Загрузить дерево отчетов"
+
+msgid "Selected marks"
+msgstr "Групповые действия с оценками"
+
+msgid "Create child"
+msgstr "Создать потомка"
+
+msgid "Show mark"
+msgstr "Перейти к оценке"
+
+msgid "No changes with total expert evaluations or the view has filtered all results"
+msgstr "Изменений в применимости оценки к трассам ошибок нет"
+
+msgid "The list of associated reports is empty"
+msgstr "Список отчетов, к которым была применена оценка, пуст"
+
+msgid "Manually resolve"
+msgstr "Разрешить противоречие"
+
+msgid "There are no applied marks"
+msgstr "Примененных оценок нет"
+
+msgid "Confirm"
+msgstr "Подтвердить применение"
+
+msgid "Unconfirm"
+msgstr "Отменить применение"
+
+msgid "Automatic"
+msgstr "Применена автоматически"
+
+msgid "Confirmed"
+msgstr "Подтверждена вручную"
+
+msgid "Unconfirmed"
+msgstr "Отменена вручную"
+
+msgid "Full screen mode"
+msgstr "Полноэкранный режим"
+
+msgid "Converted error trace"
+msgstr "Трасса ошибки после применения функции преобразования"
+
+msgid "Converted error traces are the same"
+msgstr "Трассы ошибки после применения функции преобразования полностью совпадают"
+
+msgid "Functions call tree, in which each leaf is a model function"
+msgstr "Дерево вызовов модельных функций"
+
+msgid "Functions call tree"
+msgstr "Дерево вызовов функций"
+
+msgid "Error trace conditions"
+msgstr "Условия трассы ошибок"
+
+msgid "Error trace assignments"
+msgstr "Присваивания трассы ошибок"
+
+msgid "Added by the verifier description of error locations"
+msgstr "Добавленные системой верификации описания меток ошибок"
+
+msgid "Full error trace"
+msgstr "Полная трасса ошибки"
+
+msgid "First converted trace is included into the second"
+msgstr "Первая трасса включается во вторую"
+
+msgid "All elements of the first converted trace are included into the second"
+msgstr "Все элементы первой трассы включаются во вторую"
