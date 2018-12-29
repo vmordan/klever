@@ -88,7 +88,7 @@ def get_or_convert_error_trace(unsafe, conversion_function: str) -> list:
         with ErrorTraceConvertionCache.objects.filter(
                 unsafe=report_unsafe, function=conversion_function).last().converted.file as fp:
             converted_error_trace = fp.read().decode('utf8')
-    except ObjectDoesNotExist:
+    except:
         parsed_trace = json.loads(
             ArchiveFileContent(report_unsafe, 'error_trace', ERROR_TRACE_FILE).content.decode('utf8'))
         converted_error_trace = __convert_error_trace(parsed_trace, conversion_function)
