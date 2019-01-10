@@ -173,8 +173,8 @@
         <div class="column">
             <h3>{% trans 'Consumed resources' %}</h3>
             <table class="ui celled selectable compact purple table striped">
-                <thead>
-                <tr bgcolor="#d3d3d3" onclick="show_resource_table_body()" title="{% trans 'Show/Hide' %}">
+                <thead style="background-color:lightgray;">
+                <tr onclick="show_resource_table_body()" title="{% trans 'Show/Hide' %}" style="cursor:pointer;">
                     <td>{% trans 'Component' %}</td>
                     <td class="center aligned">{% trans 'Instances' %}</td>
                     <td class="center aligned">{% trans 'CPU time' %}</td>
@@ -182,7 +182,6 @@
                     <td class="center aligned">{% trans 'Wall time' %}</td>
                 </tr>
                 </thead>
-                <div class="content">
                 <tbody id="resource_table_body" hidden>
                     {% for res_data in reportdata.data.resources %}
                         {% if reportdata.report.component.name != res_data.component %}
@@ -196,7 +195,6 @@
                         {% endif %}
                     {% endfor %}
                 </tbody>
-                </div>
                 <tfoot style="background-color:lightgray;">
                 {% for res_data in reportdata.data.resources %}
                     <tr>
