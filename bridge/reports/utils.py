@@ -274,7 +274,7 @@ class SafesTable:
                 elif col == 'tags':
                     if 'tags' in safes[rep_id] and safes[rep_id]['tags']:
                         tags_numbers = Counter(safes[rep_id]['tags'])
-                        val = ', '.join([
+                        val = '; '.join([
                             '{0} ({1})'.format(t, tags_numbers[t]) if tags_numbers[t] > 1 else t
                             for t in sorted(tags_numbers)
                         ])
@@ -387,9 +387,7 @@ class UnsafesTable:
             ordered_ids.append(unsafe_data['id'])
             unsafes[unsafe_data['id']] = unsafe_data
             if unsafe_data.get('tags'):
-                tags_numbers = Counter(unsafe_data['tags'])
-                unsafe_data['tags'] = ', '.join(['{0} ({1})'.format(t, tags_numbers[t])
-                                                 for t in sorted(unsafe_data['tags'])])
+                unsafe_data['tags'] = '; '.join(sorted(unsafe_data['tags']))
             if 'marks_number' in unsafe_data and unsafe_data['marks_number'] is None:
                 unsafe_data['marks_number'] = 0
             if 'confirmed' in unsafe_data and unsafe_data['confirmed'] is None:
@@ -429,8 +427,8 @@ class UnsafesTable:
                             break
                     color = UNSAFE_COLOR[unsafes[rep_id]['verdict']]
                 elif col == 'tags':
-                    if 'tags' in unsafes and unsafes[rep_id]['tags']:
-                        val = ', '.join(unsafes[rep_id]['tags'])
+                    if 'tags' in unsafes[rep_id] and unsafes[rep_id]['tags']:
+                        val = unsafes[rep_id]['tags']
                 elif col == 'verifiers:cpu':
                     val = get_user_time(self.user, unsafes[rep_id]['cpu_time'])
                 elif col == 'verifiers:wall':
