@@ -209,8 +209,12 @@ class LeavesQuery:
 
         # Filter
         operation = '{0} = %s'
-        if self.kwargs.get('tag') is not None:
-            args = [self.kwargs['tag'].id]
+        tag = self.kwargs.get('tag')
+        if tag is not None:
+            if isinstance(tag, UnsafeTag) or isinstance(tag, SafeTag):
+                args = [tag.id]
+            else:
+                return
         elif 'tags' in self.view:
             args = self.__get_tags(self.view['tags'][0])
             if len(args) > 1:
