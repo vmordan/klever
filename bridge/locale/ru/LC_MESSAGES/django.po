@@ -3059,3 +3059,37 @@ msgstr "Первая трасса включается во вторую"
 
 msgid "All elements of the first converted trace are included into the second"
 msgstr "Все элементы первой трассы включаются во вторую"
+
+msgid "Similarity threshold"
+msgstr "Порог похожести"
+
+msgid "Details"
+msgstr "Подробнее"
+
+msgid "Show list"
+msgstr "Показать список"
+
+msgid "Show tags"
+msgstr "Показать теги"
+
+msgid "Show problems"
+msgstr "Показать проблемы"
+
+msgid "Show/Hide"
+msgstr "Показать/спрятать"
+
+msgid "Without tags"
+msgstr "Без тегов"
+
+msgid "element"
+msgstr "элемент"
+
+msgid "elements"
+msgstr "элемента(-ов)"
+
+msgid "There is no proof description for this safe"
+msgstr "Доказательства корректности нет"
+
+msgid "Regular expression"
+msgstr "Регулярное выражение"
+
