@@ -178,14 +178,14 @@ class SafesTable:
             else:
                 self.title = '{0}: {1}'.format(_("Safes"), verdict_title)
             kwargs['verdict'] = data['verdict']
-        elif 'tag' in data:
+        if 'tag' in data:
             try:
                 tag = SafeTag.objects.get(id=data['tag'])
             except ObjectDoesNotExist:
                 raise BridgeException(_("The tag was not found"))
             self.title = '{0}: {1}'.format(_("Safes"), tag.tag)
             kwargs['tag'] = tag
-        elif 'attr' in data:
+        if 'attr' in data:
             try:
                 attr = Attr.objects.select_related('name').get(id=data['attr'])
             except ObjectDoesNotExist:
@@ -328,14 +328,14 @@ class UnsafesTable:
             else:
                 self.title = '{0}: {1}'.format(_("Unsafes"), verdict_title)
             kwargs['verdict'] = data['verdict']
-        elif 'tag' in data:
+        if 'tag' in data:
             try:
                 tag = UnsafeTag.objects.get(id=data['tag'])
             except ObjectDoesNotExist:
                 raise BridgeException(_("The tag was not found"))
             self.title = '{0}: {1}'.format(_("Unsafes"), tag.tag)
             kwargs['tag'] = tag
-        elif 'attr' in data:
+        if 'attr' in data:
             try:
                 attr = Attr.objects.select_related('name').get(id=data['attr'])
             except ObjectDoesNotExist:
@@ -484,7 +484,7 @@ class UnknownsTable:
                     raise BridgeException(_("The problem was not found"))
                 self.title = '{0}: {1}'.format(_("Unknowns"), problem.name)
                 kwargs['problem'] = problem
-        elif 'attr' in data:
+        if 'attr' in data:
             try:
                 attr = Attr.objects.select_related('name').get(id=data['attr'])
             except ObjectDoesNotExist:
