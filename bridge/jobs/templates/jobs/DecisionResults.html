@@ -24,7 +24,7 @@
         {% if reportdata.totals.unsafes > 0 %}
         <div class="column">
             <h4 class="header ui red">
-                <a href="{% url 'reports:unsafes' reportdata.report.id %}" class="ui red button fluid" style="font-size:18px" title="{% trans 'Show list' %}">
+                <a href="{% url 'reports:unsafes' reportdata.report.id %}" class="ui red button fluid big" title="{% trans 'Show list' %}">
                     {% trans 'Unsafes' %}: {{ reportdata.totals.unsafes }}
                 </a>
             </h4>
@@ -38,11 +38,28 @@
                         <div class="ui list">
                             {% for v in reportdata.data.unsafes %}
                                 <div class="item red">
-                                    <i class="pointing right mini icon"></i>
+                                    {% if v.tags %}
+                                    <i class="plus circle icon" title="{% trans 'Show tags' %}" id="icon_unsafe_tags_{{ v.id }}" onclick="switch_report_tags({{ v.id }}, 'unsafe')" style="cursor:pointer;"></i>
+                                    {% else %}
+                                    <i class="arrow circle right icon"></i>
+                                    {% endif %}
                                     <div class="content">
-                                        <span{% if v.color %} style="color:{{ v.color }};"{% endif %}>
-                                        {% if v.href.0 %}<a class="{{ v.style }}" href="{{ v.href.0 }}">
-                                        {{ v.title }}: {{ v.value.0 }}</a>{% endif %}
+                                        <span {% if v.color %} style="color:{{ v.color }};"{% endif %}>
+                                            {% if v.href %}<a class="{{ v.style }}" href="{{ v.href }}">{{ v.title }}: {{ v.value }}</a>{% endif %}
+                                            {% if v.tags %}
+                                            <div id="detailed_unsafe_tags_{{ v.id }}" class="ui list" hidden>
+                                            {% for tag_desc in v.tags %}
+                                                <div class="item" style="padding-left: {{ tag_desc.padding }}px;">
+                                                    <i class="tag tiny icon"></i>
+                                                    <div class="content">
+                                                        <span {% if tag_desc.desc != '' %} class="tag-description-popup" data-variation="very wide" data-content="{{ tag_desc.desc }}"{% endif %}>
+                                                            <a class="{{ v.style }}" href="{{ tag_desc.href }}">{{ tag_desc.name }}: {{ tag_desc.number }}</a>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                            </div>
+                                            {% endif %}
                                         </span>
                                     </div>
                                 </div>
@@ -52,34 +69,15 @@
                     </div>
                 </div>
             </div>
-            {% if reportdata.data.tags_unsafe|length %}
-            <div class="ui styled accordion">
-                <div class="title">
-                    <i class="dropdown icon"></i>{% trans 'Tags' %}
-                </div>
-                <div class="content">
-                    <div style="overflow-x:auto;">
-                        <div class="ui list">
-                            {% for t in reportdata.data.tags_unsafe %}
-                                <div class="item" style="padding-left: {{ t.padding }}px;">
-                                    <i class="tag tiny red icon"></i>
-                                    <div class="content">
-                                        <span{% if t.description != '' %} id="tag_description_id_{{ t.id }}" class="tag-description-popup" data-variation="very wide" data-content="{{ t.description }}"{% endif %}><a class="red-pale-link" href="{{ t.href }}">{{ t.name }}: {{ t.number }}</a></span>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
         </div>
         {% endif %}
 
         {% if reportdata.totals.safes > 0 %}
         <div class="column">
             <h4 class="header ui green">
-                <a href="{% url 'reports:safes' reportdata.report.id %}" class="ui green button fluid" style="font-size:18px">{% trans 'Safes' %}: {{ reportdata.totals.safes }}</a>
+                <a href="{% url 'reports:safes' reportdata.report.id %}" class="ui green button fluid big" title="{% trans 'Show list' %}">
+                    {% trans 'Safes' %}: {{ reportdata.totals.safes }}
+                </a>
             </h4>
 
             <div class="ui styled accordion">
@@ -92,10 +90,29 @@
                         <div class="ui list">
                             {% for v in reportdata.data.safes %}
                                 <div class="item">
-                                    <i class="pointing right mini icon"></i>
+                                    {% if v.tags %}
+                                    <i class="plus circle icon" title="{% trans 'Show tags' %}" id="icon_safe_tags_{{ v.id }}" onclick="switch_report_tags({{ v.id }}, 'safe')" style="cursor:pointer;"></i>
+                                    {% else %}
+                                    <i class="arrow circle right icon"></i>
+                                    {% endif %}
                                     <div class="content">
-                                        {% if v.href.0 %}<a class="{{ v.style }}" href="{{ v.href.0 }}">
-                                        {{ v.title }}: {{ v.value.0 }}</a>{% endif %}
+                                        <span {% if v.color %} style="color:{{ v.color }};"{% endif %}>
+                                            {% if v.href %}<a class="{{ v.style }}" href="{{ v.href }}">{{ v.title }}: {{ v.value }}</a>{% endif %}
+                                            {% if v.tags %}
+                                            <div id="detailed_safe_tags_{{ v.id }}" class="ui list" hidden>
+                                            {% for tag_desc in v.tags %}
+                                                <div class="item" style="padding-left: {{ tag_desc.padding }}px;">
+                                                    <i class="tag tiny icon"></i>
+                                                    <div class="content">
+                                                        <span {% if tag_desc.desc != '' %} class="tag-description-popup" data-variation="very wide" data-content="{{ tag_desc.desc }}"{% endif %}>
+                                                            <a class="{{ v.style }}" href="{{ tag_desc.href }}">{{ tag_desc.name }}: {{ tag_desc.number }}</a>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </span>
                                     </div>
                                 </div>
                             {% endfor %}
@@ -104,33 +121,16 @@
                     </div>
                 </div>
             </div>
-            {% if reportdata.data.tags_safe|length %}
-            <div class="ui styled accordion">
-                <div class="title">
-                    <i class="dropdown icon"></i>{% trans 'Tags' %}
-                </div>
-                <div class="content">
-                    <div style="overflow-x:auto;">
-                        <div class="ui list">
-                            {% for t in reportdata.data.tags_safe %}
-                                <div class="item" style="padding-left: {{ t.padding }}px;">
-                                    <i class="tag green icon"></i>
-                                    <div class="content">
-                                        <span{% if t.description != '' %} id="tag_description_id_{{ t.id }}" class="tag-description-popup" data-variation="very wide" data-content="{{ t.description }}"{% endif %}><a href="{{ t.href }}" class="green-link">{{ t.name }}: {{ t.number }}</a></span>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
         </div>
         {% endif %}
 
         {% if reportdata.totals.unknowns > 0 %}
         <div class="column">
-            <h4 class="header ui orange"><a href="{% url 'reports:unknowns' reportdata.report.id %}" class="ui orange button fluid" style="font-size:18px">{% trans 'Unknowns' %}: {{ reportdata.totals.unknowns }}</a></h4>
+            <h4 class="header ui orange">
+                <a href="{% url 'reports:unknowns' reportdata.report.id %}" class="ui orange button fluid big" title="{% trans 'Show list' %}">
+                    {% trans 'Unknowns' %}: {{ reportdata.totals.unknowns }}
+                </a>
+            </h4>
             {% if reportdata.data.unknowns|length %}
             <div class="ui styled accordion">
                 <div class="title">
@@ -141,15 +141,15 @@
                         <div class="ui small list">
                             {% for comp in reportdata.data.unknowns %}
                                 <div class="item">
-                                    <i class="cube mini icon"></i>
+                                    <i class="plus circle icon" title="{% trans 'Show problems' %}" id="icon_unknown_tags_{{ comp.component }}" onclick="switch_report_tags('{{ comp.component }}', 'unknown')" style="cursor:pointer;"></i>
                                     <div class="content">{% for probl in comp.problems %}{% if probl.problem == 'total' %} <a href="{{ probl.href }}" class="orange-link">{{ comp.component }}: {{ probl.num }}</a>{% endif %}{% endfor %}</div>
                                 </div>
                                 <div class="item">
-                                    <div class="ui list">
+                                    <div id="detailed_unknown_tags_{{ comp.component }}" class="ui list" hidden>
                                         {% for probl in comp.problems %}
                                             {% if probl.problem != 'total' %}
                                                 <div class="item" style="margin-left: 20px;">
-                                                    <i class="pointing right mini icon"></i>
+                                                    <i class="tag tiny icon"></i>
                                                     <div class="content"><a href="{{ probl.href }}" class="orange-link">{{ probl.problem }}: {{ probl.num }}</a></div>
                                                 </div>
                                             {% endif %}

@@ -15,18 +15,17 @@
 # limitations under the License.
 #
 
+import operator
+
 from django.db.models import Q, Count, Case, When, BooleanField, Value
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
-from bridge.vars import SAFE_VERDICTS, UNSAFE_VERDICTS, ASSOCIATION_TYPE
 from bridge.utils import logger, BridgeException
-
-from reports.models import ReportAttr, ComponentInstances, ReportUnknown
-from marks.models import MarkUnknownReport
-
+from bridge.vars import SAFE_VERDICTS, UNSAFE_VERDICTS, ASSOCIATION_TYPE
 from jobs.utils import SAFES, UNSAFES, TITLES, get_resource_data
-
+from marks.models import MarkUnknownReport
+from reports.models import ReportAttr, ComponentInstances, ReportUnknown
 
 COLORS = {
     'red': '#C70646',
@@ -57,8 +56,6 @@ class ViewJobData:
             'unsafes': self.__unsafes_info,
             'unknowns': self.__unknowns_info,
             'resources': self.__resource_info,
-            'tags_safe': self.__safe_tags_info,
-            'tags_unsafe': self.__unsafe_tags_info,
             'safes_attr_stat': self.__safes_attrs_statistic,
             'unsafes_attr_stat': self.__unsafes_attrs_statistic,
             'unknowns_attr_stat': self.__unknowns_attrs_statistic
@@ -247,20 +244,15 @@ class ViewJobData:
 
     def __safes_info(self):
         safes_numbers = {}
-        for verdict, confirmed, total in self.report.leaves.exclude(safe=None).values('safe__verdict').annotate(
-                total=Count('id'), confirmed=Count(Case(When(safe__has_confirmed=True, then=1)))
-        ).values_list('safe__verdict', 'confirmed', 'total'):
-            href = [None, None]
+        tags = self.__obtain_tags('safe')
+        for verdict, total in self.report.leaves.exclude(safe=None).values('safe__verdict').annotate(
+                total=Count('id')
+        ).values_list('safe__verdict', 'total'):
+            href = None
             if total > 0:
-                href[1] = '%s?verdict=%s' % (reverse('reports:safes', args=[self.report.pk]), verdict)
-            if confirmed > 0:
-                href[0] = '%s?verdict=%s&confirmed=1' % (reverse('reports:safes', args=[self.report.pk]), verdict)
+                href = '%s?verdict=%s' % (reverse('reports:safes', args=[self.report.pk]), verdict)
 
-            if 'hidden' in self.view and 'confirmed_marks' in self.view['hidden']:
-                value = [total]
-                del href[0]
-            else:
-                value = [confirmed, total]
+            value = total
 
             color = None
             safe_name = 'safe:'
@@ -284,17 +276,22 @@ class ViewJobData:
             elif verdict == SAFE_VERDICTS[4][0]:
                 safe_name += SAFES[4]
                 style = 'black-link'
-                value = [total]
-                if len(href) == 2:
-                    del href[0]
+
+            if verdict in tags:
+                if not verdict == SAFE_VERDICTS[4][0]:
+                    self.postprocess_tags(tags, verdict, href)
+                else:
+                    del tags[verdict]
 
             if total > 0:
                 safes_numbers[safe_name] = {
+                    'id': verdict,
                     'title': TITLES[safe_name],
                     'value': value,
                     'color': color,
                     'href': href,
-                    'style': style
+                    'style': style,
+                    'tags': tags.get(verdict, None)
                 }
 
         safes_data = []
@@ -304,22 +301,62 @@ class ViewJobData:
                 safes_data.append(safes_numbers[safe_name])
         return safes_data
 
+    def __sort_tree(self, parent_id, padding, raw_data: dict):
+        children = []
+        if parent_id is not None:
+            parent = raw_data[parent_id]
+            parent['padding'] = padding * 13
+            children.append(parent)
+        for tag_id, tag_desc in sorted(raw_data.items(), key=operator.itemgetter(0)):
+            if tag_desc['parent'] == parent_id:
+                children.extend(self.__sort_tree(tag_id, padding + 1, raw_data))
+        return children
+
+    def __obtain_tags(self, leaf_type: str) -> dict:
+        tags = {}
+        if leaf_type == 'unsafe':
+            leaves = self.report.leaves.exclude(unsafe=None)
+        elif leaf_type == 'safe':
+            leaves = self.report.leaves.exclude(safe=None)
+        else:
+            return {}
+        for leaf in leaves.values(leaf_type + '__verdict', leaf_type + '__tags__tag', leaf_type + '__tags__tag__tag',
+                                  leaf_type + '__tags__tag__description', leaf_type + '__tags__tag__parent_id'):
+            verdict_id = leaf[leaf_type + '__verdict']
+            tag_id = leaf[leaf_type + '__tags__tag']
+            if verdict_id not in tags:
+                tags[verdict_id] = {}
+            if not tag_id:
+                tag_id = -1
+                leaf[leaf_type + '__tags__tag__description'] = ''
+                leaf[leaf_type + '__tags__tag__tag'] = _('Without tags')
+
+            if tag_id not in tags[verdict_id].keys():
+                tags[verdict_id][tag_id] = {'number': 1, 'name': leaf[leaf_type + '__tags__tag__tag'],
+                                            'desc': leaf[leaf_type + '__tags__tag__description'],
+                                            'parent': leaf[leaf_type + '__tags__tag__parent_id']}
+            else:
+                tags[verdict_id][tag_id]['number'] += 1
+        return tags
+
+    def postprocess_tags(self, tags: dict, verdict: str, href: str):
+        for tag_id, tag_desc in tags[verdict].items():
+            tag_desc['href'] = "{}&tag={}".format(href, tag_id)
+        tags[verdict] = self.__sort_tree(None, -1, tags[verdict])
+
     def __unsafes_info(self):
         unsafes_numbers = {}
-        for verdict, confirmed, total in self.report.leaves.exclude(unsafe=None).values('unsafe__verdict').annotate(
-                total=Count('id'), confirmed=Count(Case(When(unsafe__has_confirmed=True, then=1)))
-        ).values_list('unsafe__verdict', 'confirmed', 'total'):
-            href = [None, None]
-            if total > 0:
-                href[1] = '%s?verdict=%s' % (reverse('reports:unsafes', args=[self.report.pk]), verdict)
-            if confirmed > 0:
-                href[0] = '%s?verdict=%s&confirmed=1' % (reverse('reports:unsafes', args=[self.report.pk]), verdict)
 
-            if 'hidden' in self.view and 'confirmed_marks' in self.view['hidden']:
-                value = [total]
-                del href[0]
-            else:
-                value = [confirmed, total]
+        tags = self.__obtain_tags('unsafe')
+
+        for verdict, total in self.report.leaves.exclude(unsafe=None).values('unsafe__verdict').annotate(
+                total=Count('id')
+        ).values_list('unsafe__verdict', 'total'):
+            href = None
+            if total > 0:
+                href = '%s?verdict=%s' % (reverse('reports:unsafes', args=[self.report.pk]), verdict)
+
+            value = total
 
             color = None
             unsafe_name = 'unsafe:'
@@ -347,17 +384,22 @@ class ViewJobData:
             elif verdict == UNSAFE_VERDICTS[5][0]:
                 unsafe_name += UNSAFES[5]
                 style = 'red-link'
-                value = [total]
-                if len(href) == 2:
-                    del href[0]
+
+            if verdict in tags:
+                if not verdict == UNSAFE_VERDICTS[5][0]:
+                    self.postprocess_tags(tags, verdict, href)
+                else:
+                    del tags[verdict]
 
             if total > 0:
                 unsafes_numbers[unsafe_name] = {
+                    'id': verdict,
                     'title': TITLES[unsafe_name],
                     'value': value,
                     'color': color,
                     'href': href,
-                    'style': style
+                    'style': style,
+                    'tags': tags.get(verdict, None)
                 }
         unsafes_data = []
         for unsafe_name in UNSAFES:

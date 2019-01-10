@@ -157,6 +157,7 @@ class SafesTable:
         self.view = view
         self._kwargs = self.__get_kwargs(report, data)
         self.parents = get_parents(report)
+        self.report = report
 
         self.verdicts = SAFE_VERDICTS
 
@@ -179,12 +180,17 @@ class SafesTable:
                 self.title = '{0}: {1}'.format(_("Safes"), verdict_title)
             kwargs['verdict'] = data['verdict']
         if 'tag' in data:
-            try:
-                tag = SafeTag.objects.get(id=data['tag'])
-            except ObjectDoesNotExist:
-                raise BridgeException(_("The tag was not found"))
-            self.title = '{0}: {1}'.format(_("Safes"), tag.tag)
-            kwargs['tag'] = tag
+            tag_id = data['tag']
+            if tag_id == '-1':
+                self.title = '{0}: {1}'.format(_("Safes"), _("Without tags"))
+                kwargs['tag'] = -1
+            else:
+                try:
+                    tag = SafeTag.objects.get(id=data['tag'])
+                except ObjectDoesNotExist:
+                    raise BridgeException(_("The tag was not found"))
+                self.title = '{0}: {1}'.format(_("Safes"), tag.tag)
+                kwargs['tag'] = tag
         if 'attr' in data:
             try:
                 attr = Attr.objects.select_related('name').get(id=data['attr'])
@@ -239,6 +245,14 @@ class SafesTable:
         for safe_data in objects:
             ordered_ids.append(safe_data['id'])
             safes[safe_data['id']] = safe_data
+
+        if 'tag' in self._kwargs and self._kwargs['tag'] == -1:
+            new_ids = []
+            for identifier in list(self.report.leaves.exclude(safe=None).filter(
+                    safe__tags__tag=None, safe__id__in=ordered_ids).order_by('safe__id').
+                                           values_list("safe__id")):
+                new_ids.extend(identifier)
+            ordered_ids = new_ids
 
         attributes = {}
         for r_id, a_name, a_value in ReportAttr.objects.filter(report_id__in=ordered_ids).order_by('id')\
@@ -306,6 +320,7 @@ class UnsafesTable:
         self._kwargs = self.__get_kwargs(report, data)
         self.parents = get_parents(report)
         self.page = None
+        self.report = report
 
         self.selected_columns = self.__selected()
         self.available_columns = self.__available()
@@ -329,12 +344,17 @@ class UnsafesTable:
                 self.title = '{0}: {1}'.format(_("Unsafes"), verdict_title)
             kwargs['verdict'] = data['verdict']
         if 'tag' in data:
-            try:
-                tag = UnsafeTag.objects.get(id=data['tag'])
-            except ObjectDoesNotExist:
-                raise BridgeException(_("The tag was not found"))
-            self.title = '{0}: {1}'.format(_("Unsafes"), tag.tag)
-            kwargs['tag'] = tag
+            tag_id = data['tag']
+            if tag_id == '-1':
+                self.title = '{0}: {1}'.format(_("Unsafes"), _("Without tags"))
+                kwargs['tag'] = -1
+            else:
+                try:
+                    tag = UnsafeTag.objects.get(id=data['tag'])
+                except ObjectDoesNotExist:
+                    raise BridgeException(_("The tag was not found"))
+                self.title = '{0}: {1}'.format(_("Unsafes"), tag.tag)
+                kwargs['tag'] = tag
         if 'attr' in data:
             try:
                 attr = Attr.objects.select_related('name').get(id=data['attr'])
@@ -392,6 +412,14 @@ class UnsafesTable:
                 unsafe_data['marks_number'] = 0
             if 'confirmed' in unsafe_data and unsafe_data['confirmed'] is None:
                 unsafe_data['confirmed'] = 0
+
+        if 'tag' in self._kwargs and self._kwargs['tag'] == -1:
+            new_ids = []
+            for identifier in list(self.report.leaves.exclude(unsafe=None).filter(
+                    unsafe__tags__tag=None, unsafe__id__in=ordered_ids).order_by('unsafe__id').
+                                           values_list("unsafe__id")):
+                new_ids.extend(identifier)
+            ordered_ids = new_ids
 
         attributes = {}
         for r_id, a_name, a_value in ReportAttr.objects.filter(report_id__in=ordered_ids).order_by('id')\
