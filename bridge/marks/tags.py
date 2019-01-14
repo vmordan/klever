@@ -60,7 +60,7 @@ class TagAccess:
         return self._is_manager or self.__has_edit_access()
 
     def create(self):
-        return self._is_manager or self.__has_child_access()
+        return True
 
     def delete(self):
         return self._is_manager or self.__is_leaf() and self.__has_edit_access()
