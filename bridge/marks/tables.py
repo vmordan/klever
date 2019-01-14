@@ -64,7 +64,7 @@ MARK_TITLES = {
     'ass_type': _('Manually resolve'),
     'automatic': _('Automatic association'),
     'tags': _('Tags'),
-    'buttons': _('Edit'),
+    'buttons': _('Control'),
     'description': _('Description'),
     'total_similarity': _('Total similarity'),
     'identifier': _('Identifier')
@@ -313,7 +313,10 @@ class ReportMarkTable:
                 elif col == 'description' and len(mark_rep.mark.description) > 0:
                     val = mark_rep.mark.description
                 elif col == 'buttons':
-                    val = mark_rep.mark_id
+                    val = _('Edit')
+                    href = '%sedit?report_to_redirect=%s' % (
+                        reverse('marks:mark', args=[self.type, mark_rep.mark_id]), self.report.pk
+                    )
                 elif col == 'change_date':
                     val = mark_rep.mark.change_date
                 elif col == 'author':

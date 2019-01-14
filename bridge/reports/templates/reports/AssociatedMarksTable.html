@@ -33,32 +33,7 @@
                 <tr>
                     {% for v in row_data %}
                         <td>
-                            {% if v.column == 'likes' %}
-                                <div class="ui mini basic buttons">
-                                    <button id="like_association_{{ v.value.0 }}" class="ui green basic icon button {% if v.value.1|length %} like-popup{% endif %}">
-                                        <i class="ui thumbs up icon"></i>{{ v.value.1|length }}
-                                    </button>
-                                    {% if v.value.1|length %}
-                                        <div class="ui popup">
-                                            {% for like in v.value.1 %}
-                                                <span><a href="{% url 'users:show_profile' like.1 %}">{{ like.0 }}</a></span><br>
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                    <button id="dislike_association_{{ v.value.0 }}" class="ui red icon basic right attached button {% if v.value.2|length %} like-popup{% endif %}">
-                                        <i class="ui thumbs down icon"></i>{{ v.value.2|length }}
-                                    </button>
-                                    {% if v.value.2|length %}
-                                        <div class="ui popup">
-                                            {% for dislike in v.value.2 %}
-                                                <span><a href="{% url 'users:show_profile' dislike.1 %}">{{ dislike.0 }}</a></span><br>
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            {% elif v.column == 'buttons' %}
-                                <button id="inline_edit_mark_{{ v.value }}" class="ui blue mini icon button note-popup" data-position="top right" data-content="{% trans 'Edit' %}"><i class="edit icon"></i></button>
-                            {% elif v.column == 'description' %}
+                            {% if v.column == 'description' %}
                                 {{ v.value|safe }}
                             {% elif v.column == 'ass_type' %}
                                 <div class="ui dropdown">
