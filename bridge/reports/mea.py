@@ -8,16 +8,12 @@ import operator
 import re
 from io import BytesIO
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import ugettext as _
 
-from bridge.utils import ArchiveFileContent, BridgeException
-from bridge.utils import file_get_or_create
+from bridge.utils import ArchiveFileContent, BridgeException, file_get_or_create
 from bridge.vars import ERROR_TRACE_FILE
-from marks.models import ErrorTraceConvertionCache, ConvertedTraces
-from marks.models import MarkUnsafe
+from marks.models import ErrorTraceConvertionCache, ConvertedTraces, MarkUnsafe, MarkUnsafeReport
 from reports.models import ReportUnsafe
-
 
 CONVERSION_FUNCTION_CALL_TREE = "call tree"
 CONVERSION_FUNCTION_MODEL_FUNCTIONS = "model functions"
@@ -82,8 +78,14 @@ def get_or_convert_error_trace(unsafe, conversion_function: str) -> list:
         report_unsafe = unsafe
     elif isinstance(unsafe, MarkUnsafe):
         report_unsafe = unsafe.report
+        if not report_unsafe:
+            most_likely_report_id = MarkUnsafeReport.objects.filter(mark__id=unsafe.id).values_list('report')[0][0]
+            report_unsafe = ReportUnsafe.objects.get(id=most_likely_report_id)
     else:
         raise BridgeException("Unknown type of unsafe: {}".format(unsafe))
+
+    if not report_unsafe:
+        raise BridgeException("Cannot obtain unsafe report for this mark")
     try:
         with ErrorTraceConvertionCache.objects.filter(
                 unsafe=report_unsafe, function=conversion_function).last().converted.file as fp:

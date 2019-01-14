@@ -124,10 +124,11 @@ class AssociationChangesView(LoggedCallMixin, Bview.DataViewMixin, DetailView):
             if m:
                 mark_id = m.group(1)
                 mark = MarkUnsafe.objects.get(id=mark_id)
-                component_report = ReportComponent.objects.get(parent=None, root=mark.report.root)
-                trace_id = mark.report.trace_id
-                job_id = mark.report.root.job.id
-                root_report_id = component_report.id
+                if mark.report:
+                    component_report = ReportComponent.objects.get(parent=None, root=mark.report.root)
+                    trace_id = mark.report.trace_id
+                    job_id = mark.report.root.job.id
+                    root_report_id = component_report.id
         view_type_map = {'safe': VIEW_TYPES[16], 'unsafe': VIEW_TYPES[17], 'unknown': VIEW_TYPES[18]}
         return {'TableData': AssociationChangesTable(self.object, self.get_view(view_type_map[self.kwargs['type']])),
                 'job_id': job_id, 'trace_id': trace_id, 'root_report_id': root_report_id}
@@ -183,7 +184,10 @@ class MarkFormView(LoggedCallMixin, DetailView):
                 res.create_mark()
             job_id = None
             if kwargs['type'] == 'unsafe':
-                job_id = res.mark.report.root.job.id
+                try:
+                    job_id = res.mark.report.root.job.id
+                except AttributeError:
+                    job_id = None
             cache_id = MarkChangesTable(self.request.user, res.mark, res.changes, job_id).cache_id
         except BridgeException as e:
             raise BridgeException(str(e), response_type='json')
