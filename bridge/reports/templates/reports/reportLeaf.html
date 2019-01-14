@@ -105,7 +105,7 @@
         </div>
         <div class="twelve wide column">
             {% if MarkTable.can_mark %}
-                <a id="create_light_mark_btn" class="ui red button inverted"><i class="empty star icon"></i> {% trans 'Create default mark' %}</a>
+                <!---<a id="create_light_mark_btn" class="ui red button inverted"><i class="empty star icon"></i> {% trans 'Create default mark' %}</a>-->
                 <a href="{% url 'marks:mark_form' report_type report.pk 'create' %}" class="ui red button"><i class="star icon"></i> {% trans 'Create extended mark' %}</a>
             {% endif %}
         </div>
