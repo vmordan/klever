@@ -3093,3 +3093,11 @@ msgstr "Доказательства корректности нет"
 msgid "Regular expression"
 msgstr "Регулярное выражение"
 
+msgid "Control"
+msgstr "Управление"
+
+msgid "Choose existed tags"
+msgstr "Выбрать существующий тег"
+
+msgid "Create new tag"
+msgstr "Создать новый тег"
