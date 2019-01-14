@@ -241,7 +241,14 @@ $(document).ready(function () {
                     err_notify(data.error);
                     return false;
                 }
-                window.location.replace('');
+                if (window.location.toString().includes('tags')) {
+                    window.location.replace('');
+                } else {
+                    create_tag_modal.modal('hide');
+                    clear_modal();
+                    $('#selected_tags').append($('<span>', {text: data.tag}));
+                    update_tags();
+                }
             }
         });
     });

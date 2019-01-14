@@ -57,13 +57,9 @@ window.init_popups = function () {
     });
 };
 
-window.activate_tags = function () {
-    drow_connections();
-    init_popups();
-
-    function update_tags(deleted) {
+function update_tags(deleted) {
         $.ajax({
-            url: '/marks/' + $('#tags_type').val() + '/tags_data/',
+            url: '/marks/' + $('#tags_type').text() + '/tags_data/',
             type: 'POST',
             data: {
                 selected_tags: JSON.stringify(get_tags_values()),
@@ -84,11 +80,16 @@ window.activate_tags = function () {
                 var tags_list = $('#tag_list');
                 tags_list.empty();
                 $.each(JSON.parse(data['available']), function (i, value) {
-                    $('#tag_list').append($('<option>', {text: value[1], value: value[0]}));
+                    $('#tag_list').append($('<option>', {text: value[1], value: value[0], id: "tag_id_" + value[0]}));
                 });
             }
         });
     }
+
+
+window.activate_tags = function () {
+    drow_connections();
+    init_popups();
 
     $('#tag_list').dropdown({
         useLabels: false,

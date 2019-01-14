@@ -27,12 +27,15 @@
             <span>{{ t_id }}</span>
         {% endfor %}
     </div>
-    <label for="tag_list"></label>
-    <select id="tag_list" class="ui search selection dropdown fluid" multiple>
+    <label for="tag_list">{% trans 'Choose existed tags' %}:&nbsp;</label>
+    <select id="tag_list" class="ui search selection dropdown" multiple>
         {% for tag in available %}
-            <option value="{{ tag.0 }}">{{ tag.1 }}</option>
+            <option value="{{ tag.0 }}" id="tag_id_{{ tag.0 }}">{{ tag.1 }}</option>
         {% endfor %}
-    </select>
+    </select> {% trans 'or' %}
+    <button id="create_root_tag" class="ui pink basic button"><i class="ui add icon"></i>{% trans 'Create new tag' %}</button>
 {% endif %}
 <span id="tag_label_color" hidden>{% if markdata.type == 'safe' %}green{% elif markdata.type == 'unsafe' %}orange{% endif %}</span>
 <span id="error__no_results" hidden>{% trans 'No results found' %}</span>
+
+{% include 'marks/TagsControls.html' %}

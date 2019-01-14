@@ -40,8 +40,6 @@
         {% if can_create %}<button id="create_root_tag" class="ui tiny basic blue button"><i class="ui add icon"></i>{% trans 'Create new root tag' %}</button>{% endif %}
 
         <br><br>
-        <p style="margin-left: 10px"><i class="ui large gift purple icon"></i> <span style="color: #808080" class="italic">- {% trans 'Populated tags' %}</span></p>
-
         <table>
             {% for row in tags %}
                 <tr>
@@ -60,12 +58,12 @@
     </div>
 
     <span id="tags_type" hidden>{{ tags_type }}</span>
+    {% include 'marks/TagsControls.html' %}
     <div class="popups">
         {% for row in tags %}
             {% for cell in row %}
                 {% if cell|value_type == "<class 'marks.tags.TagData'>" %}
                     <div id="tag_popup_{{ cell.id }}" class="ui popup" style="min-width: 250px;">
-                        {% if cell.populated %}<i class="ui tiny gift purple icon"></i>{% endif %}
                         {% if cell.can_edit %}
                             <span class="icon-text" style="display: inline">&nbsp;</span>
                         {% endif %}
@@ -131,45 +129,6 @@
             </div>
         </div>
     </div>
-    <div id="create_tag_modal" class="ui dinamic modal">
-        <div class="ui header">{% trans 'Create tag' %}</div>
-        <div class="content">
-            <div class="ui form">
-                <div class="ui grid">
-                    <div class="eight wide column">
-                        <label class="bold-text" for="create_tag_name">{% trans 'Name' %}</label>
-                        <div class="ui input fluid">
-                            <input id="create_tag_name" type="text" maxlength="32">
-                        </div>
-                    </div>
-                    <div class="eight wide column">
-                        <label class="bold-text" for="create_tag_parent">{% trans 'Parent' %}</label>
-                        <select id="create_tag_parent" class="ui search selection dropdown fluid">
-                            <option value="0">{% trans 'Root' %}</option>
-                        </select>
-                    </div>
-                </div>
-                <br>
-                <label class="bold-text" for="create_tag_description">{% trans 'Description' %}</label>
-                <textarea id="create_tag_description" rows="7" placeholder="{% trans 'Description' %}" style="resize:none"></textarea>
-                {% if user.extended.role == '2' %}
-                    <br><br>
-                    <div id="create_tag_user_access_selection"></div>
-                {% endif %}
-                <br><br>
-            </div>
-        </div>
-        <div class="actions">
-            <div class="ui grid">
-                <div class="eight wide column left aligned">
-                    <button id="confirm_create_tag" type="button" class="ui green button small">{% trans 'Create' %}</button>
-                </div>
-                <div class="eight wide column right aligned">
-                    <button id="cancel_create_tag" type="button" class="ui blue button small">{% trans 'Cancel' %}</button>
-                </div>
-            </div>
-        </div>
-    </div>
     <div id="remove_tag_modal" class="ui basic modal">
         <div class="ui icon header">
             <i class="warning sign icon"></i>
@@ -204,6 +163,4 @@
             <button id="upload_tags_cancel" type="button" class="ui blue button">{% trans 'Cancel' %}</button>
         </div>
     </div>
-    <span id="label_for_user_access_1" hidden>{% trans 'Users can modify' %}</span>
-    <span id="label_for_user_access_2" hidden>{% trans 'Users can create children' %}</span>
 {% endblock %}

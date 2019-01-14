@@ -27,6 +27,7 @@
     <link href="{% static 'marks/css/mark.css' %}" rel="stylesheet">
     <link href="{% static 'marks/css/tagsmap.css' %}" rel="stylesheet">
     <script type="text/javascript" src="{% static 'marks/js/tags.js' %}"></script>
+    <script type="text/javascript" src="{% static 'marks/js/tagsmap.js' %}"></script>
     <script type="text/javascript" src="{% static 'marks/js/markForm.js' %}"></script>
 
     {% if markdata.type == 'unsafe' %}<link href="{% static 'reports/css/ETV.css' %}" rel="stylesheet">{% endif %}
@@ -37,6 +38,7 @@
 {% endblock %}
 
 {% block body_block %}
+<span id="tags_type" hidden>{{ markdata.type }}</span>
     <div class="ui grid">
         <div class="eight wide column">
             {% if markdata.type == 'unknown' %}
@@ -115,17 +117,10 @@
             {# Tags #}
             {% if markdata.type != 'unknown' %}
                 <div class="ui pink segment">
-                    <h4 class="header ui pink">{% trans 'Tags' %} ({% trans 'choose required tag from' %}
-                        {% if markdata.type == 'unsafe' %}
-                            <a href="{% url 'marks:tags' 'unsafe' %}">{% trans 'unsafe tags tree' %}</a>)
-                        {% else %}
-                            <a href="{% url 'marks:tags' 'safe' %}">{% trans 'safe tags tree' %}</a>)
-                        {% endif %}
-                    </h4>
+                    <h4 class="header ui pink">{% trans 'Tags' %}</h4>
                     {% include 'marks/MarkTags.html' with tags=markdata.tags.table available=markdata.tags.available selected=markdata.tags.selected %}
                 </div>
             {% endif %}
-
 
             {# Description #}
             <div class="ui blue segment">
@@ -240,10 +235,6 @@
             {% endif %}
         </div>
     </div>
-
-    {% if etv %}
-        {% include 'reports/UnsafeContent.html' %}
-    {% endif %}
 
     <input id="obj_type" type="hidden" value="{{ markdata.type }}">
     <input id="obj_id" type="hidden" value="{% if mark %}{{ mark.id }}{% elif report %}{{ report.id }}{% else %}0{% endif %}">

@@ -428,8 +428,8 @@ class SaveTagView(LoggedCallMixin, Bview.JsonView):
     unparallel = [UnsafeTag, SafeTag]
 
     def get_context_data(self, **kwargs):
-        SaveTag(self.request.user, self.request.POST)
-        return {}
+        tag = SaveTag(self.request.user, self.request.POST)
+        return {'tag': tag.tag.id}
 
 
 @method_decorator(login_required, name='dispatch')
