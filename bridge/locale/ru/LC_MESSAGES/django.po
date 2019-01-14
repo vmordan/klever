@@ -3101,3 +3101,9 @@ msgstr "Выбрать существующий тег"
 
 msgid "Create new tag"
 msgstr "Создать новый тег"
+
+msgid "in percents"
+msgstr "в процентах"
+
+msgid "Jaccard index of threads sets"
+msgstr "Мера Жаккара для множеств потоков"

@@ -201,8 +201,10 @@
 
             {% if markdata.type == 'unsafe' %}
                 <div class="ui yellow segment">
-                    <h4 class="header ui">{% trans 'Similarity threshold' %}</h4>
-                    <input type="number" id="similarity_threshold" min="1" max="100" placeholder="1" value="1">
+                    <h4 class="header ui" title="{% trans 'Jaccard index of threads sets' %}">
+                        {% trans 'Similarity threshold' %} ({% trans 'in percents' %}, 1% &le; threshold &le; 100%)
+                    </h4>
+                    <input type="number" id="similarity_threshold" min="1" max="100" value="1">
                 </div>
             {% endif %}
 
