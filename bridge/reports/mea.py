@@ -81,6 +81,8 @@ def get_or_convert_error_trace(unsafe, conversion_function: str) -> list:
         if not report_unsafe:
             most_likely_report_id = MarkUnsafeReport.objects.filter(mark__id=unsafe.id).values_list('report')[0][0]
             report_unsafe = ReportUnsafe.objects.get(id=most_likely_report_id)
+            unsafe.report = report_unsafe
+            unsafe.save()
     else:
         raise BridgeException("Unknown type of unsafe: {}".format(unsafe))
 
