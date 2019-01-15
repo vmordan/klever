@@ -140,7 +140,7 @@
                 </div>
             </div>
             {% endif %}
-            {# IMPORTANT #}
+
             {% if markdata.type == 'unsafe' %}
                 <div class="ui red segment">
                     <h4 class="header ui red">{% trans 'Converted error trace' %}</h4>
@@ -149,6 +149,8 @@
                         <textarea id="converted_error_trace" rows="15" style="font-family: monospace" onkeydown="if(event.keyCode===9){var v=this.value,s=this.selectionStart,e=this.selectionEnd;this.value=v.substring(0, s)+'\t'+v.substring(e);this.selectionStart=this.selectionEnd=s+1;return false;}">{{ converted_error_trace }}</textarea>
                     </div>
                 </div>
+            {% else %}
+                <br>
             {% endif %}
 
             <div class="ui action input fluid">

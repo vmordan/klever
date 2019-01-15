@@ -63,12 +63,12 @@
                 </div>
             </div>
             {% if markdata.type == 'unknown' %}
-                <div class="ui purple segment" style="margin-top: 0">
+                <div class="ui purple segment">
                     <div class="ui top left attached purple label">{% trans 'Pattern' %}{% if markdata.unknown_data.3 %} (regexp){% endif %}</div>
                     <div class="filecontent">{{ markdata.unknown_data.0 }}</div>
                 </div>
             {% else %}
-                <div class="ui horizontal segments" style="margin-top: 0">
+                <div class="ui horizontal segments">
                     <div class="ui pink segment">
                         <h4 class="header ui pink">{% trans 'Tags' %}</h4>
                         {% include 'marks/MarkTags.html' with tags=markdata.tags.table available=markdata.tags.available selected=markdata.tags.selected %}
