@@ -156,6 +156,8 @@ class NewMark:
             old_trace = json.loads(fp.read().decode('utf8'))
         if self.edited_error_trace != old_trace:
             do_recalc = True
+        if not (int(last_v.similarity) / 100.0) == self.similarity_threshold:
+            do_recalc = True
 
         markversion = self.__create_version(mark, self.error_trace_id)
 
