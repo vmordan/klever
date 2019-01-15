@@ -163,7 +163,13 @@
                     {% endif %}
                 </tbody>
             </table>
-            <br>
+            {% if similarity %}
+            <div class="ui horizontal segments">
+                <div class="ui violet segment">
+                    <h4 class="header ui violet">{% trans 'Similarity threshold' %}: {{ similarity }}%</h4>
+                </div>
+            </div>
+            {% endif %}
             <h4 class="header ui teal">{% trans 'Associated leaf reports' %}</h4>
             {# View for associated reports #}
             {% if user.extended.role == '2' %}

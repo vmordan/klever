@@ -204,7 +204,7 @@
                     <h4 class="header ui" title="{% trans 'Jaccard index of threads sets' %}">
                         {% trans 'Similarity threshold' %} ({% trans 'in percents' %}, 1% &le; threshold &le; 100%)
                     </h4>
-                    <input type="number" id="similarity_threshold" min="1" max="100" value="1">
+                    <input type="number" id="similarity_threshold" min="1" max="100" value="{{ similarity }}">
                 </div>
             {% endif %}
 

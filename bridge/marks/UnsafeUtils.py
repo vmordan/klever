@@ -216,7 +216,7 @@ class NewMark:
             mark=mark, version=mark.version, status=mark.status, verdict=mark.verdict,
             author=mark.author, change_date=mark.change_date, comment=self._args['comment'],
             error_trace=error_trace, description=mark.description, comparison_function=self.comparison_function,
-            conversion_function=self.conversion_function
+            conversion_function=self.conversion_function, similarity=round(self.similarity_threshold * 100)
         )
         MarkUnsafeTag.objects.bulk_create(
             list(MarkUnsafeTag(tag_id=t_id, mark_version=markversion) for t_id in self._args['tags'])

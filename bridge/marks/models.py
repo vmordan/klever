@@ -171,6 +171,7 @@ class MarkUnsafeHistory(MarkHistory):
     comparison_function = models.CharField(max_length=64, default='')
     conversion_function = models.CharField(max_length=64, default='')
     error_trace = models.ForeignKey(ConvertedTraces, models.CASCADE)
+    similarity = models.PositiveSmallIntegerField(default=1)
 
     class Meta:
         db_table = 'mark_unsafe_history'

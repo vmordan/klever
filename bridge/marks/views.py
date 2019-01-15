@@ -81,7 +81,9 @@ class MarkPage(LoggedCallMixin, Bview.DataViewMixin, DetailView):
         desc = {}
         markdata = MarkData(self.kwargs['type'], mark_version=history_set.first())
         edited_error_trace = None
+        similarity = None
         if self.kwargs['type'] == 'unsafe':
+            similarity = history_set.first().similarity
             for func in COMPARISON_FUNCTIONS:
                 if func['name'] == self.object.comparison_function:
                     desc["comparison"] = (func['desc'])
@@ -102,7 +104,8 @@ class MarkPage(LoggedCallMixin, Bview.DataViewMixin, DetailView):
             'reports': MarkReportsTable(self.request.user, self.object,
                                         self.get_view(view_type_map[self.kwargs['type']]),
                                         page=self.request.GET.get('page', 1)),
-            'desc': desc
+            'desc': desc,
+            'similarity': similarity
         }
 
 
@@ -225,6 +228,7 @@ class MarkFormView(LoggedCallMixin, DetailView):
                 raise BridgeException(_('The mark version was not found'))
             context['cancel_url'] = reverse('marks:mark', args=[self.kwargs['type'], self.object.id])
             if self.kwargs['type'] == 'unsafe':
+                context['similarity'] = context['markdata'].mark_version.similarity
                 try:
                     edited_error_trace = error_trace_pretty_print(context['markdata'].error_trace)
                 except:
@@ -254,6 +258,7 @@ class MarkFormView(LoggedCallMixin, DetailView):
                 args=[self.object.trace_id if self.kwargs['type'] == 'unsafe' else self.object.id]
             )
             if self.kwargs['type'] == 'unsafe':
+                context['similarity'] = 1
                 try:
                     conversion_function = context['markdata'].conversion[0]['name']
                     comparison_function = context['markdata'].comparison[0]['name']
