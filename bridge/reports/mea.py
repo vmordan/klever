@@ -79,15 +79,16 @@ def get_or_convert_error_trace(unsafe, conversion_function: str) -> list:
     elif isinstance(unsafe, MarkUnsafe):
         report_unsafe = unsafe.report
         if not report_unsafe:
-            most_likely_report_id = MarkUnsafeReport.objects.filter(mark__id=unsafe.id).values_list('report')[0][0]
-            report_unsafe = ReportUnsafe.objects.get(id=most_likely_report_id)
-            unsafe.report = report_unsafe
-            unsafe.save()
+            most_likely_report_id = MarkUnsafeReport.objects.filter(mark__id=unsafe.id).values_list('report')
+            if most_likely_report_id:
+                report_unsafe = ReportUnsafe.objects.get(id=most_likely_report_id[0][0])
+                unsafe.report = report_unsafe
+                unsafe.save()
     else:
         raise BridgeException("Unknown type of unsafe: {}".format(unsafe))
 
     if not report_unsafe:
-        raise BridgeException("Cannot obtain unsafe report for this mark")
+        raise BridgeException("There is no unsafe report for this mark")
     try:
         with ErrorTraceConvertionCache.objects.filter(
                 unsafe=report_unsafe, function=conversion_function).last().converted.file as fp:
