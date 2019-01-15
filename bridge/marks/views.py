@@ -43,7 +43,8 @@ from marks.models import MarkSafe, MarkUnsafe, MarkUnknown, MarkSafeHistory, Mar
     SafeAssociationLike, UnsafeAssociationLike, UnknownAssociationLike, ReportComponent
 from marks.tables import MarkData, MarkChangesTable, MarkReportsTable, MarksList, AssociationChangesTable
 from marks.tags import GetTagsData, GetParents, SaveTag, TagsInfo, CreateTagsFromFile, TagAccess
-from reports.mea import error_trace_pretty_print, get_or_convert_error_trace, COMPARISON_FUNCTIONS, CONVERSION_FUNCTIONS
+from reports.mea import error_trace_pretty_print, get_or_convert_error_trace, COMPARISON_FUNCTIONS, \
+    CONVERSION_FUNCTIONS, DEFAULT_CONVERSION_FUNCTION, DEFAULT_COMPARISON_FUNCTION
 from reports.models import ReportSafe, ReportUnsafe, ReportUnknown
 from tools.profiling import LoggedCallMixin
 from users.models import User
@@ -307,8 +308,26 @@ class InlineMarkForm(LoggedCallMixin, Bview.JSONResponseMixin, DetailView):
             context['markdata'] = MarkData(self.kwargs['type'], mark_version=self.object)
             if self.kwargs['type'] != 'unknown':
                 selected_tags = list(t_id for t_id, in self.object.tags.values_list('tag_id'))
+            if self.kwargs['type'] == 'unsafe':
+                try:
+                    edited_error_trace = error_trace_pretty_print(context['markdata'].error_trace)
+                except:
+                    converted_error_trace = get_or_convert_error_trace(self.object, self.object.conversion_function)
+                    edited_error_trace = error_trace_pretty_print(converted_error_trace)
+                context['converted_error_trace'] = edited_error_trace
+                context['similarity'] = context['markdata'].mark_version.similarity
+                context['conversion_function'] = self.object.conversion_function
+                context['comparison_function'] = self.object.comparison_function
         else:
             context['markdata'] = MarkData(self.kwargs['type'], report=self.object)
+            if self.kwargs['type'] == 'unsafe':
+                context['similarity'] = 1
+                conversion_function = DEFAULT_CONVERSION_FUNCTION
+                comparison_function = DEFAULT_COMPARISON_FUNCTION
+                converted_error_trace = get_or_convert_error_trace(self.object, conversion_function)
+                context['converted_error_trace'] = error_trace_pretty_print(converted_error_trace)
+                context['conversion_function'] = conversion_function
+                context['comparison_function'] = comparison_function
         if self.kwargs['type'] != 'unknown':
             context['tags'] = TagsInfo(self.kwargs['type'], selected_tags)
         return context

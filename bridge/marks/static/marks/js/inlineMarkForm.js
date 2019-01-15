@@ -41,7 +41,12 @@ function collect_markdata() {
     else {
         mark_data['verdict'] = $("input[name='selected_verdict']:checked").val();
         mark_data['tags'] = get_tags_values();
-        if (obj_type === 'unsafe') mark_data['compare_id'] = $("#compare_function").val();
+    }
+    if (obj_type == 'unsafe') {
+        mark_data['edited_error_trace'] = $('#converted_error_trace').val();
+        mark_data['conversion_function'] = $('#conversion_function').val();
+        mark_data['comparison_function'] = $('#comparison_function').val();
+        mark_data['similarity_threshold'] = $('#similarity_threshold').val();
     }
     return JSON.stringify(mark_data);
 }
@@ -77,6 +82,7 @@ window.get_inline_mark_form = function(container, obj_id, action) {
             $('#close_inline_mark_form').click(function () { $('#inline_mark_form').hide().empty() });
             $('#save_inline_mark_btn').click(save_inline_mark);
         }
+        init_tags();
     });
 };
 

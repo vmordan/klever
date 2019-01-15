@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-$(document).ready(function () {
+function init_tags() {
     drow_connections();
     init_popups();
 
@@ -187,7 +187,7 @@ $(document).ready(function () {
     var create_tag_modal = $('#create_tag_modal'), create_tag_parent = $('#create_tag_parent');
     create_tag_modal.modal({transition: 'drop', autofocus: false, closable: false});
     function create_tag_click(parent_id) {
-        $.post('/marks/tags/' + $('#tags_type').text() + '/get_tag_data/', {}, function (data) {
+        $.post('/marks/tags/' + get_tag_type() + '/get_tag_data/', {}, function (data) {
             if (data.error) {
                 err_notify(data.error);
                 clear_modal();
@@ -230,7 +230,7 @@ $(document).ready(function () {
             type: 'POST',
             data: {
                 name: $('#create_tag_name').val(),
-                tag_type: $('#tags_type').text(),
+                tag_type: get_tag_type(),
                 description: $('#create_tag_description').val(),
                 parent_id: $('#create_tag_parent').val(),
                 action: 'create',
@@ -289,4 +289,8 @@ $(document).ready(function () {
         }
         $('#upload_tags_filename').html(filename_list);
     });
+}
+
+$(document).ready(function () {
+    init_tags();
 });

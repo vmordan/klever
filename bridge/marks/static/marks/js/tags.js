@@ -57,9 +57,17 @@ window.init_popups = function () {
     });
 };
 
+function get_tag_type() {
+    var tag_type = $('#tags_type').text();
+    if (!tag_type) {
+       tag_type = $('#tags_type').val();
+    }
+    return tag_type;
+}
+
 function update_tags(deleted) {
         $.ajax({
-            url: '/marks/' + $('#tags_type').text() + '/tags_data/',
+            url: '/marks/' + get_tag_type() + '/tags_data/',
             type: 'POST',
             data: {
                 selected_tags: JSON.stringify(get_tags_values()),

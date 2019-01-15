@@ -25,7 +25,10 @@
     {% if report_type == 'unsafe' %}<link href="{% static 'reports/css/ETV.css' %}" rel="stylesheet">{% endif %}
     {% if report_type != 'unknown' %}<link href="{% static 'marks/css/tagsmap.css' %}" rel="stylesheet">{% endif %}
     <link href="{% static 'reports/css/reportLeaf.css' %}" rel="stylesheet">
-    {% if report_type != 'unknown' %}<script type="text/javascript" src="{% static 'marks/js/tags.js' %}"></script>{% endif %}
+    {% if report_type != 'unknown' %}
+        <script type="text/javascript" src="{% static 'marks/js/tags.js' %}"></script>
+        <script type="text/javascript" src="{% static 'marks/js/tagsmap.js' %}"></script>
+    {% endif %}
     <script type="text/javascript" src="{% static 'marks/js/inlineMarkForm.js' %}"></script>
     {% if report_type == 'unsafe' %}
         <script type="text/javascript" src="{% static 'reports/js/ETV.js' %}"></script>
@@ -35,6 +38,7 @@
 {% endblock %}
 
 {% block body_block %}
+<input id="tags_type" type="hidden" value="{{ report_type }}">
     <div class="ui grid">
         <div class="nine wide column">
             <a href="{% url 'jobs:job' report.root.job.pk %}" class="ui tiny green button" title="{{ report.root.job.name }}">{% trans 'Back to report' %}</a>
@@ -105,7 +109,7 @@
         </div>
         <div class="twelve wide column">
             {% if MarkTable.can_mark %}
-                <!---<a id="create_light_mark_btn" class="ui red button inverted"><i class="empty star icon"></i> {% trans 'Create default mark' %}</a>-->
+                <a id="create_light_mark_btn" class="ui red button inverted"><i class="empty star icon"></i> {% trans 'Create default mark' %}</a>
                 <a href="{% url 'marks:mark_form' report_type report.pk 'create' %}" class="ui red button"><i class="star icon"></i> {% trans 'Create extended mark' %}</a>
             {% endif %}
         </div>

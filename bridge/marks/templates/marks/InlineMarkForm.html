@@ -86,7 +86,10 @@
         <button id="close_inline_mark_form" class="ui blue button">{% trans 'Cancel' %}</button>
     </div>
     {% if markdata.type == 'unsafe' %}
-        <input id="compare_function" type="hidden" value="{{ markdata.selected_func.id }}">
+        <input id="similarity_threshold" type="hidden" value="{{ similarity }}">
+        <input id="converted_error_trace" type="hidden" value="{{ converted_error_trace }}">
+        <input id="conversion_function" type="hidden" value="{{ conversion_function }}">
+        <input id="comparison_function" type="hidden" value="{{ comparison_function }}">
     {% endif %}
 
     <input id="obj_id" type="hidden" value="{{ obj_id }}">
