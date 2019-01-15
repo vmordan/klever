@@ -3107,3 +3107,6 @@ msgstr "в процентах"
 
 msgid "Jaccard index of threads sets"
 msgstr "Мера Жаккара для множеств потоков"
+
+msgid "Parent components"
+msgstr "Компоненты-родители"
