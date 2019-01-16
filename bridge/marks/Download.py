@@ -28,7 +28,8 @@ import marks.UnknownUtils as UnknownUtils
 import marks.UnsafeUtils as UnsafeUtils
 from bridge.ZipGenerator import ZipStream, CHUNK_SIZE
 from bridge.utils import logger, BridgeException
-from marks.models import MarkSafe, MarkUnsafe, MarkUnknown, SafeTag, UnsafeTag
+from reports.mea import obtain_pretty_error_trace, error_trace_pretty_parse
+from marks.models import MarkSafe, MarkUnsafe, MarkUnknown, SafeTag, UnsafeTag, MarkUnsafeReport, ReportUnsafe
 
 
 class MarkArchiveGenerator:
@@ -46,6 +47,7 @@ class MarkArchiveGenerator:
         self.stream = ZipStream()
 
     def __iter__(self):
+        is_good = False
         for markversion in self.mark.versions.all():
             version_data = {
                 'status': markversion.status,
@@ -72,10 +74,23 @@ class MarkArchiveGenerator:
                     version_data['comparison_function'] = markversion.comparison_function
                     with markversion.error_trace.file.file as fp:
                         version_data['error_trace'] = json.loads(fp.read().decode('utf8'))
+                    try:
+                        raw = obtain_pretty_error_trace(
+                            version_data['error_trace'], self.mark, version_data['conversion_function'])
+                        version_data['error_trace'] = error_trace_pretty_parse(raw)
+                    except BridgeException:
+                        continue
+                    if markversion.similarity:
+                        version_data['similarity'] = markversion.similarity
+                    else:
+                        version_data['similarity'] = 1
 
+            is_good = True
             content = json.dumps(version_data, ensure_ascii=False, sort_keys=True, indent=4)
             for data in self.stream.compress_string('version-%s' % markversion.version, content):
                 yield data
+        if not is_good:
+            return
         common_data = {
             'is_modifiable': self.mark.is_modifiable,
             'mark_type': self.type,
@@ -193,13 +208,22 @@ class UploadMark:
         version = versions[len(versions) - 1]
         version.update(mark_data)
         res = mark_utils[self.type].NewMark(self._user, version)
-        res.conversion_function = version.get('conversion_function')
-        res.comparison_function = version.get('comparison_function')
+        if self.type == 'unsafe':
+            res.conversion_function = version.get('conversion_function')
+            res.comparison_function = version.get('comparison_function')
+            res.similarity_threshold = self.similarity_threshold = int(version.get('similarity')) / 100
+
         mark = res.upload_mark()
         if self.type == 'safe':
             SafeUtils.RecalculateTags(list(SafeUtils.ConnectMarks([mark]).changes.get(mark.id, {})))
         elif self.type == 'unsafe':
             UnsafeUtils.RecalculateTags(list(UnsafeUtils.ConnectMarks([mark]).changes.get(mark.id, {})))
+
+            most_likely_report_id = MarkUnsafeReport.objects.filter(mark__id=mark.id).values_list('report')
+            if most_likely_report_id:
+                report_unsafe = ReportUnsafe.objects.get(id=most_likely_report_id[0][0])
+                mark.report = report_unsafe
+                mark.save()
         elif self.type == 'unknown':
             UnknownUtils.ConnectMark(mark)
         return mark
