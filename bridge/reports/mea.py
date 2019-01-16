@@ -118,7 +118,7 @@ def compare_error_traces(edited_error_trace: list, compared_error_trace: list, c
         COMPARISON_FUNCTION_INCLUDE_PARTIAL: __compare_include_partial,
     }
     if comparison_function not in functions.keys():
-        comparison_function = DEFAULT_CONVERSION_FUNCTION
+        comparison_function = DEFAULT_COMPARISON_FUNCTION
     equal_threads = functions[comparison_function](et1_threaded, et2_threaded)
     return __get_jaccard(et1_threaded, et2_threaded, equal_threads)
 
