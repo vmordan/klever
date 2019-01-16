@@ -166,7 +166,9 @@ class ZipStream:
 
         yield self.__get_data(zinfo.FileHeader())
 
+        counter = 0
         for buf in datagen:
+            counter += 1
             if not buf:
                 continue
             zinfo.file_size += len(buf)
@@ -175,6 +177,8 @@ class ZipStream:
                 buf = cmpr.compress(buf)
                 zinfo.compress_size += len(buf)
             yield self.__get_data(buf)
+        if not counter:
+            return
 
         if cmpr:
             buf = cmpr.flush()
