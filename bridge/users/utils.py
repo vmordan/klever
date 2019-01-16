@@ -28,7 +28,7 @@ DEF_NUMBER_OF_ELEMENTS = 500
 JOB_TREE_VIEW = {
     'columns': ['name', 'finish', 'unsafe:bug', 'unsafe:false_positive',
                 'unsafe:unknown', 'unsafe:unassociated', 'unsafe:total',
-                'safe:total', 'problem:total'],    # order: [up|down, title|date|start|finish]
+                'safe:total', 'problem:total', 'resource'],    # order: [up|down, title|date|start|finish]
     'order': ['up', 'start'],
 
     # FILTERS:
@@ -36,7 +36,7 @@ JOB_TREE_VIEW = {
     # change_author: [is|isnot, <id from User model>]
     # change_date: [younger|older, <int number>, weeks|days|hours|minutes]
     # status: <list of identifiers from JOB_STATUS>
-    # resource_component: [iexact|istartswith|icontains, <any text>]
+    # resource: [iexact|istartswith|icontains, <any text>]
     # problem_component: [iexact|istartswith|icontains, <any text>]
     # problem_problem: [iexact|istartswith|icontains, <any text>]
     # format: [is|isnot, <number>]
@@ -48,7 +48,7 @@ JOB_TREE_VIEW = {
     # 'change_author': ['is', '1'],
     # 'change_date': ['younger', '2', 'weeks'],
     # 'status': ['2', '5', '1'],
-    # 'resource_component': ['istartswith', 'D'],
+    # 'resource': ['istartswith', 'D'],
     # 'problem_component': ['iexact', 'BLAST'],
     # 'problem_problem': ['icontains', '1'],
     # 'format': ['is', '1'],
