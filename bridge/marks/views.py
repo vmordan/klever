@@ -44,7 +44,7 @@ from marks.models import MarkSafe, MarkUnsafe, MarkUnknown, MarkSafeHistory, Mar
 from marks.tables import MarkData, MarkChangesTable, MarkReportsTable, MarksList, AssociationChangesTable
 from marks.tags import GetTagsData, GetParents, SaveTag, TagsInfo, CreateTagsFromFile, TagAccess
 from reports.mea import error_trace_pretty_print, get_or_convert_error_trace, COMPARISON_FUNCTIONS, \
-    CONVERSION_FUNCTIONS, DEFAULT_CONVERSION_FUNCTION, DEFAULT_COMPARISON_FUNCTION
+    CONVERSION_FUNCTIONS, DEFAULT_CONVERSION_FUNCTION, DEFAULT_COMPARISON_FUNCTION, obtain_pretty_error_trace
 from reports.models import ReportSafe, ReportUnsafe, ReportUnknown
 from tools.profiling import LoggedCallMixin
 from users.models import User
@@ -230,11 +230,8 @@ class MarkFormView(LoggedCallMixin, DetailView):
             context['cancel_url'] = reverse('marks:mark', args=[self.kwargs['type'], self.object.id])
             if self.kwargs['type'] == 'unsafe':
                 context['similarity'] = context['markdata'].mark_version.similarity
-                try:
-                    edited_error_trace = error_trace_pretty_print(context['markdata'].error_trace)
-                except:
-                    converted_error_trace = get_or_convert_error_trace(self.object, self.object.conversion_function)
-                    edited_error_trace = error_trace_pretty_print(converted_error_trace)
+                edited_error_trace = obtain_pretty_error_trace(context['markdata'].error_trace,
+                                                               self.object, self.object.conversion_function)
                 context['converted_error_trace'] = edited_error_trace
                 context['conversion_function'] = self.object.conversion_function
                 context['comparison_function'] = self.object.comparison_function
@@ -309,11 +306,8 @@ class InlineMarkForm(LoggedCallMixin, Bview.JSONResponseMixin, DetailView):
             if self.kwargs['type'] != 'unknown':
                 selected_tags = list(t_id for t_id, in self.object.tags.values_list('tag_id'))
             if self.kwargs['type'] == 'unsafe':
-                try:
-                    edited_error_trace = error_trace_pretty_print(context['markdata'].error_trace)
-                except:
-                    converted_error_trace = get_or_convert_error_trace(self.object, self.object.conversion_function)
-                    edited_error_trace = error_trace_pretty_print(converted_error_trace)
+                edited_error_trace = obtain_pretty_error_trace(context['markdata'].error_trace,
+                                                               self.object, self.object.conversion_function)
                 context['converted_error_trace'] = edited_error_trace
                 context['similarity'] = context['markdata'].mark_version.similarity
                 context['conversion_function'] = self.object.conversion_function

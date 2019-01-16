@@ -123,6 +123,18 @@ def compare_error_traces(edited_error_trace: list, compared_error_trace: list, c
     return __get_jaccard(et1_threaded, et2_threaded, equal_threads)
 
 
+def obtain_pretty_error_trace(converted_error_trace: list, unsafe, conversion_function: str) -> str:
+    try:
+        # If trace is in new format, then just process it.
+        return error_trace_pretty_print(converted_error_trace)
+    except:
+        # In case of old format create new converted error trace.
+        if conversion_function not in CONVERSION_FUNCTIONS:
+            conversion_function = DEFAULT_CONVERSION_FUNCTION
+        converted_error_trace = get_or_convert_error_trace(unsafe, conversion_function)
+        return error_trace_pretty_print(converted_error_trace)
+
+
 def error_trace_pretty_print(converted_error_trace: list) -> str:
     """
     Print converted error trace (list of elements) for the user.
