@@ -26,10 +26,11 @@ import marks.SafeUtils as SafeUtils
 import marks.UnknownUtils as UnknownUtils
 import marks.UnsafeUtils as UnsafeUtils
 from bridge.utils import file_get_or_create, unique_id, BridgeException
-from bridge.vars import USER_ROLES, JOB_ROLES, ROOT_REPORT
+from bridge.vars import USER_ROLES, JOB_ROLES, ROOT_REPORT, SCHEDULER_TYPE
 from jobs.jobForm import JobForm
 from jobs.models import Job, JobFile
 from marks.tags import CreateTagsFromFile
+from service.models import Scheduler
 from users.models import Extended
 
 JOB_SETTINGS_FILE = 'settings.json'
@@ -73,6 +74,7 @@ class Population:
             except ObjectDoesNotExist:
                 extend_user(self.user)
         self.changes['jobs'] = self.__populate_jobs()
+        self.changes['schedulers'] = Scheduler.objects.get_or_create(type=SCHEDULER_TYPE[0][0])[1]
 
     def __correct_description(self, descr):
         self.__is_not_used()
