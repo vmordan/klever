@@ -438,6 +438,8 @@ class MarksList:
                         color = UNSAFE_COLOR[marks[m_id]['verdict']]
                 elif col == 'tags':
                     if 'tags' in marks[m_id] and marks[m_id]['tags']:
+                        if isinstance(marks[m_id]['tags'], str):
+                            marks[m_id]['tags'] = str(marks[m_id]['tags']).split(',')
                         val = ', '.join(sorted(marks[m_id]['tags']))
                 elif col == 'status':
                     val = model_map[self.type](status=marks[m_id]['status']).get_status_display()

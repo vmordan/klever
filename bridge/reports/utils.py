@@ -287,6 +287,8 @@ class SafesTable:
                     color = SAFE_COLOR[safes[rep_id]['verdict']]
                 elif col == 'tags':
                     if 'tags' in safes[rep_id] and safes[rep_id]['tags']:
+                        if isinstance(safes[rep_id]['tags'], str):
+                            safes[rep_id]['tags'] = safes[rep_id]['tags'].split(',')
                         tags_numbers = Counter(safes[rep_id]['tags'])
                         val = '; '.join([
                             '{0} ({1})'.format(t, tags_numbers[t]) if tags_numbers[t] > 1 else t
@@ -407,6 +409,8 @@ class UnsafesTable:
             ordered_ids.append(unsafe_data['id'])
             unsafes[unsafe_data['id']] = unsafe_data
             if unsafe_data.get('tags'):
+                if isinstance(unsafe_data['tags'], str):
+                    unsafe_data['tags'] = unsafe_data['tags'].split(',')
                 unsafe_data['tags'] = '; '.join(sorted(unsafe_data['tags']))
             if 'marks_number' in unsafe_data and unsafe_data['marks_number'] is None:
                 unsafe_data['marks_number'] = 0
@@ -596,6 +600,9 @@ class UnknownsTable:
                     else:
                         val = str(unknowns[rep_id]['marks_number'])
                 elif col == 'problems':
+                    if 'problems' in unknowns[rep_id]:
+                        if isinstance(unknowns[rep_id]['problems'], str):
+                            unknowns[rep_id]['problems'] = unknowns[rep_id]['problems'].split(",")
                     if unknowns[rep_id].get('problems'):
                         pr_numbers = Counter(unknowns[rep_id]['problems'])
                         val = ', '.join(['{0} ({1})'.format(p, pr_numbers[p]) if pr_numbers[p] > 1 else str(p)

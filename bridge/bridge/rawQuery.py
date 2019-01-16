@@ -3,8 +3,22 @@ from django.db.models import Model
 from django.utils.functional import cached_property
 
 
+DB_MYSQL = "mysql"
+DB_POSTGRESQL = "postgresql"
+
+
 def is_model(arg):
     return isinstance(arg, type) and issubclass(arg, Model)
+
+
+def get_db_engine() -> str:
+    engine = connection.settings_dict['ENGINE']
+    if DB_MYSQL in engine:
+        return DB_MYSQL
+    elif DB_POSTGRESQL in engine:
+        return DB_POSTGRESQL
+    else:
+        return engine
 
 
 class EmptyQuery(Exception):
@@ -149,6 +163,8 @@ class RawQuery:
         self._fields.extend(self.__parse_fields(*fields))
 
     def aggregate(self, name, aggregation, *fields, args_list=None):
+        if get_db_engine() == DB_MYSQL:
+            aggregation = aggregation.replace('ARRAY_AGG', 'GROUP_CONCAT')
         self._fields.append('{0} AS "{1}"'.format(aggregation.format(*self.__parse_fields(*fields)), name))
         if isinstance(args_list, list):
             self._fields_args.extend(args_list)
@@ -172,13 +188,19 @@ class RawQuery:
     def group_by(self, *fields):
         self._group_by.extend(self.__parse_fields(*fields))
 
+    def __nulls_last(self):
+        if get_db_engine() == DB_MYSQL:
+            return ""
+        else:
+            return "NULLS LAST"
+
     def order_by(self, field, order_direction):
         # Ordering only by one field is supported now
-        self._order = 'ORDER BY {0} {1} NULLS LAST'.format(self.__parse_fields(field)[0], order_direction)
+        self._order = 'ORDER BY {0} {1} {2}'.format(self.__parse_fields(field)[0], order_direction, self.__nulls_last())
 
     def order_by_aggregation(self, aggregation, order_direction, *fields, args_list=None):
         target = aggregation.format(*self.__parse_fields(*fields))
-        self._order = 'ORDER BY {0} {1} NULLS LAST'.format(target, order_direction)
+        self._order = 'ORDER BY {0} {1} {2}'.format(target, order_direction, self.__nulls_last())
 
         if isinstance(args_list, list):
             self._order_args = args_list[:]
