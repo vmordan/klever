@@ -203,11 +203,24 @@
 
             {% if markdata.type == 'unsafe' %}
                 <div class="ui yellow segment">
-                    <h4 class="header ui" title="{% trans 'Jaccard index of threads sets' %}">
+                    <h4 class="header ui">
                         {% trans 'Similarity threshold' %} ({% trans 'in percents' %}, 1% &le; threshold &le; 100%)
+                        <i class="question icon red" title="{% trans 'Jaccard index of threads sets' %}"></i>
                     </h4>
                     <input type="number" id="similarity_threshold" min="1" max="100" value="{{ similarity }}">
                 </div>
+
+                {% if mark_report %}
+                <div class="ui violet segment">
+                    <h4 class="header ui violet">{% trans 'Change initial error trace for this mark' %}</h4>
+                    <select id="change_initial_error_trace" class="ui dropdown fluid top attached" onchange="change_initial_error_trace(this.value)">
+                        {% for report_id, data in mark_report.items %}
+                            <option value="{{ report_id }}"{% if data.selected %} selected{% endif %}>{{ report_id }} of {{ data.job_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+
             {% endif %}
 
             {# Attributes #}

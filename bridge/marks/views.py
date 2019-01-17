@@ -237,6 +237,16 @@ class MarkFormView(LoggedCallMixin, DetailView):
                 context['comparison_function'] = self.object.comparison_function
                 if self.object.report:
                     context['report_id'] = self.object.report.id
+                mark_report = {}
+                for mur in MarkUnsafeReport.objects.filter(mark__id=self.object.id):
+                    report = mur.report
+                    mark_report[report.id] = {
+                        'job_name': report.root.job.name,
+                    }
+                    if report.id == context.get('report_id'):
+                        mark_report[report.id]['selected'] = True
+                if len(mark_report) > 1:
+                    context['mark_report'] = mark_report
         else:
             if self.kwargs['type'] == 'unknown':
                 try:

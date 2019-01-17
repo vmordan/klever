@@ -50,6 +50,7 @@ class NewMark:
             self.similarity_threshold = int(args['similarity_threshold']) / 100
         else:
             self.similarity_threshold = 0.0
+        self.initial_error_trace = args.get('initial_error_trace')
         if mark_unsafe:
             self.__check_mark_applicability(mark_unsafe)
 
@@ -63,6 +64,10 @@ class NewMark:
         else:
             self.edited_error_trace = error_trace_pretty_parse(self.edited_error_trace)
         # Check that mark is applicable to the error trace itself.
+        if self.initial_error_trace:
+            new_report = ReportUnsafe.objects.get(id=self.initial_error_trace)
+            mark_unsafe.report = new_report
+            mark_unsafe.save()
         converted_error_trace = get_or_convert_error_trace(mark_unsafe, self.conversion_function)
         if compare_error_traces(self.edited_error_trace, converted_error_trace, self.comparison_function) < \
                 self.similarity_threshold:

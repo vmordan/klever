@@ -69,6 +69,7 @@ function collect_markdata() {
         mark_data['conversion_function'] = JSON.parse($('#conversion_function').val().replace(/\'/g, '"')).name;
         mark_data['comparison_function'] = JSON.parse($('#comparison_function').val().replace(/\'/g, '"')).name;
         mark_data['similarity_threshold'] = $('#similarity_threshold').val();
+        mark_data['initial_error_trace'] = $('#report_id').val();
     }
     return JSON.stringify(mark_data);
 }
@@ -85,11 +86,9 @@ function set_action_on_func_change() {
     });
 }
 
-function conversion_function_change(new_function) {
-    obj = JSON.parse(new_function.replace(/\'/g, '"'));
-    $('#conversion_function_description').text(obj.desc);
+function update_converted_error_trace(conversion_function) {
     $.post(
-        '/marks/get_converted_trace/' + $('#report_id').val() +'/', {"conversion": obj.name},
+        '/marks/get_converted_trace/' + $('#report_id').val() +'/', {"conversion": conversion_function},
         function (data) {
             if (data.error) {
                 err_notify(data.error);
@@ -98,6 +97,19 @@ function conversion_function_change(new_function) {
             $('#converted_error_trace').val(data['converted_error_trace']);
         }
     );
+}
+
+
+function conversion_function_change(new_function) {
+    obj = JSON.parse(new_function.replace(/\'/g, '"'));
+    $('#conversion_function_description').text(obj.desc);
+    update_converted_error_trace(obj.name);
+}
+
+function change_initial_error_trace(report_id) {
+    $('#report_id').val(report_id);
+    var conversion_function = JSON.parse($('#conversion_function').val().replace(/\'/g, '"')).name;
+    update_converted_error_trace(conversion_function);
 }
 
 function comparison_function_change(new_function) {
@@ -153,7 +165,7 @@ $(document).ready(function () {
     $('#test_unknown_mark').click(test_unknown_function);
 
     $('#save_mark_btn').click(function () {
-        //$(this).addClass('disabled');
+        $(this).addClass('disabled');
         $.post('', {data: collect_markdata()}, function (data) {
             if (data.error) {
                 $('#save_mark_btn').removeClass('disabled');
