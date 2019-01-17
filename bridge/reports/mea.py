@@ -287,7 +287,7 @@ def error_trace_pretty_parse(pretty_error_trace: str) -> list:
             converted_error_trace.append({
                 CET_OP: op,
                 CET_THREAD: cur_thread,
-                CET_SOURCE: None,
+                CET_SOURCE: text,
                 CET_DISPLAY_NAME: text,
                 CET_ID: 0,
                 CET_LINE: line
