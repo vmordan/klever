@@ -112,6 +112,9 @@ def compare_error_traces(edited_error_trace: list, compared_error_trace: list, c
     edited_error_trace = __load_json(edited_error_trace)
     compared_error_trace = error_trace_pretty_parse(error_trace_pretty_print(__load_json(compared_error_trace)))
     et1_threaded, et2_threaded = __transfrom_to_threads(edited_error_trace, compared_error_trace)
+    if not et1_threaded and not et2_threaded:
+        # Return true for empty converted error traces (so they will be applied to all unsafes with the same attributes)
+        return 1.0
     functions = {
         COMPARISON_FUNCTION_EQUAL: __compare_equal,
         COMPARISON_FUNCTION_INCLUDE: __compare_include,
