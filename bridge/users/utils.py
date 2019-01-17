@@ -246,7 +246,7 @@ UNKNOWN_ASS_MARKS_VIEW = {
 
 UNSAFE_MARK_ASS_REPORTS_VIEW = {
     'elements': [DEF_NUMBER_OF_ELEMENTS],
-    'columns': ['job', 'similarity', 'ass_author'],
+    'columns': ['job', 'similarity', 'attrs'],
 
     # FILTERS:
     # similarity: <sublist from ['0', '50', '100']>
@@ -259,7 +259,7 @@ UNSAFE_MARK_ASS_REPORTS_VIEW = {
 
 SAFE_MARK_ASS_REPORTS_VIEW = {
     'elements': [DEF_NUMBER_OF_ELEMENTS],
-    'columns': ['job', 'ass_author'],
+    'columns': ['job', 'attrs'],
 
     # FILTERS:
     # ass_type: <list of identifiers from ASSOCIATION_TYPE>
@@ -270,7 +270,7 @@ SAFE_MARK_ASS_REPORTS_VIEW = {
 
 UNKNOWN_MARK_ASS_REPORTS_VIEW = {
     'elements': [DEF_NUMBER_OF_ELEMENTS],
-    'columns': ['job', 'ass_author'],
+    'columns': ['job', 'attrs'],
 
     # FILTERS:
     # ass_type: <list of identifiers from ASSOCIATION_TYPE>

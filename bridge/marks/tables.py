@@ -67,7 +67,8 @@ MARK_TITLES = {
     'buttons': _('Control'),
     'description': _('Description'),
     'total_similarity': _('Total similarity'),
-    'identifier': _('Identifier')
+    'identifier': _('Identifier'),
+    'attrs': _('Attributes')
 }
 
 CHANGE_DATA = {
@@ -580,8 +581,8 @@ class MarkReportsTable:
         self.available_columns = self.__available()
 
         self.columns = self.__get_columns()
-        self.header = Header(self.columns, MARK_TITLES).struct
         self.values = self.__get_page(page, self.__get_values())
+        self.header = Header(self.columns, MARK_TITLES).struct
 
     def __selected(self):
         columns = []
@@ -605,17 +606,24 @@ class MarkReportsTable:
 
     def __supported_columns(self):
         if self.type == 'unsafe':
-            return ['job', 'similarity', 'ass_type', 'ass_author']
-        return ['job', 'ass_type', 'ass_author']
+            return ['job', 'similarity', 'ass_type', 'ass_author', 'attrs']
+        return ['job', 'ass_type', 'ass_author', 'attrs']
 
     def __get_columns(self):
         columns = ['report']
         columns.extend(self.view['columns'])
+        if 'attrs' in columns:
+            columns.remove('attrs')
         return columns
+
+    def __is_attrs(self):
+        return 'attrs' in self.view['columns']
 
     def __get_values(self):
 
         values = []
+        attr_vals = []
+        attrs = []
         cnt = 0
         for mark_report in self.mark.markreport_set.select_related('report', 'report__root__job').order_by('id'):
             if 'similarity' in self.view:
@@ -660,7 +668,22 @@ class MarkReportsTable:
                         val = mark_report.author.get_full_name()
                         href = reverse('users:show_profile', args=[mark_report.author_id])
                 values_str.append({'value': val, 'href': href, 'color': color})
+            if self.__is_attrs():
+                attr_val = {}
+                for name, val in list(report.attrs.order_by('id').values_list('attr__name__name', 'attr__value')):
+                    attr_val[name] = val
+                    if name not in attrs:
+                        attrs.append(name)
+                attr_vals.append(attr_val)
             values.append(values_str)
+        if self.__is_attrs():
+            cnt = 0
+            for name in attrs:
+                self.columns.append(name)
+            for value in values:
+                for name in attrs:
+                    value.append({'value': attr_vals[cnt].get(name, '-')})
+                cnt += 1
         return values
 
     def __get_page(self, page, values):
