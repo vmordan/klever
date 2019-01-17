@@ -39,20 +39,39 @@ function fill_all_values() {
 
 function fill_checked_values() {
     $("td[id^='checked__']").each(function() {
-        var cell_id_data = $(this).attr('id').split('__');
-        if ($.inArray(cell_id_data.slice(1, -1).join(':'), countable) > -1 || $.inArray(cell_id_data[1], countable_prefixes) > -1) {
-            cell_id_data[0] = 'value';
-            var sum = 0, have_numbers = false, is_checked = false;
-            $("td[id^='" + cell_id_data.join('__') + "__']").each(function() {
-                if ($('#job_checkbox__' + $(this).attr('id').split('__').slice(-1)[0]).is(':checked')) {
-                    is_checked = true;
-                    var num = parseInt($(this).children().first().text());
-                    isNaN(num) ? num = 0 : have_numbers = true;
+        var call_id = $(this).attr('id');
+        var cell_id_data = call_id.split('__');
+        cell_id_data[0] = 'value';
+        var sum = 0, have_numbers = false, is_checked = false;
+        $("td[id^='" + cell_id_data.join('__') + "__']").each(function() {
+            if ($('#job_checkbox__' + $(this).attr('id').split('__').slice(-1)[0]).is(':checked')) {
+                is_checked = true;
+                var hidden_value = $(this).attr('value');
+                var num = 0;
+                if (hidden_value) {
+                    num = parseInt(hidden_value);
+                } else {
+                    num = parseInt($(this).children().first().text());
+                }
+                isNaN(num) ? num = 0 : have_numbers = true;
+                if (call_id.includes('resource__mem')) {
+                    sum = Math.max(sum, num);
+                } else {
                     sum += num;
                 }
-            });
-            (have_numbers === true && is_checked === true) ? $(this).text(sum) : $(this).text('-');
+            }
+        });
+        if (have_numbers === true && is_checked === true && call_id.includes('resource__mem')) {
+            if (sum > 10**3) {
+                sum = Math.round(sum / 10**3);
+                sum += ' Gb';
+            } else {
+                sum += ' Mb';
+            }
+        } else if (have_numbers === true && is_checked === true && call_id.includes('resource__')) {
+            sum += ' s';
         }
+        (have_numbers === true && is_checked === true) ? $(this).text(sum) : $(this).text('-');
     });
 }
 

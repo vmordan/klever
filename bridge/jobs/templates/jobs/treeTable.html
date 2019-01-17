@@ -41,7 +41,9 @@
                     </div>
                 </td>
                 {% for v in row_data.values %}
-                    <td id="value__{{ v.id }}__{{ row_data.id }}" class="collapsing" {% if 'name__' not in v.id %} style="text-align: center;"{% endif %}>
+                    <td id="value__{{ v.id }}__{{ row_data.id }}" class="collapsing"
+                        {% if 'name__' not in v.id %} style="text-align: center;"{% endif %}
+                        {% if v.hidden %} value="{{ v.hidden }}" {% endif %}>
                         {% if v.href %}
                             <a href="{{ v.href }}">{{ v.value }}</a>
                         {% else %}
@@ -63,7 +65,7 @@
         <tr style="background: #cafdff">
             <th class="right aligned" colspan="{{ TableData.footer_title_length }}" style="background: #cafdff;">{% trans 'All for checked' %}</th>
             {% for fc in TableData.footer %}
-                <td id="checked__{{ fc }}">-</td>
+                <td id="checked__{{ fc }}" style="text-align: center;">-</td>
             {% endfor %}
         </tr>
         </thead>

@@ -48,6 +48,8 @@ SUBJOBS_COLUMNS = [
     'subjobs:progress_sj', 'subjobs:expected_time_sj'
 ]
 
+resource_raws = {"cpu": _("CPU time"), "wall": _("Wall time"), "mem": _("Memory")}
+
 
 class Header:
     def __init__(self, columns, titles):
@@ -346,7 +348,7 @@ class TableTree:
         for c_id, c_name in ComponentResource.objects.filter(**filters).exclude(component=None)\
                 .values_list('component_id', 'component__name').distinct().order_by('component__name'):
             if c_name == "Core":
-                for resource, translation in {"cpu": _("CPU time"), "wall": _("Wall time"), "mem": _("Memory")}.items():
+                for resource, translation in sorted(resource_raws.items()):
                     column = 'resource:{}_{}'.format(resource, c_id)
                     self._titles[column] = translation
                     resource_columns.append(column)
@@ -439,11 +441,14 @@ class TableTree:
                 col_id += 1
                 cell_value = '-' if job['id'] in self._job_ids else ''
                 href = None
+                hidden_value = None
                 if job['id'] in self._values_data and col in self._values_data[job['id']]:
                     if isinstance(self._values_data[job['id']][col], tuple):
                         cell_value = self._values_data[job['id']][col][0]
                         if cell_value != 0:
                             href = self._values_data[job['id']][col][1]
+                        if len(self._values_data[job['id']][col]) == 3:
+                            hidden_value = self._values_data[job['id']][col][2]
                     else:
                         cell_value = self._values_data[job['id']][col]
                 if col in DATE_COLUMNS:
@@ -451,7 +456,7 @@ class TableTree:
                         cell_value = get_templated_text('{% load humanize %}{{ date|naturaltime }}', date=cell_value)
                 row_values.append({
                     'id': '__'.join(col.split(':')) + ('__%d' % col_id),
-                    'value': cell_value, 'href': href
+                    'value': cell_value, 'href': href, 'hidden': hidden_value
                 })
             table_rows.append({
                 'id': job['id'], 'parent': job['parent'],
@@ -680,9 +685,12 @@ class TableTree:
             job_id = self._roots[cr.root_id]
             rd = get_resource_data(data_format, accuracy, cr)
             if cr.component_id is not None:
-                self._values_data[job_id]['resource:wall_' + str(cr.component_id)] = rd[0]
-                self._values_data[job_id]['resource:cpu_' + str(cr.component_id)] = rd[1]
-                self._values_data[job_id]['resource:mem_' + str(cr.component_id)] = rd[2]
+                self._values_data[job_id]['resource:wall_' + str(cr.component_id)] = (rd[0], None,
+                                                                                      round(cr.wall_time / 10**3))
+                self._values_data[job_id]['resource:cpu_' + str(cr.component_id)] = (rd[1], None,
+                                                                                     round(cr.cpu_time / 10**3))
+                self._values_data[job_id]['resource:mem_' + str(cr.component_id)] = (rd[2], None,
+                                                                                     round(cr.memory / 10**6))
 
     def __collect_roles(self):
         user_role = self._user.extended.role
