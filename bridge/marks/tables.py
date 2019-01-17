@@ -878,10 +878,6 @@ class AssociationChangesTable:
                         return False
                     elif ftype == 'icontains' and fvalue.lower() not in value.lower():
                         return False
-        if 'hidden' in self.view and 'unchanged' in self.view['hidden']:
-            if self._data['values'][r_id]['old_verdict'] == self._data['values'][r_id]['new_verdict'] \
-                    and self._data['values'][r_id].get('tags') is None:
-                return False
         return True
 
     def __is_not_used(self):
