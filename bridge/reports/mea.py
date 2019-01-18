@@ -90,6 +90,8 @@ def get_or_convert_error_trace(unsafe, conversion_function: str, args: dict) -> 
 
     if not report_unsafe:
         raise BridgeException("There is no unsafe report for this mark")
+    if not args:
+        args = {}
     if conversion_function == CONVERSION_FUNCTION_MODEL_FUNCTIONS:
         additional_model_functions = args.get(TAG_ADDITIONAL_MODEL_FUNCTIONS, "")
         if additional_model_functions:
@@ -111,6 +113,13 @@ def get_or_convert_error_trace(unsafe, conversion_function: str, args: dict) -> 
         ErrorTraceConvertionCache.objects.create(unsafe=report_unsafe, function=conversion_function, converted=et_file,
                                                  args=args_str)
     return converted_error_trace
+
+
+def is_equivalent(comparison_results: float, similarity_threshold: int) -> bool:
+    """
+    Returns true, if compared error traces are considered to be equivalent.
+    """
+    return comparison_results and (comparison_results * 100 >= similarity_threshold)
 
 
 def compare_error_traces(edited_error_trace: list, compared_error_trace: list, comparison_function: str) -> float:

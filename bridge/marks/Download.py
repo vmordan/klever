@@ -213,7 +213,7 @@ class UploadMark:
         if self.type == 'unsafe':
             res.conversion_function = version.get('conversion_function')
             res.comparison_function = version.get('comparison_function')
-            res.similarity_threshold = int(version.get('similarity')) / 100
+            res.similarity_threshold = version.get('similarity')
             res.conversion_function_args = version.get('args', {})
 
         mark = res.upload_mark()
