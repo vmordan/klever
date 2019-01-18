@@ -72,11 +72,13 @@ class MarkArchiveGenerator:
                 if self.type == 'unsafe':
                     version_data['conversion_function'] = markversion.conversion_function
                     version_data['comparison_function'] = markversion.comparison_function
+                    version_data['args'] = json.loads(markversion.args or {})
                     with markversion.error_trace.file.file as fp:
                         version_data['error_trace'] = json.loads(fp.read().decode('utf8'))
                     try:
                         raw = obtain_pretty_error_trace(
-                            version_data['error_trace'], self.mark, version_data['conversion_function'])
+                            version_data['error_trace'], self.mark, markversion.conversion_function,
+                            version_data['args'])
                         version_data['error_trace'] = error_trace_pretty_parse(raw)
                     except BridgeException:
                         continue
@@ -211,13 +213,16 @@ class UploadMark:
         if self.type == 'unsafe':
             res.conversion_function = version.get('conversion_function')
             res.comparison_function = version.get('comparison_function')
-            res.similarity_threshold = self.similarity_threshold = int(version.get('similarity')) / 100
+            res.similarity_threshold = int(version.get('similarity')) / 100
+            res.conversion_function_args = version.get('args', {})
 
         mark = res.upload_mark()
         if self.type == 'safe':
             SafeUtils.RecalculateTags(list(SafeUtils.ConnectMarks([mark]).changes.get(mark.id, {})))
         elif self.type == 'unsafe':
-            UnsafeUtils.RecalculateTags(list(UnsafeUtils.ConnectMarks([mark]).changes.get(mark.id, {})))
+            UnsafeUtils.RecalculateTags(list(
+                UnsafeUtils.ConnectMarks([mark], res.similarity_threshold, res.conversion_function_args).
+                    changes.get(mark.id, {})))
 
             most_likely_report_id = MarkUnsafeReport.objects.filter(mark__id=mark.id).values_list('report')
             if most_likely_report_id:

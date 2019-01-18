@@ -80,14 +80,25 @@
                             <h4 class="header ui">
                                 {% trans 'Error traces conversion function' %}: <span style="color:red">{{ mark.conversion_function }}</span>
                             </h4>
-                            <!--{% trans 'Description' %}:-->
                             <p class="func-description">{{ desc.conversion }}</p>
+                            {% if args %}
+                                <h5 class="header ui">{% trans 'Arguments' %}:</h5>
+                                <table class="ui selectable compact table celled">
+                                    <tbody>
+                                        {% for name, val in args.items %}
+                                            <tr>
+                                                <td class="collapsing">{{ name }}</td>
+                                                <td class="collapsing">{{ val }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% endif %}
                         </div>
                         <div class="ui segment yellow center aligned">
                             <h4 class="header ui">
                                 {% trans 'Error traces comparison function' %}: <span style="color:red">{{ mark.comparison_function }}</span>
                             </h4>
-                            <!--{% trans 'Description' %}:-->
                             <p class="func-description">{{ desc.comparison }}</p>
 
                         </div>

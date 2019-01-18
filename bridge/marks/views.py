@@ -83,8 +83,12 @@ class MarkPage(LoggedCallMixin, Bview.DataViewMixin, DetailView):
         markdata = MarkData(self.kwargs['type'], mark_version=history_set.first())
         edited_error_trace = None
         similarity = None
+        args = None
         if self.kwargs['type'] == 'unsafe':
             similarity = history_set.first().similarity
+            args = history_set.first().args
+            if args:
+                args = json.loads(args)
             for func in COMPARISON_FUNCTIONS:
                 if func['name'] == self.object.comparison_function:
                     desc["comparison"] = (func['desc'])
@@ -106,7 +110,8 @@ class MarkPage(LoggedCallMixin, Bview.DataViewMixin, DetailView):
                                         self.get_view(view_type_map[self.kwargs['type']]),
                                         page=self.request.GET.get('page', 1)),
             'desc': desc,
-            'similarity': similarity
+            'similarity': similarity,
+            'args': args
         }
 
 
@@ -230,11 +235,14 @@ class MarkFormView(LoggedCallMixin, DetailView):
             context['cancel_url'] = reverse('marks:mark', args=[self.kwargs['type'], self.object.id])
             if self.kwargs['type'] == 'unsafe':
                 context['similarity'] = context['markdata'].mark_version.similarity
+                args = context['markdata'].mark_version.args
+                if args:
+                    args = json.loads(args)
                 edited_error_trace = obtain_pretty_error_trace(context['markdata'].error_trace,
-                                                               self.object, self.object.conversion_function)
+                                                               self.object, self.object.conversion_function, args)
                 context['converted_error_trace'] = edited_error_trace
-                context['conversion_function'] = self.object.conversion_function
-                context['comparison_function'] = self.object.comparison_function
+                context['conversion_function'] = self.object.conversion_function or DEFAULT_CONVERSION_FUNCTION
+                context['comparison_function'] = self.object.comparison_function or DEFAULT_COMPARISON_FUNCTION
                 if self.object.report:
                     context['report_id'] = self.object.report.id
                 mark_report = {}
@@ -268,9 +276,9 @@ class MarkFormView(LoggedCallMixin, DetailView):
             if self.kwargs['type'] == 'unsafe':
                 context['similarity'] = 1
                 try:
-                    conversion_function = context['markdata'].conversion[0]['name']
-                    comparison_function = context['markdata'].comparison[0]['name']
-                    converted_error_trace = get_or_convert_error_trace(self.object, conversion_function)
+                    conversion_function = DEFAULT_CONVERSION_FUNCTION
+                    comparison_function = DEFAULT_COMPARISON_FUNCTION
+                    converted_error_trace = get_or_convert_error_trace(self.object, conversion_function, {})
                     context['converted_error_trace'] = error_trace_pretty_print(converted_error_trace)
                     context['conversion_function'] = conversion_function
                     context['comparison_function'] = comparison_function
@@ -316,8 +324,11 @@ class InlineMarkForm(LoggedCallMixin, Bview.JSONResponseMixin, DetailView):
             if self.kwargs['type'] != 'unknown':
                 selected_tags = list(t_id for t_id, in self.object.tags.values_list('tag_id'))
             if self.kwargs['type'] == 'unsafe':
+                args = context['markdata'].mark_version.args
+                if args:
+                    args = json.loads(args)
                 edited_error_trace = obtain_pretty_error_trace(context['markdata'].error_trace,
-                                                               self.object, self.object.conversion_function)
+                                                               self.object, self.object.conversion_function, args)
                 context['converted_error_trace'] = edited_error_trace
                 context['similarity'] = context['markdata'].mark_version.similarity
                 context['conversion_function'] = self.object.conversion_function
@@ -328,7 +339,7 @@ class InlineMarkForm(LoggedCallMixin, Bview.JSONResponseMixin, DetailView):
                 context['similarity'] = 1
                 conversion_function = DEFAULT_CONVERSION_FUNCTION
                 comparison_function = DEFAULT_COMPARISON_FUNCTION
-                converted_error_trace = get_or_convert_error_trace(self.object, conversion_function)
+                converted_error_trace = get_or_convert_error_trace(self.object, conversion_function, {})
                 context['converted_error_trace'] = error_trace_pretty_print(converted_error_trace)
                 context['conversion_function'] = conversion_function
                 context['comparison_function'] = comparison_function
@@ -631,9 +642,10 @@ class GetConvertedTrace(LoggedCallMixin, Bview.JsonDetailPostView):
 
     def get_context_data(self, **kwargs):
         conversion_function = self.request.POST['conversion']
+        args = json.loads(self.request.POST.get('args', {}))
         context = {}
         try:
-            converted_error_trace = get_or_convert_error_trace(self.object, conversion_function)
+            converted_error_trace = get_or_convert_error_trace(self.object, conversion_function, args)
             context['converted_error_trace'] = error_trace_pretty_print(converted_error_trace)
         except Exception as e:
             logger.exception(e, stack_info=True)

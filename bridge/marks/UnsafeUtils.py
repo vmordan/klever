@@ -51,6 +51,8 @@ class NewMark:
         else:
             self.similarity_threshold = 0.0
         self.initial_error_trace = args.get('initial_error_trace')
+        self.conversion_function_args = json.loads(args.get('conversion_function_args', "{}"))
+
         if mark_unsafe:
             self.__check_mark_applicability(mark_unsafe)
 
@@ -60,7 +62,8 @@ class NewMark:
 
     def __check_mark_applicability(self, mark_unsafe):
         if not self.edited_error_trace:
-            self.edited_error_trace = get_or_convert_error_trace(mark_unsafe, self.conversion_function)
+            self.edited_error_trace = get_or_convert_error_trace(mark_unsafe, self.conversion_function,
+                                                                 self.conversion_function_args)
         else:
             self.edited_error_trace = error_trace_pretty_parse(self.edited_error_trace)
         # Check that mark is applicable to the error trace itself.
@@ -68,7 +71,8 @@ class NewMark:
             new_report = ReportUnsafe.objects.get(id=self.initial_error_trace)
             mark_unsafe.report = new_report
             mark_unsafe.save()
-        converted_error_trace = get_or_convert_error_trace(mark_unsafe, self.conversion_function)
+        converted_error_trace = get_or_convert_error_trace(mark_unsafe, self.conversion_function,
+                                                           self.conversion_function_args)
         if compare_error_traces(self.edited_error_trace, converted_error_trace, self.comparison_function) < \
                 self.similarity_threshold:
             raise BridgeException(_("Mark cannot be applied to the initial error trace"), response_type='json')
@@ -127,8 +131,8 @@ class NewMark:
         except Exception:
             mark.delete()
             raise
-        self.changes = ConnectMarks([mark], prime_id=report.id, similarity_threshold=self.similarity_threshold).\
-            changes.get(mark.id, {})
+        self.changes = ConnectMarks([mark], self.similarity_threshold, self.conversion_function_args,
+                                    prime_id=report.id).changes.get(mark.id, {})
         self.__get_tags_changes(RecalculateTags(list(self.changes)).changes)
         update_confirmed_cache([report])
         return mark
@@ -175,7 +179,7 @@ class NewMark:
 
         if recalculate_cache:
             if do_recalc:
-                changes = ConnectMarks([mark], similarity_threshold=self.similarity_threshold).changes
+                changes = ConnectMarks([mark], self.similarity_threshold, self.conversion_function_args).changes
             else:
                 changes = self.__create_changes(mark)
                 if recalc_verdicts:
@@ -223,7 +227,8 @@ class NewMark:
             mark=mark, version=mark.version, status=mark.status, verdict=mark.verdict,
             author=mark.author, change_date=mark.change_date, comment=self._args['comment'],
             error_trace=error_trace, description=mark.description, comparison_function=self.comparison_function,
-            conversion_function=self.conversion_function, similarity=round(self.similarity_threshold * 100)
+            conversion_function=self.conversion_function, similarity=round(self.similarity_threshold * 100),
+            args=json.dumps(self.conversion_function_args, sort_keys=True)
         )
         MarkUnsafeTag.objects.bulk_create(
             list(MarkUnsafeTag(tag_id=t_id, mark_version=markversion) for t_id in self._args['tags'])
@@ -294,11 +299,12 @@ class NewMark:
 
 
 class ConnectMarks:
-    def __init__(self, marks, prime_id=None, similarity_threshold=0.0):
+    def __init__(self, marks, similarity_threshold, conversion_function_args: dict, prime_id=None):
         self._marks = marks
         self._prime_id = prime_id
         self.changes = {}
         self.similarity_threshold = similarity_threshold
+        self.conversion_function_args = conversion_function_args
         self.conversion_functions = {}
         self.comparison_functions = {}
         self.edited_error_trace = {}
@@ -382,7 +388,8 @@ class ConnectMarks:
                 compare_error = None
                 compare_result = 0
                 try:
-                    converted_error_trace = get_or_convert_error_trace(unsafe, self.conversion_functions[mark_id])
+                    converted_error_trace = get_or_convert_error_trace(unsafe, self.conversion_functions[mark_id],
+                                                                       self.conversion_function_args)
                     compare_result = compare_error_traces(self.edited_error_trace[mark_id], converted_error_trace,
                                                           self.comparison_functions[mark_id])
                     if compare_result < self.similarity_threshold:
@@ -503,7 +510,7 @@ class ConnectReport:
                                                                    self._marks[mark_id]['conversion_functions'])
                 compare_result = compare_error_traces(self._marks[mark_id]['edited_error_trace'], converted_error_trace,
                                                       self._marks[mark_id]['comparison_functions'])
-                # raise BridgeException(_("OK"), response_type='json')
+                # TODO: this is broken
             except BridgeException as e:
                 compare_error = str(e)
             except Exception as e:

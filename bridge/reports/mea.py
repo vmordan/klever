@@ -70,7 +70,7 @@ CET_END = "__ERROR__"
 ASSIGN_MARK = " = "
 
 
-def get_or_convert_error_trace(unsafe, conversion_function: str) -> list:
+def get_or_convert_error_trace(unsafe, conversion_function: str, args: dict) -> list:
     """
     Convert error trace for unsafe report and cache results, so the result can be reused later.
     """
@@ -89,18 +89,20 @@ def get_or_convert_error_trace(unsafe, conversion_function: str) -> list:
 
     if not report_unsafe:
         raise BridgeException("There is no unsafe report for this mark")
+
+    args_str = json.dumps(args, sort_keys=True)
+
     try:
         with ErrorTraceConvertionCache.objects.filter(
-                unsafe=report_unsafe, function=conversion_function).last().converted.file as fp:
+                unsafe=report_unsafe, function=conversion_function, args=args_str).last().converted.file as fp:
             converted_error_trace = fp.read().decode('utf8')
     except:
         parsed_trace = json.loads(
             ArchiveFileContent(report_unsafe, 'error_trace', ERROR_TRACE_FILE).content.decode('utf8'))
-        converted_error_trace = __convert_error_trace(parsed_trace, conversion_function)
+        converted_error_trace = __convert_error_trace(parsed_trace, conversion_function, args)
         et_file = dump_converted_error_trace(converted_error_trace)
-        ErrorTraceConvertionCache.objects.create(unsafe=report_unsafe,
-                                                 function=conversion_function,
-                                                 converted=et_file)
+        ErrorTraceConvertionCache.objects.create(unsafe=report_unsafe, function=conversion_function, converted=et_file,
+                                                 args=args_str)
     return converted_error_trace
 
 
@@ -126,15 +128,13 @@ def compare_error_traces(edited_error_trace: list, compared_error_trace: list, c
     return __get_jaccard(et1_threaded, et2_threaded, equal_threads)
 
 
-def obtain_pretty_error_trace(converted_error_trace: list, unsafe, conversion_function: str) -> str:
+def obtain_pretty_error_trace(converted_error_trace: list, unsafe, conversion_function: str, args: dict) -> str:
     try:
         # If trace is in new format, then just process it.
         return error_trace_pretty_print(converted_error_trace)
     except:
         # In case of old format create new converted error trace.
-        if conversion_function not in CONVERSION_FUNCTIONS:
-            conversion_function = DEFAULT_CONVERSION_FUNCTION
-        converted_error_trace = get_or_convert_error_trace(unsafe, conversion_function)
+        converted_error_trace = get_or_convert_error_trace(unsafe, conversion_function, args)
         return error_trace_pretty_print(converted_error_trace)
 
 
@@ -307,7 +307,7 @@ def dump_converted_error_trace(converted_error_trace):
         ET_FILE_NAME, ConvertedTraces)[0]
 
 
-def __convert_error_trace(error_trace: dict, conversion_function: str) -> list:
+def __convert_error_trace(error_trace: dict, conversion_function: str, args: dict=dict) -> list:
     """
     Convert json error trace into list of elements.
     Do not call this function itself, use wrapper function get_or_convert_error_trace
@@ -322,11 +322,11 @@ def __convert_error_trace(error_trace: dict, conversion_function: str) -> list:
     }
     if conversion_function not in functions.keys():
         conversion_function = DEFAULT_CONVERSION_FUNCTION
-    result = functions[conversion_function](error_trace)
+    result = functions[conversion_function](error_trace, args)
     return result
 
 
-def __convert_call_tree_filter(error_trace: dict) -> list:
+def __convert_call_tree_filter(error_trace: dict, args: dict=dict) -> list:
     converted_error_trace = list()
     counter = 0
     # TODO: should be fixed in core.
@@ -374,7 +374,7 @@ def __convert_call_tree_filter(error_trace: dict) -> list:
     return converted_error_trace
 
 
-def __convert_model_functions(error_trace: dict) -> list:
+def __convert_model_functions(error_trace: dict, args: dict=dict) -> list:
     model_functions = __get_model_functions(error_trace)
     converted_error_trace = __convert_call_tree_filter(error_trace)
     while True:
@@ -464,7 +464,7 @@ def __convert_model_functions_saved(error_trace: dict) -> list:
     return converted_error_trace
 
 
-def __convert_conditions(error_trace: dict) -> list:
+def __convert_conditions(error_trace: dict, args: dict=dict) -> list:
     converted_error_trace = list()
     counter = 0
     for edge in error_trace['edges']:
@@ -482,7 +482,7 @@ def __convert_conditions(error_trace: dict) -> list:
     return converted_error_trace
 
 
-def __convert_assignments(error_trace: dict) -> list:
+def __convert_assignments(error_trace: dict, args: dict=dict) -> list:
     converted_error_trace = list()
     counter = 0
     for edge in error_trace['edges']:
@@ -501,7 +501,7 @@ def __convert_assignments(error_trace: dict) -> list:
     return converted_error_trace
 
 
-def __convert_notes(error_trace: dict) -> list:
+def __convert_notes(error_trace: dict, args: dict=dict) -> list:
     converted_error_trace = list()
     counter = 0
     for edge in error_trace['edges']:
@@ -527,7 +527,7 @@ def __convert_notes(error_trace: dict) -> list:
     return converted_error_trace
 
 
-def __convert_full(error_trace: dict) -> list:
+def __convert_full(error_trace: dict, args: dict=dict) -> list:
     converted_error_trace = __convert_call_tree_filter(error_trace) + \
                             __convert_conditions(error_trace) + \
                             __convert_assignments(error_trace) + \

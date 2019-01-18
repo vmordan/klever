@@ -172,6 +172,7 @@ class MarkUnsafeHistory(MarkHistory):
     conversion_function = models.CharField(max_length=64, default='')
     error_trace = models.ForeignKey(ConvertedTraces, models.CASCADE)
     similarity = models.PositiveSmallIntegerField(default=1)
+    args = models.TextField(null=True)
 
     class Meta:
         db_table = 'mark_unsafe_history'
@@ -360,6 +361,7 @@ class ErrorTraceConvertionCache(models.Model):
     unsafe = models.ForeignKey(ReportUnsafe, models.CASCADE)
     function = models.CharField(max_length=64, default='')
     converted = models.ForeignKey(ConvertedTraces, models.CASCADE)
+    args = models.TextField(null=True)
 
     class Meta:
         db_table = 'cache_error_trace_converted'
