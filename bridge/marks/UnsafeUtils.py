@@ -480,12 +480,13 @@ class ConnectReport:
             if mark_id not in marks_attrs:
                 marks_attrs[mark_id] = set()
             marks_attrs[mark_id].add(attr_id)
-        for m_id, f_comparison, f_conversion, edited_error_trace, verdict, report in MarkUnsafeHistory.objects\
+        for m_id, f_comparison, f_conversion, edited_error_trace, verdict, report, similarity, args in MarkUnsafeHistory.objects\
                 .filter(mark_id__in=marks_attrs, version=F('mark__version'))\
                 .values_list('mark_id', 'comparison_function', 'conversion_function', 'error_trace_id', 'verdict',
-                             'mark__report'):
+                             'mark__report', 'similarity', 'args'):
             self._marks[m_id] = {'comparison_functions': f_comparison, 'conversion_functions': f_conversion,
-                                 'edited_error_trace': edited_error_trace, 'verdict': verdict, 'report': report}
+                                 'edited_error_trace': edited_error_trace, 'verdict': verdict, 'report': report,
+                                 'similarity': similarity, 'args': args}
         return marks_attrs
 
     def __connect(self):
@@ -507,10 +508,12 @@ class ConnectReport:
             compare_error = None
             try:
                 converted_error_trace = get_or_convert_error_trace(self._unsafe,
-                                                                   self._marks[mark_id]['conversion_functions'])
+                                                                   self._marks[mark_id]['conversion_functions'],
+                                                                   json.loads(self._marks[mark_id]['args'] or "{}"))
                 compare_result = compare_error_traces(self._marks[mark_id]['edited_error_trace'], converted_error_trace,
                                                       self._marks[mark_id]['comparison_functions'])
-                # TODO: this is broken
+                if compare_result * 100 < self._marks[mark_id]['similarity']:
+                    continue
             except BridgeException as e:
                 compare_error = str(e)
             except Exception as e:
