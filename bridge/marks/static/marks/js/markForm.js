@@ -70,6 +70,7 @@ function collect_markdata() {
         mark_data['comparison_function'] = JSON.parse($('#comparison_function').val().replace(/\'/g, '"')).name;
         mark_data['similarity_threshold'] = $('#similarity_threshold').val();
         mark_data['initial_error_trace'] = $('#report_id').val();
+        mark_data['conversion_function_args'] = get_conversion_function_args();
     }
     return JSON.stringify(mark_data);
 }
@@ -86,9 +87,26 @@ function set_action_on_func_change() {
     });
 }
 
+function get_conversion_function() {
+    return JSON.parse($('#conversion_function').val().replace(/\'/g, '"')).name;
+}
+
+function get_conversion_function_args() {
+    var args = {};
+    var conversion_function = get_conversion_function();
+    if (conversion_function == 'model functions') {
+        args['additional_model_functions'] = $('#additional_model_functions').val();
+    }
+    return JSON.stringify(args);
+}
+
 function update_converted_error_trace(conversion_function) {
     $.post(
-        '/marks/get_converted_trace/' + $('#report_id').val() +'/', {"conversion": conversion_function},
+        '/marks/get_converted_trace/' + $('#report_id').val() +'/',
+        {
+            "conversion": conversion_function,
+            "args": get_conversion_function_args()
+        },
         function (data) {
             if (data.error) {
                 err_notify(data.error);
@@ -103,13 +121,23 @@ function update_converted_error_trace(conversion_function) {
 function conversion_function_change(new_function) {
     obj = JSON.parse(new_function.replace(/\'/g, '"'));
     $('#conversion_function_description').text(obj.desc);
+    if (obj.name != 'model functions') {
+        $('#additional_model_functions').hide();
+    } else {
+        $('#additional_model_functions').val(null);
+        $('#additional_model_functions').show();
+    }
     update_converted_error_trace(obj.name);
 }
 
+function additional_model_functions_change(args) {
+    update_converted_error_trace(get_conversion_function());
+}
+
+
 function change_initial_error_trace(report_id) {
     $('#report_id').val(report_id);
-    var conversion_function = JSON.parse($('#conversion_function').val().replace(/\'/g, '"')).name;
-    update_converted_error_trace(conversion_function);
+    update_converted_error_trace(get_conversion_function());
 }
 
 function comparison_function_change(new_function) {

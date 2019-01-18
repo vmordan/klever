@@ -178,6 +178,17 @@
                             {% endfor %}
                         </p>
                     </div>
+
+                    <div id="conversion_function_arguments" class="ui teal segment">
+                        <h5>{% trans 'Conversion function arguments' %}</h5>
+                        <div class="ui form">
+                        <input type="text" id="additional_model_functions"
+                               {% if conversion_function != 'model functions' %} hidden {% endif %}
+                               placeholder="{% trans 'Input additional model function names separated by comma and press Enter' %}"
+                               onchange="additional_model_functions_change(this.value)" value="{{ additional_model_functions }}">
+                        </div>
+                    </div>
+
                     <h4 class="header ui teal">{% trans 'Error traces comparison function' %}</h4>
                     <label for="comparison_function" class="purple-title"></label>
                     <select id="comparison_function" class="ui dropdown fluid top attached" onchange="comparison_function_change(this.value)">

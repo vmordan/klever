@@ -62,6 +62,7 @@ CET_LINE = "line"
 TAG_CONVERSION_FUNCTION = "conversion_function"
 TAG_COMPARISON_FUNCTION = "comparison_function"
 TAG_EDITED_ERROR_TRACE = "edited_error_trace"
+TAG_ADDITIONAL_MODEL_FUNCTIONS = "additional_model_functions"
 
 CODE_LINE_SEPARATOR = "|"
 CODE_LINE_SEPARATOR_FOR_REGEXP = "\|"
@@ -89,7 +90,13 @@ def get_or_convert_error_trace(unsafe, conversion_function: str, args: dict) -> 
 
     if not report_unsafe:
         raise BridgeException("There is no unsafe report for this mark")
-
+    if conversion_function == CONVERSION_FUNCTION_MODEL_FUNCTIONS:
+        additional_model_functions = args.get(TAG_ADDITIONAL_MODEL_FUNCTIONS, "")
+        if additional_model_functions:
+            if isinstance(additional_model_functions, str):
+                additional_model_functions = additional_model_functions.split(",")
+            additional_model_functions.sort()
+            args[TAG_ADDITIONAL_MODEL_FUNCTIONS] = additional_model_functions
     args_str = json.dumps(args, sort_keys=True)
 
     try:
@@ -375,7 +382,8 @@ def __convert_call_tree_filter(error_trace: dict, args: dict=dict) -> list:
 
 
 def __convert_model_functions(error_trace: dict, args: dict=dict) -> list:
-    model_functions = __get_model_functions(error_trace)
+    additional_model_functions = set(args.get(TAG_ADDITIONAL_MODEL_FUNCTIONS, []))
+    model_functions = __get_model_functions(error_trace, additional_model_functions)
     converted_error_trace = __convert_call_tree_filter(error_trace)
     while True:
         counter = 0
@@ -479,15 +487,23 @@ def __convert_full(error_trace: dict, args: dict=dict) -> list:
     return converted_error_trace
 
 
-def __get_model_functions(error_trace: dict) -> set:
+def __get_model_functions(error_trace: dict, additional_model_functions: set) -> set:
     """
     Extract model functions from error trace.
     """
     stack = list()
-    model_functions = set()
+    model_functions = additional_model_functions
+    patterns = set()
+    for func in model_functions:
+        if not str(func).isidentifier():
+            patterns.add(func)
     for edge in error_trace['edges']:
         if 'enter' in edge:
             func = error_trace['funcs'][edge['enter']]
+            if patterns:
+                for pattern_func in patterns:
+                    if re.match(pattern_func, func):
+                        model_functions.add(func)
             stack.append(func)
         if 'return' in edge:
             # func = error_trace['funcs'][edge['return']]
@@ -495,6 +511,7 @@ def __get_model_functions(error_trace: dict) -> set:
         if 'warn' in edge or 'note' in edge:
             if len(stack) > 0:
                 model_functions.add(stack[len(stack) - 1])
+    model_functions = model_functions - patterns
     return model_functions
 
 

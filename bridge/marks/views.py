@@ -44,7 +44,8 @@ from marks.models import MarkSafe, MarkUnsafe, MarkUnknown, MarkSafeHistory, Mar
 from marks.tables import MarkData, MarkChangesTable, MarkReportsTable, MarksList, AssociationChangesTable
 from marks.tags import GetTagsData, GetParents, SaveTag, TagsInfo, CreateTagsFromFile, TagAccess
 from reports.mea import error_trace_pretty_print, get_or_convert_error_trace, COMPARISON_FUNCTIONS, \
-    CONVERSION_FUNCTIONS, DEFAULT_CONVERSION_FUNCTION, DEFAULT_COMPARISON_FUNCTION, obtain_pretty_error_trace
+    CONVERSION_FUNCTIONS, DEFAULT_CONVERSION_FUNCTION, DEFAULT_COMPARISON_FUNCTION, obtain_pretty_error_trace, \
+    TAG_ADDITIONAL_MODEL_FUNCTIONS
 from reports.models import ReportSafe, ReportUnsafe, ReportUnknown
 from tools.profiling import LoggedCallMixin
 from users.models import User
@@ -238,6 +239,9 @@ class MarkFormView(LoggedCallMixin, DetailView):
                 args = context['markdata'].mark_version.args
                 if args:
                     args = json.loads(args)
+                    additional_model_functions = args.get(TAG_ADDITIONAL_MODEL_FUNCTIONS, [])
+                    if additional_model_functions:
+                        context['additional_model_functions'] = ','.join(additional_model_functions)
                 edited_error_trace = obtain_pretty_error_trace(context['markdata'].error_trace,
                                                                self.object, self.object.conversion_function, args)
                 context['converted_error_trace'] = edited_error_trace
