@@ -407,63 +407,6 @@ def __convert_model_functions(error_trace: dict, args: dict=dict) -> list:
     return converted_error_trace
 
 
-def __convert_model_functions_saved(error_trace: dict) -> list:
-    model_functions = __get_model_functions(error_trace)
-    counter = 0
-    converted_error_trace = list()
-    for edge in error_trace['edges']:
-        if edge['thread'] == '3':
-            break
-        if 'enter' in edge:
-            function_call = error_trace['funcs'][edge['enter']]
-            converted_error_trace.append({
-                CET_OP: CET_OP_CALL,
-                CET_THREAD: edge['thread'],
-                CET_SOURCE: edge['source'],
-                CET_DISPLAY_NAME: function_call,
-                CET_ID: counter
-            })
-        if 'return' in edge:
-            function_return = error_trace['funcs'][edge['return']]
-            if function_return in model_functions:
-                converted_error_trace.append({
-                    CET_OP: CET_OP_RETURN,
-                    CET_THREAD: edge['thread'],
-                    CET_SOURCE: edge['source'],
-                    CET_DISPLAY_NAME: function_return,
-                    CET_ID: counter
-                })
-            else:
-                # Check from the last call of that function.
-                is_save = False
-                sublist = []
-                cur_thread = edge['thread']
-                for elem in reversed(converted_error_trace):
-                    if elem[CET_THREAD] != cur_thread:
-                        sublist.reverse()
-                        break
-                    sublist.append(elem)
-                    if elem[CET_OP] == CET_OP_CALL:
-                        for mf in model_functions:
-                            if elem[CET_DISPLAY_NAME] == mf:
-                                is_save = True
-                    if elem[CET_DISPLAY_NAME] == function_return and elem[CET_OP] == CET_OP_CALL:
-                        sublist.reverse()
-                        break
-                if is_save:
-                    converted_error_trace.append({
-                        CET_OP: CET_OP_RETURN,
-                        CET_THREAD: edge['thread'],
-                        CET_SOURCE: edge['source'],
-                        CET_DISPLAY_NAME: function_return,
-                        CET_ID: counter
-                    })
-                else:
-                    converted_error_trace = converted_error_trace[:-sublist.__len__()]
-        counter += 1
-    return converted_error_trace
-
-
 def __convert_conditions(error_trace: dict, args: dict=dict) -> list:
     converted_error_trace = list()
     counter = 0
