@@ -3110,3 +3110,15 @@ msgstr "Мера Жаккара для множеств потоков"
 
 msgid "Parent components"
 msgstr "Компоненты-родители"
+
+msgid "Conversion function arguments"
+msgstr "Параметры функции преобразования"
+
+msgid "Input additional model function names separated by comma and press Enter"
+msgstr "Введите имена дополнительных модельных функций и введите Enter"
+
+msgid "Arguments"
+msgstr "Параметры"
+
+msgid "Change initial error trace for this mark"
+msgstr "Изменить исходную трассу ошибки для оценки"
