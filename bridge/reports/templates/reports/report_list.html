@@ -98,7 +98,7 @@
                 </thead>
                 <tbody>
                     {% for row_data in TableData.table_data.values %}
-                        <tr>
+                        <tr onclick="document.location = '{{row_data.0.href}}'" style="cursor:pointer;">
                             {% for v in row_data %}
                                 <td>
                                     {% if v.html %}
