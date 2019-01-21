@@ -72,7 +72,7 @@ class MarkArchiveGenerator:
                 if self.type == 'unsafe':
                     version_data['conversion_function'] = markversion.conversion_function
                     version_data['comparison_function'] = markversion.comparison_function
-                    version_data['args'] = json.loads(markversion.args or {})
+                    version_data['args'] = json.loads(markversion.args or "{}")
                     with markversion.error_trace.file.file as fp:
                         version_data['error_trace'] = json.loads(fp.read().decode('utf8'))
                     try:
