@@ -807,6 +807,8 @@ def check_new_parent(job, parent):
 
 
 def get_resource_data(data_format, accuracy, resource):
+    if not resource:
+        return [0, 0, 0]
     if data_format == 'hum':
         wall = convert_time(resource.wall_time, accuracy)
         # Make big numbers look actually human readable.
