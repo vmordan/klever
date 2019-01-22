@@ -1028,7 +1028,10 @@ class UploadReportsWithoutDecision:
                     files.extend(list(os.path.join(self._reports_dir, p) for p in report[f]))
 
         # Uploading report
-        with OpenFiles(*files, rel_path=self._reports_dir) as archives:
-            res = UploadReport(self._job, report, archives=archives, source_archives=self.source_archives)
-        if res.error is not None:
-            raise ValueError(res.error)
+        try:
+            with OpenFiles(*files, rel_path=self._reports_dir) as archives:
+                res = UploadReport(self._job, report, archives=archives, source_archives=self.source_archives)
+            if res.error is not None:
+                raise ValueError(res.error)
+        except FileNotFoundError:
+            logger.error('Files {} were not found'.format(files))
