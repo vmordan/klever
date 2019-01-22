@@ -32,8 +32,11 @@
         </thead>
         <tbody>
             {% for row_data in TableData.values %}
-                <tr class="treegrid-{{ row_data.id }}{% if row_data.parent %} treegrid-parent-{{ row_data.parent }}{% endif %}"
-                    style="{% if row_data.black %}color: silver;{% endif %}{% if row_data.parent %}{% endif %}">
+                <tr class="treegrid-{{ row_data.id }}{% if row_data.parent %} treegrid-parent-{{ row_data.parent }}{% endif %}
+                           {% if row_data.children %} children {% endif %}
+                           {% if row_data.double_children %} double {% endif %}"
+                    style="{% if row_data.black %}color: silver;{% endif %} {% if not row_data.children %}display:none;{% endif %}"
+                    {% if row_data.desc %} title="{{ row_data.desc }}"{% endif %}>
                 <td id="value__{{ row_data.id }}" width="1%">
                     <div class="ui fitted checkbox">
                         <input type="checkbox" id="job_checkbox__{{ row_data.id }}">

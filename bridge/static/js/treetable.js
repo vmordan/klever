@@ -23,28 +23,35 @@ window.inittree = function(table, column, expanded, collapsed) {
 
     function get_ids(tr_class) {
         if (!tr_class) {
-            return [null, null];
+            return [null, null, false, false];
         }
-        var classlist = tr_class.split(/\s+/), tt_par_id = null, tt_id = null;
+        var classlist = tr_class.split(/\s+/), tt_par_id = null, tt_id = null, has_children = false,
+            has_double_children = false;
         $.each(classlist, function(i, item) {
             if (item.startsWith('treegrid-parent-')) {
                 tt_par_id = item.replace('treegrid-parent-', '');
             }
             else if (item.startsWith('treegrid-')) {
                 tt_id = item.replace('treegrid-', '');
+            } else if (item == 'children') {
+                has_children = true;
+            } else if (item == 'double') {
+                has_double_children = true;
             }
         });
-        return [tt_id, tt_par_id];
+        return [tt_id, tt_par_id, has_children, has_double_children];
     }
 
     var old_rows = {}, indent = 16, prev_icon, prev_indent;
     var expanded_parents = [];
     table.find('tr').each(function() {
-        var tt_par_id, tt_id,
+        var tt_par_id, tt_id, has_children, has_double_children,
             new_element = $('<div>', {class: 'tabletree'}), curr_ids = get_ids($(this).attr('class')),
             tree_cell = $(this).children('td:nth-child(' + column + ')');
         tt_id = curr_ids[0];
         tt_par_id = curr_ids[1];
+        has_children = curr_ids[2];
+        has_double_children = curr_ids[3];
 
         if (!tt_id) {
             return;
@@ -59,14 +66,13 @@ window.inittree = function(table, column, expanded, collapsed) {
                 curr_indent = old_rows[tt_par_id] + indent;
             }
             new_element.append($("<span>", {style: 'margin-left: ' + curr_indent + 'px;', class: 'tabletree'}));
-            if ($(this).hasClass('tr-show')) {
+            if ($(this).hasClass('tr-show') || has_double_children) {
                 $(this).removeClass('tr-show');
                 new_element.append($('<i>', {class: expanded, style: 'cursor: pointer', id: 'tt_expander_' + tt_id}));
                 expanded_parents.push(tt_id);
             }
             else {
-                new_element.append($('<i>', {class: expanded, style: 'cursor: pointer', id: 'tt_expander_' + tt_id}));
-                expanded_parents.push(tt_id);
+                new_element.append($('<i>', {class: collapsed, style: 'cursor: pointer', id: 'tt_expander_' + tt_id}));
             }
             tree_cell.prepend(new_element.html());
             if (tt_par_id && expanded_parents.indexOf(tt_par_id) === -1) {
