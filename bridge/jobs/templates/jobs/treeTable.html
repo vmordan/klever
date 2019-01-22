@@ -42,7 +42,19 @@
                 </td>
                 {% for v in row_data.values %}
                     <td id="value__{{ v.id }}__{{ row_data.id }}" class="collapsing"
-                        {% if 'name__' not in v.id %} style="text-align: center;"{% endif %}
+                        {% if 'name__' not in v.id %} style="text-align: center;"
+                        {% else %}
+                            style="
+                            {% if row_data.level == 0 %} font-size: 18px;
+                            {% elif row_data.level == 1 %} font-size: 16px;
+                            {% elif row_data.level == 2 %} font-size: 14px;
+                            {% else %}
+                            {% endif %}
+                            {% if row_data.children %} font-weight: bold
+                            {% endif %}
+                            "
+                        {% endif %}
+
                         {% if v.hidden %} value="{{ v.hidden }}" {% endif %}>
                         {% if v.href %}
                             <a href="{{ v.href }}">{{ v.value }}</a>
