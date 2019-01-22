@@ -413,6 +413,25 @@ class TableTree:
         columns.append('problem:total')
         return columns
 
+    def __get_level(self, cur_id: int) -> int:
+        for job in self._tree:
+            if job['id'] == cur_id:
+                return 1 + self.__get_level(job['parent'])
+        return 0
+
+    def __has_children(self, cur_id: int) -> bool:
+        for job in self._tree:
+            if job['parent'] == cur_id:
+                return True
+        return False
+
+    def __has_double_children(self, cur_id: int) -> bool:
+        for job in self._tree:
+            if job['parent'] == cur_id:
+                if self.__has_children(job['id']):
+                    return True
+        return False
+
     def __get_values(self):
         self.__init_values_data()
         self.__collect_jobdata()
@@ -462,7 +481,11 @@ class TableTree:
                 'id': job['id'], 'parent': job['parent'],
                 'black': job['id'] not in self._job_ids,
                 'values': row_values,
-                "type": Job.objects.get(pk=job['id']).format
+                "type": Job.objects.get(pk=job['id']).format,
+                "level": self.__get_level(job['parent']),
+                'desc': self._values_data[job['id']].get('desc', ''),
+                "children": self.__has_children(job['id']),
+                "double_children": self.__has_double_children(job['id'])
 
             })
         return table_rows
@@ -485,6 +508,9 @@ class TableTree:
             if j.change_author is not None:
                 self._values_data[j.id]['author'] = (j.change_author.get_full_name(),
                                                      reverse('users:show_profile', args=[j.change_author_id]))
+            desc = JobHistory.objects.get(job_id=j.id, version=F('job__version')).description
+            if desc:
+                self._values_data[j.id]['desc'] = desc
 
     def __get_safes_without_confirmed(self):
         # Collect safes data
