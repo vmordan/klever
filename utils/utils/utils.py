@@ -60,7 +60,10 @@ class Session:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.__request('/users/service_signout/')
+        try:
+            self.__request('/users/service_signout/')
+        except:
+            print('Cannot execute query \'/users/service_signout\'')
 
     def __check_host(self, host):
         self.__is_not_used()
