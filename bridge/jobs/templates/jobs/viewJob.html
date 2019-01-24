@@ -82,7 +82,7 @@
             <tbody>
                 <tr><th class="right aligned">{% trans 'Identifier' %}</th><td>{{ job.identifier }}</td></tr>
                 {% if last_version.description|length %}
-                    <tr><th class="right aligned">{% trans 'Description' %}</th><td>{{ last_version.description|safe }}</td></tr>
+                <tr><th class="right aligned">{% trans 'Description' %}</th><td><span style="white-space: pre-wrap;">{{ last_version.description|safe }}</span></td></tr>
                 {% endif %}
                 <tr id="tr_before_progress">
                     <th class="right aligned">{% trans 'Last change' %}</th>
