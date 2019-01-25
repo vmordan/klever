@@ -3054,12 +3054,6 @@ msgstr "Добавленные системой верификации опис�
 msgid "Full error trace"
 msgstr "Полная трасса ошибки"
 
-msgid "First converted trace is included into the second"
-msgstr "Первая трасса включается во вторую"
-
-msgid "All elements of the first converted trace are included into the second"
-msgstr "Все элементы первой трассы включаются во вторую"
-
 msgid "Similarity threshold"
 msgstr "Порог похожести"
 
@@ -3122,3 +3116,9 @@ msgstr "Параметры"
 
 msgid "Change initial error trace for this mark"
 msgstr "Изменить исходную трассу ошибки для оценки"
+
+msgid "Edited error trace is included in compared trace as a whole sequence"
+msgstr "Трасса ошибки после редактирования включается в сравниваемую трассу (в виде подпоследовательности)"
+
+msgid "All elements of the edited error trace are included into compared trace"
+msgstr "Все элементы трассы ошибки после редактирования включаются в сравниваемую трассу"

@@ -37,9 +37,10 @@ COMPARISON_FUNCTION_INCLUDE = "include"
 COMPARISON_FUNCTION_INCLUDE_PARTIAL = "partial include"
 COMPARISON_FUNCTIONS = [
     {'name': COMPARISON_FUNCTION_EQUAL, 'id': 1, 'desc': _('Converted error traces are the same')},
-    {'name': COMPARISON_FUNCTION_INCLUDE, 'id': 2, 'desc': _('First converted trace is included into the second')},
+    {'name': COMPARISON_FUNCTION_INCLUDE, 'id': 2,
+     'desc': _('Edited error trace is included in compared trace as a whole sequence')},
     {'name': COMPARISON_FUNCTION_INCLUDE_PARTIAL, 'id': 3,
-     'desc': _('All elements of the first converted trace are included into the second')}
+     'desc': _('All elements of the edited error trace are included into compared trace')}
 ]
 DEFAULT_COMPARISON_FUNCTION = COMPARISON_FUNCTION_EQUAL
 
