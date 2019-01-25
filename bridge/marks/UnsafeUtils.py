@@ -50,6 +50,7 @@ class NewMark:
         self.similarity_threshold = round(int(args.get('similarity_threshold', 0)))
         self.initial_error_trace = args.get('initial_error_trace')
         self.conversion_function_args = json.loads(args.get('conversion_function_args', "{}"))
+        self.apply_for_current = args.get('apply_for_current', False)
 
         if mark_unsafe:
             self.__check_mark_applicability(mark_unsafe)
@@ -130,7 +131,8 @@ class NewMark:
             mark.delete()
             raise
         self.changes = ConnectMarks([mark], self.similarity_threshold, self.conversion_function_args,
-                                    prime_id=report.id).changes.get(mark.id, {})
+                                    prime_id=report.id, apply_for_current=self.apply_for_current).\
+            changes.get(mark.id, {})
         self.__get_tags_changes(RecalculateTags(list(self.changes)).changes)
         update_confirmed_cache([report])
         return mark
@@ -177,7 +179,8 @@ class NewMark:
 
         if recalculate_cache:
             if do_recalc:
-                changes = ConnectMarks([mark], self.similarity_threshold, self.conversion_function_args).changes
+                changes = ConnectMarks([mark], self.similarity_threshold, self.conversion_function_args,
+                                       apply_for_current=self.apply_for_current).changes
             else:
                 changes = self.__create_changes(mark)
                 if recalc_verdicts:
@@ -297,7 +300,8 @@ class NewMark:
 
 
 class ConnectMarks:
-    def __init__(self, marks, similarity_threshold, conversion_function_args: dict, prime_id=None):
+    def __init__(self, marks, similarity_threshold, conversion_function_args: dict, prime_id=None,
+                 apply_for_current=False):
         self._marks = marks
         self._prime_id = prime_id
         self.changes = {}
@@ -306,6 +310,7 @@ class ConnectMarks:
         self.conversion_functions = {}
         self.comparison_functions = {}
         self.edited_error_trace = {}
+        self.apply_for_current = apply_for_current
 
         self._marks_attrs = self.__get_marks_attrs()
         self._unsafes_attrs = self.__get_unsafes_attrs()
@@ -383,6 +388,16 @@ class ConnectMarks:
             for mark_id in self.edited_error_trace:
                 if unsafe.id not in marks_reports[mark_id]:
                     continue
+                if self.apply_for_current:
+                    try:
+                        current_job_id = MarkUnsafe.objects.get(id=mark_id).report.root.job.id
+                        compared_job_id = unsafe.root.job.id
+                        if not current_job_id == compared_job_id:
+                            # Skip comparison for other reports for faster results.
+                            continue
+                    except:
+                        # Do not process old format (report was not saved, so we cannot use this heuristic).
+                        pass
                 compare_error = None
                 compare_result = 0
                 try:

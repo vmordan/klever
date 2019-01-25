@@ -3122,3 +3122,6 @@ msgstr "Трасса ошибки после редактирования вкл
 
 msgid "All elements of the edited error trace are included into compared trace"
 msgstr "Все элементы трассы ошибки после редактирования включаются в сравниваемую трассу"
+
+msgid "Apply only to current report"
+msgstr "Применять к трассам только из анализируемого отчета"
