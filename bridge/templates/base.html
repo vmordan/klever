@@ -45,7 +45,7 @@
             <div class="ui text loader">{% trans 'Please wait' %}</div>
         </div>
 
-        <div id="page_header" class="ui secondary fixed menu" style="background: #baedef">
+        <div id="page_header" class="ui inverted menu blue compact fixed">
         {% if user.is_authenticated %}
             <div class="item">
                 <a href="{% url 'jobs:tree' %}">
@@ -53,7 +53,7 @@
                 </a>
             </div>
             <a class="browse item">{% trans 'Menu' %}<i class="dropdown icon"></i></a>
-            <div class="ui fluid popup bottom left transition hidden" style="max-width: 50%;">
+            <div class="ui fluid popup bottom left transition hidden inverted" style="max-width: 50%;">
                 <div class="ui three column relaxed equal height grid">
                     <div class="column">
                         <h3 class="ui blue header">{% trans 'Jobs' %}</h3>
