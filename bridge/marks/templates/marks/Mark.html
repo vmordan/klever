@@ -34,88 +34,35 @@
 
 {% block body_block %}
     <div class="ui grid">
-        <div class="eight wide column">
-            {# Attributes #}
-            <div class="ui styled accordion fluid">
-                <div class="title">
-                    <i class="grid layout icon"></i>{% trans 'Attributes' %}
-                </div>
-                <div class="content">
-                    <div style="overflow-x:auto;">
-                        <table class="ui celled compact purple table">
-                            <tbody>
-                                {% for v in markdata.attributes %}
-                                    <tr>
-                                        <th class="collapsing">{{ v.0 }}</th>
-                                        <td class="collapsing">
-                                            {% if v.2 %}
-                                                <i class="ui green small checkmark icon"></i>
-                                            {% else %}
-                                                <i class="ui red small remove icon"></i>
-                                            {% endif %}
-                                            {{ v.1 }}
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+        <div class="ten wide column">
             {% if markdata.type == 'unknown' %}
                 <div class="ui purple segment">
                     <div class="ui top left attached purple label">{% trans 'Pattern' %}{% if markdata.unknown_data.3 %} (regexp){% endif %}</div>
                     <div class="filecontent">{{ markdata.unknown_data.0 }}</div>
                 </div>
             {% else %}
+                {% if markdata.tags.table %}
                 <div class="ui horizontal segments">
                     <div class="ui pink segment">
                         <h4 class="header ui pink">{% trans 'Tags' %}</h4>
                         {% include 'marks/MarkTags.html' with tags=markdata.tags.table available=markdata.tags.available selected=markdata.tags.selected %}
                     </div>
                 </div>
-                {% if markdata.type == 'unsafe' %}
-                    <div class="ui horizontal segments equal">
-                        <div class="ui segment red center aligned">
-                            <h4 class="header ui">
-                                {% trans 'Error traces conversion function' %}: <span style="color:red">{{ mark.conversion_function }}</span>
-                            </h4>
-                            <p class="func-description">{{ desc.conversion }}</p>
-                            {% if args %}
-                                <h5 class="header ui">{% trans 'Arguments' %}:</h5>
-                                <table class="ui selectable compact table celled">
-                                    <tbody>
-                                        {% for name, val in args.items %}
-                                            <tr>
-                                                <td class="collapsing">{{ name }}</td>
-                                                <td class="collapsing">{{ val }}</td>
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            {% endif %}
-                        </div>
-                        <div class="ui segment yellow center aligned">
-                            <h4 class="header ui">
-                                {% trans 'Error traces comparison function' %}: <span style="color:red">{{ mark.comparison_function }}</span>
-                            </h4>
-                            <p class="func-description">{{ desc.comparison }}</p>
-
-                        </div>
-                    </div>
-                    <div class="ui styled accordion fluid">
-                        <div class="title"><i class="file outline icon"></i>{% trans 'Converted error trace' %}</div>
-                        <div class="content active">
-                            <div class="filecontent" style="max-height:40vh;">{{ edited_error_trace }}</div>
-                        </div>
-                    </div>
                 {% endif %}
+            {% endif %}
+            {% if markdata.type == 'unsafe' %}
+                <div class="ui styled accordion fluid">
+                    <div class="title"><i class="file outline icon"></i>{% trans 'Converted error trace' %}</div>
+                    <div class="content active">
+                        <div class="filecontent" style="max-height:40vh;">{{ edited_error_trace }}</div>
+                    </div>
+                </div>
             {% endif %}
         </div>
 
-        <div class="eight wide column">
+        <div class="six wide column">
             {# Mark menu #}
-            <div class="ui blue inverted menu top attached">
+            <div class="ui menu top attached secondary" style="background: #baedef">
                 {% if user.extended.role == '2' %}
                 <a href="{% url 'marks:download_mark' markdata.type mark.pk %}" class="item">{% trans 'Download' %}</a>
                 <!--<a href="{% url 'marks:download_preset_mark' markdata.type mark.pk %}" class="item">{% trans 'Download in preset format' %}</a> What is this? -->
@@ -125,32 +72,32 @@
                 <a id="show_remove_mark_popup" class="item{% if not access.can_delete %} disabled{% endif %}">{% trans 'Delete' %}</a>
                 {% endif %}
             </div>
-            <table class="ui selectable compact inverted blue table attached">
+            <table class="ui selectable compact table attached celled striped" style="background: #cafdff">
                 <tbody>
                     {% if markdata.type == 'unknown' %}
                         <tr>
-                            <th class="right aligned">{% trans 'Component' %}</th>
+                            <td class="right aligned">{% trans 'Component' %}</td>
                             <td>{{ mark.component.name }}</td>
                         </tr>
                     {% endif %}
                     {% if markdata.author %}
                         <tr>
-                            <th class="right aligned">{% trans 'Author' %}</th>
-                            <td><a class="violet-link" href="{% url 'users:show_profile' markdata.author.pk %}">{{ markdata.author.get_full_name }}</a></td>
+                            <td class="right aligned">{% trans 'Author' %}</td>
+                            <td><a class="purple-link" href="{% url 'users:show_profile' markdata.author.pk %}">{{ markdata.author.get_full_name }}</a></td>
                         </tr>
                     {% endif %}
 
                     <tr>
-                        <th class="right aligned">{% trans 'Status' %}</th>
+                        <td class="right aligned" width="15%">{% trans 'Status' %}</td>
                         <td>
                             {% for s in markdata.statuses %}
-                                {% if s.checked %}<strong style="color: {{ s.color }};text-shadow: 1px 1px 1px black;">{{ s.title }}</strong>{% endif %}
+                                {% if s.checked %}<strong style="color: {{ s.color }};">{{ s.title }}</strong>{% endif %}
                             {% endfor %}
                         </td>
                     </tr>
                     {% if markdata.type == 'unknown' %}
                         <tr>
-                            <th class="right aligned">{% trans 'Problem' %}</th>
+                            <td class="right aligned">{% trans 'Problem' %}</td>
                             <td>
                                 {% if markdata.unknown_data.2 %}
                                     <a class="violet-link" href="{{ markdata.unknown_data.2 }}">{{ markdata.unknown_data.1 }}</a>
@@ -161,76 +108,151 @@
                         </tr>
                     {% else %}
                         <tr>
-                            <th class="right aligned">{% trans 'Verdict' %}</th>
+                            <td class="right aligned">{% trans 'Verdict' %}</td>
                             <td>
                                 {% for v in markdata.verdicts %}
-                                    {% if v.checked %}<strong style="color: {{ v.color }};text-shadow: 1px 1px 1px black;">{{ v.title }}</strong>{% endif %}
+                                    {% if v.checked %}<strong style="color: {{ v.color }};">{{ v.title }}</strong>{% endif %}
                                 {% endfor %}
                             </td>
                         </tr>
                     {% endif %}
+                    {% if markdata.type == 'unsafe' %}
+                    <tr>
+                        <td class="right aligned">{% trans 'Error traces conversion function' %}</td>
+                        <td>
+                            {% if mark.conversion_function %}
+                                <strong>{{ mark.conversion_function }}</strong>
+                                {% if desc.conversion %}
+                                    <b><i class="question icon red" title="{{ desc.conversion }}"></i></b>
+                                {% endif %}
+                                {% if args %}
+                                <div class="ui accordion">
+                                    <div class="title"><a class="purple-link" href="#">{% trans 'Arguments' %}</a></div>
+                                    <div class="content">
+                                        <table class="table selectable">
+                                            <tbody>
+                                                {% for name, val in args.items %}
+                                                    <tr>
+                                                        <td>{{ name }}</td>
+                                                        <td>{{ val }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% else %}
+                                {% trans 'Default' %}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="right aligned">{% trans 'Error traces comparison function' %}</td>
+                        <td>
+                            {% if mark.comparison_function %}
+                                <b>{{ mark.comparison_function }}</b>
+                                {% if desc.comparison %}
+                                    <b><i class="question icon red" title="{{ desc.comparison }}"></i></b>
+                                {% endif %}
+                            {% else %}
+                                {% trans 'Default' %}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% if similarity %}
+                    <tr>
+                        <td class="right aligned">{% trans 'Similarity threshold' %}</td>
+                        <td><b>{{ similarity }}%</b></td>
+                    </tr>
+                    {% endif %}
+                    {% endif %}
                     {% if markdata.description|length > 0 %}
-                        <tr><th class="right aligned">{% trans 'Description' %}</th><td>{{ markdata.description|safe }}</td></tr>
+                        <tr><td class="right aligned">{% trans 'Description' %}</td><td>{{ markdata.description|safe }}</td></tr>
                     {% endif %}
                 </tbody>
             </table>
-            {% if similarity %}
+
             <div class="ui horizontal segments">
-                <div class="ui violet segment">
-                    <h4 class="header ui violet">{% trans 'Similarity threshold' %}: {{ similarity }}%</h4>
+                {# Attributes #}
+                <div class="ui styled accordion fluid">
+                    <div class="title">
+                        <i class="grid layout icon"></i>{% trans 'Attributes' %}
+                    </div>
+                    <div class="content">
+                        <div style="overflow-x:auto;">
+                            <table class="ui celled compact teal table">
+                                <tbody>
+                                    {% for v in markdata.attributes %}
+                                        <tr>
+                                            <th class="collapsing">{{ v.0 }}</th>
+                                            <td class="collapsing">
+                                                {% if v.2 %}
+                                                    <i class="ui green small checkmark icon"></i>
+                                                {% else %}
+                                                    <i class="ui red small remove icon"></i>
+                                                {% endif %}
+                                                {{ v.1 }}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
-            {% endif %}
-            <h4 class="header ui teal">{% trans 'Associated leaf reports' %}</h4>
-            {# View for associated reports #}
-            {% if user.extended.role == '2' %}
-            {% include reports.view.template with view=reports.view selected_columns=reports.selected_columns available_columns=reports.available_columns %}
-            {% endif %}
-            {# Associated reports table #}
-            {% if reports.values|length %}
-                <br>
-                <div>
-                    {% if reports.values.has_previous %}
-                        <i class="ui arrow left blue link icon page-link-icon" data-page-number="{{ reports.values.previous_page_number }}"></i>
-                    {% endif %}
-                    <span>{% blocktrans with n1=reports.values.number n2=reports.values.paginator.num_pages %}Page {{ n1 }} of {{ n2 }}{% endblocktrans %}</span>
-                    {% if reports.values.has_next %}
-                        <i class="ui arrow right blue link icon page-link-icon" data-page-number="{{ reports.values.next_page_number }}"></i>
-                    {% endif %}
-                </div>
-                <div style="overflow-x: auto;">
-                    <table class="ui compact teal celled selectable table alternate-color">
-                        <thead>
-                            {% for column_row in reports.header %}
-                                <tr>
-                                {% for coldata in column_row %}
-                                    <th colspan="{{ coldata.columns }}" rowspan="{{ coldata.rows }}">{{ coldata.title }}</th>
-                                {% endfor %}
-                                </tr>
-                            {% endfor %}
-                        </thead>
-                        <tbody>
-                            {% for row_data in reports.values %}
-                                <tr>
-                                    {% for v in row_data %}
-                                        <td class="collapsing">
-                                            {% if v.href %}
-                                                <a href="{{ v.href }}">{{ v.value }}</a>
-                                            {% else %}
-                                                <span{% if v.color %} style="color:{{ v.color }}"{% endif %}>{{ v.value }}</span>
-                                            {% endif %}
-                                        </td>
-                                    {% endfor %}
-                                </tr>
-                            {%  endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <h5>{% trans 'The list of associated reports is empty' %}</h5>
-            {% endif %}
         </div>
     </div>
+
+    <h4 class="header ui teal">{% trans 'Associated leaf reports' %}</h4>
+    {# View for associated reports #}
+    {% if user.extended.role == '2' %}
+    {% include reports.view.template with view=reports.view selected_columns=reports.selected_columns available_columns=reports.available_columns %}
+    {% endif %}
+    {# Associated reports table #}
+    {% if reports.values|length %}
+        <br>
+        <div>
+            {% if reports.values.has_previous %}
+                <i class="ui arrow left blue link icon page-link-icon" data-page-number="{{ reports.values.previous_page_number }}"></i>
+            {% endif %}
+            <span>{% blocktrans with n1=reports.values.number n2=reports.values.paginator.num_pages %}Page {{ n1 }} of {{ n2 }}{% endblocktrans %}</span>
+            {% if reports.values.has_next %}
+                <i class="ui arrow right blue link icon page-link-icon" data-page-number="{{ reports.values.next_page_number }}"></i>
+            {% endif %}
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="ui compact teal celled selectable table alternate-color">
+                <thead>
+                    {% for column_row in reports.header %}
+                        <tr>
+                        {% for coldata in column_row %}
+                            <th colspan="{{ coldata.columns }}" rowspan="{{ coldata.rows }}">{{ coldata.title }}</th>
+                        {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </thead>
+                <tbody>
+                    {% for row_data in reports.values %}
+                        <tr>
+                            {% for v in row_data %}
+                                <td class="collapsing">
+                                    {% if v.href %}
+                                        <a href="{{ v.href }}">{{ v.value }}</a>
+                                    {% else %}
+                                        <span{% if v.color %} style="color:{{ v.color }}"{% endif %}>{{ v.value }}</span>
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {%  endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <h5>{% trans 'The list of associated reports is empty' %}</h5>
+    {% endif %}
 
     {% if access.can_delete %}
         <div id="remove_mark_popup" class="ui basic modal">

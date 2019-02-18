@@ -36,9 +36,9 @@ from marks.models import MarkSafe, MarkUnsafe, MarkUnknown, MarkSafeHistory, Mar
 
 STATUS_COLOR = {
     '0': '#e81919',
-    '1': '#FF8533',
-    '2': '#FF8533',
-    '3': '#00c600',
+    '1': '#00C600',
+    '2': '#00C600',
+    '3': '#FF8533',
 }
 
 UNSAFE_COLOR = {

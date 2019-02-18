@@ -383,7 +383,7 @@ class ViewJobData:
                 style = 'purple-link'
             elif verdict == UNSAFE_VERDICTS[5][0]:
                 unsafe_name += UNSAFES[5]
-                style = 'red-link'
+                style = 'black-link'
 
             if verdict in tags:
                 if not verdict == UNSAFE_VERDICTS[5][0]:

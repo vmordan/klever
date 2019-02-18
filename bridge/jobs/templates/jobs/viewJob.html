@@ -59,9 +59,9 @@
     <div class="six wide column right floated right aligned">
         {% if user.extended.role == '2' %}
             {# Job menu #}
-            <div class="ui menu top attached blue inverted">
+            <div class="ui menu top attached secondary" style="background: #baedef">
                 <a class="browse item">{% trans 'Menu' %}<i class="dropdown icon"></i></a>
-                <div class="ui popup bottom left inverted hidden transition">
+                <div class="ui popup bottom left hidden transition">
                     <a id="download_job_btn" href="{% url 'jobs:download' job.id %}" class="item{% if not job_access.can_download %} disabled{% endif %}">{% trans 'Download' %}</a>
                     <a href="{% url 'jobs:form' job.id 'edit' %}" class="menu-link item{% if not job_access.can_edit %} disabled{% endif %}">{% trans 'Edit' %}</a>
                     <a id="remove_job_btn" class="item{% if not job_access.can_delete %} disabled{% endif %}" style="">{% trans 'Delete' %}</a>
@@ -71,33 +71,33 @@
             </div>
         {% endif %}
         {# Job data table #}
-        <table class="ui selectable attached compact table celled blue inverted">
+        <table class="ui selectable attached compact table celled striped" style="background: #cafdff">
             <thead>
                 <tr>
-                    <th class="center aligned" colspan="2">
-                        <span class="ui white header" style="text-shadow: 1px 1px 2px black;color: white">{{ job.name }}{% if job.weight == '1' %} ({{ job.get_weight_display|lower }}){% endif %}</span>
-                    </th>
+                    <td class="center aligned" colspan="2"  style="background: #baedef">
+                        <span class="ui header">{{ job.name }}{% if job.weight == '1' %} ({{ job.get_weight_display|lower }}){% endif %}</span>
+                    </td>
                 </tr>
             </thead>
             <tbody>
-                <tr><th class="right aligned">{% trans 'Identifier' %}</th><td>{{ job.identifier }}</td></tr>
+                <tr><td class="right aligned">{% trans 'Identifier' %}</td><td>{{ job.identifier }}</td></tr>
                 {% if last_version.description|length %}
-                <tr><th class="right aligned">{% trans 'Description' %}</th><td><span style="white-space: pre-wrap;">{{ last_version.description|safe }}</span></td></tr>
+                <tr><td class="right aligned">{% trans 'Description' %}</td><td><span style="white-space: pre-wrap;">{{ last_version.description|safe }}</span></td></tr>
                 {% endif %}
                 <tr id="tr_before_progress">
-                    <th class="right aligned">{% trans 'Last change' %}</th>
+                    <td class="right aligned">{% trans 'Last change' %}</td>
                     <td>
                         {% if user.extended.data_format == 'hum' %}{{ last_version.change_date|naturaltime }}{% else %}{{ last_version.change_date }}{% endif %}
                         {% if last_version.change_author %}
-                            (<a class="violet-link" href="{% url 'users:show_profile' last_version.change_author.pk %}">{{ last_version.change_author.get_full_name }}</a>)
+                            (<a class="purple-link" href="{% url 'users:show_profile' last_version.change_author.pk %}">{{ last_version.change_author.get_full_name }}</a>)
                         {% endif %}
                     </td>
                 </tr>
                 <tr id="job_status_popup_activator">
-                    <th class="right aligned">{% trans 'Status' %}</th>
+                    <td class="right aligned">{% trans 'Status' %}</td>
                     <td>
                         {% if reportdata.report %}
-                            <a class="status-link status{{ job.status }}-link" href="{% url 'reports:component' reportdata.report.id %}">{{ job.get_status_display }} ({% trans 'components tree' %})</a>
+                            <a class="purple-link" href="{% url 'reports:component' reportdata.report.id %}">{{ job.get_status_display }} ({% trans 'components tree' %})</a>
                         {% else %}
                             <span style="color: #f1ffff">{{ job.get_status_display }}</span>
                         {% endif %}
@@ -105,23 +105,23 @@
                 </tr>
                 {% if attrs %}
                     <tr>
-                        <th class="center aligned" colspan="2">
+                        <td class="ui header center aligned" colspan="2"  style="background: #baedef">
                             {% trans 'Attributes' %}
-                        </th>
+                        </td>
                     </tr>
                     {% for name, vals in attrs.items|dictsort:"0.lower" %}
                     <tr>
-                        <th class="right aligned">{{ name }}</th>
+                        <td class="right aligned">{{ name }}</td>
                         <td>
-                            <div class="ui accordion" style="color:white">
-                                <div class="title" style="color:white"><i class="dropdown icon"></i>{{ vals|length }}
+                            <div class="ui accordion" style="">
+                                <div class="title" style=""><i class="dropdown icon"></i>{{ vals|length }}
                                     {% if vals|length == 1 %} {% trans 'element' %} {% else %} {% trans 'elements' %} {% endif %}
                                 </div>
                                 <div class="content">
                                     {% for val in vals %}
                                     <div class="ui checkbox">
                                         <input type="checkbox" id="attr_{{ name }}_{{ val }}">
-                                        <label style="color:white">{{ val }}</label>
+                                        <label style="">{{ val }}</label>
                                     </div>
                                     <br>
                                     {% endfor %}
