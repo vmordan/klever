@@ -18,7 +18,7 @@
 $(document).ready(function () {
     $('.bottom-attached').parent().addClass('with-bottom-attachment');
 
-    $('.parent-popup').popup({inline:true});
+    $('.parent-popup').popup({inline:true, hoverable:true});
     $('.ui.dropdown').dropdown();
 
     $('#create_light_mark_btn').click(function () {

@@ -51,33 +51,42 @@
             {% if resources %}
                 <i class="ui tiny inverted violet button parent-popup" data-variation="very wide">{% trans 'Consumed resources' %}</i>
                 <div class="ui special popup">
-                    <div class="content">
-                        <span class="purple-subtitle">{% trans 'Wall time' %}: </span>{{ resources.wall_time }}<br>
-                        <span class="purple-subtitle">{% trans 'CPU time' %}: </span>{{ resources.cpu_time }}<br>
-                        <span class="purple-subtitle">{% trans 'Memory' %}: </span>{{ resources.memory }}<br>
-                    </div>
+                    <table class="ui celled compact purple table">
+                        <tbody>
+                            <tr>
+                                <td class="purple-subtitle">{% trans 'Wall time' %}</td>
+                                <td>{{ resources.wall_time }}</td>
+                            </tr>
+                            <tr>
+                                <td class="purple-subtitle">{% trans 'CPU time' %}</td>
+                                <td>{{ resources.cpu_time }}</td>
+                            </tr>
+                            <tr>
+                                <td class="purple-subtitle">{% trans 'Memory' %}</td>
+                                <td>{{ resources.memory }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             {% endif %}
             <i class="ui tiny inverted violet button parent-popup" data-variation="very wide">{% trans 'Attributes' %}</i>
             <div class="ui special popup">
-                <div class="content">
-                    <table class="ui celled compact purple table">
-                        <tbody>
-                            {% for a_id, a_name, a_value, a_data in SelfAttrsData %}
-                                <tr>
-                                    <td class="collapsing">{{ a_name }}</td>
-                                    <td class="collapsing">
-                                        {% if a_data %}
-                                            <a class="attr-data-href" href="#" data-attr-id="{{ a_id }}">{{ a_value }}</a>
-                                        {% else %}
-                                            <span>{{ a_value }}</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                <table class="ui celled compact purple table">
+                    <tbody>
+                        {% for a_id, a_name, a_value, a_data in SelfAttrsData %}
+                            <tr>
+                                <td class="purple-subtitle">{{ a_name }}</td>
+                                <td class="collapsing">
+                                    {% if a_data %}
+                                        <a class="attr-data-href" href="#" data-attr-id="{{ a_id }}">{{ a_value }}</a>
+                                    {% else %}
+                                        <span>{{ a_value }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
             {% with parents|last as parent %}
                 {% if parent.has_coverage %}
@@ -157,16 +166,18 @@
                 <div class="ui special popup">
                     <div class="header">{{ parents.0.title }}</div>
                     <div class="content">
+                        {% if parents.0.attrs %}
                         <table class="ui celled compact purple table">
                             <tbody>
                                 {% for attr in parents.0.attrs %}
                                     <tr>
-                                        <td><span class="purple-subtitle">{{ attr.0 }}: </span></td>
+                                        <td><span class="purple-subtitle">{{ attr.0 }} </span></td>
                                         <td>{{ attr.1|safe }}</td>
                                     </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
+                        {% endif %}
                     </div>
                 </div>
                 {% for parent in parents|slice:"1:" %}
@@ -175,16 +186,18 @@
                     <div class="ui special popup">
                         <div class="header">{{ parent.title }}</div>
                         <div class="content">
+                            {% if parent.attrs %}
                             <table class="ui celled compact purple table">
                                 <tbody>
                                     {% for attr in parent.attrs %}
                                         <tr>
-                                            <td><span class="purple-subtitle">{{ attr.0 }}: </span></td>
+                                            <td><span class="purple-subtitle">{{ attr.0 }} </span></td>
                                             <td>{{ attr.1|safe }}</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
+                            {% endif %}
                         </div>
                     </div>
                 {% endfor %}
