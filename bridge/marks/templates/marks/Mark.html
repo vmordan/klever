@@ -68,9 +68,7 @@
                 <!--<a href="{% url 'marks:download_preset_mark' markdata.type mark.pk %}" class="item">{% trans 'Download in preset format' %}</a> What is this? -->
                 {% endif %}
                 <a href="{% url 'marks:mark_form' markdata.type mark.pk 'edit' %}{% if report_id %}?report_to_redirect={{ report_id }}{% endif %}" class="item{% if not access.can_edit %} disabled{% endif %}">{% trans 'Edit' %}</a>
-                {% if user.extended.role == '2' %}
                 <a id="show_remove_mark_popup" class="item{% if not access.can_delete %} disabled{% endif %}">{% trans 'Delete' %}</a>
-                {% endif %}
             </div>
             <table class="ui selectable compact table attached celled striped" style="background: #cafdff">
                 <tbody>
