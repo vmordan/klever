@@ -71,6 +71,8 @@ FUNCTION_CALL_SEPARATOR = " "
 CET_END = "__ERROR__"
 ASSIGN_MARK = " = "
 
+DEFAULT_SIMILARITY_THRESHOLD = 100  # in % (all threads are equal)
+
 
 def get_or_convert_error_trace(unsafe, conversion_function: str, args: dict) -> list:
     """

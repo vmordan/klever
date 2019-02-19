@@ -45,7 +45,7 @@ from marks.tables import MarkData, MarkChangesTable, MarkReportsTable, MarksList
 from marks.tags import GetTagsData, GetParents, SaveTag, TagsInfo, CreateTagsFromFile, TagAccess
 from reports.mea import error_trace_pretty_print, get_or_convert_error_trace, COMPARISON_FUNCTIONS, \
     CONVERSION_FUNCTIONS, DEFAULT_CONVERSION_FUNCTION, DEFAULT_COMPARISON_FUNCTION, obtain_pretty_error_trace, \
-    TAG_ADDITIONAL_MODEL_FUNCTIONS
+    TAG_ADDITIONAL_MODEL_FUNCTIONS, DEFAULT_SIMILARITY_THRESHOLD
 from reports.models import ReportSafe, ReportUnsafe, ReportUnknown
 from tools.profiling import LoggedCallMixin
 from users.models import User
@@ -278,7 +278,7 @@ class MarkFormView(LoggedCallMixin, DetailView):
                 args=[self.object.trace_id if self.kwargs['type'] == 'unsafe' else self.object.id]
             )
             if self.kwargs['type'] == 'unsafe':
-                context['similarity'] = 1
+                context['similarity'] = DEFAULT_SIMILARITY_THRESHOLD
                 try:
                     conversion_function = DEFAULT_CONVERSION_FUNCTION
                     comparison_function = DEFAULT_COMPARISON_FUNCTION
@@ -340,7 +340,7 @@ class InlineMarkForm(LoggedCallMixin, Bview.JSONResponseMixin, DetailView):
         else:
             context['markdata'] = MarkData(self.kwargs['type'], report=self.object)
             if self.kwargs['type'] == 'unsafe':
-                context['similarity'] = 1
+                context['similarity'] = DEFAULT_SIMILARITY_THRESHOLD
                 conversion_function = DEFAULT_CONVERSION_FUNCTION
                 comparison_function = DEFAULT_COMPARISON_FUNCTION
                 converted_error_trace = get_or_convert_error_trace(self.object, conversion_function, {})
