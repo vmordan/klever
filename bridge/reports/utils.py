@@ -193,13 +193,7 @@ class SafesTable:
                 self.title = '{0}: {1}'.format(_("Safes"), tag.tag)
                 kwargs['tag'] = tag
         if 'attr' in data:
-            try:
-                attr = Attr.objects.select_related('name').get(id=data['attr'])
-            except ObjectDoesNotExist:
-                raise BridgeException(_("The attribute was not found"))
-            self.title = _('Safes where %(a_name)s is %(a_val)s') % {'a_name': attr.name.name, 'a_val': attr.value}
-            kwargs['attr'] = attr
-
+            kwargs['attr'] = str(data['attr']).split(",")
         return kwargs
 
     @cached_property
@@ -359,13 +353,7 @@ class UnsafesTable:
                 self.title = '{0}: {1}'.format(_("Unsafes"), tag.tag)
                 kwargs['tag'] = tag
         if 'attr' in data:
-            try:
-                attr = Attr.objects.select_related('name').get(id=data['attr'])
-            except ObjectDoesNotExist:
-                raise BridgeException(_("The attribute was not found"))
-            self.title = _('Unsafes where %(a_name)s is %(a_val)s') % {'a_name': attr.name.name, 'a_val': attr.value}
-            kwargs['attr'] = attr
-
+            kwargs['attr'] = str(data['attr']).split(",")
         return kwargs
 
     def __selected(self):
@@ -516,13 +504,7 @@ class UnknownsTable:
                 self.title = '{0}: {1}'.format(_("Unknowns"), problem.name)
                 kwargs['problem'] = problem
         if 'attr' in data:
-            try:
-                attr = Attr.objects.select_related('name').get(id=data['attr'])
-            except ObjectDoesNotExist:
-                raise BridgeException(_("The attribute was not found"))
-            self.title = _('Unknowns where %(a_name)s is %(a_val)s') % {'a_name': attr.name.name, 'a_val': attr.value}
-            kwargs['attr'] = attr
-
+            kwargs['attr'] = str(data['attr']).split(",")
         return kwargs
 
     def __selected(self):
