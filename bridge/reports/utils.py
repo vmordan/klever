@@ -109,7 +109,8 @@ def get_parents(report):
             'title': parent.component.name,
             'href': reverse('reports:component', args=[parent.id]),
             'attrs': parent_attrs,
-            'has_coverage': (parent.covnum > 0)
+            'has_coverage': (parent.covnum > 0),
+            'id': parent.id
         })
         try:
             parent = ReportComponent.objects.get(id=parent.parent_id)

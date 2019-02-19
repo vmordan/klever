@@ -41,11 +41,23 @@
 <input id="tags_type" type="hidden" value="{{ report_type }}">
     <div class="ui grid">
         <div class="nine wide column">
-            <a href="{% url 'jobs:job' report.root.job.pk %}" class="ui tiny green button" title="{{ report.root.job.name }}">{% trans 'Back to report' %}</a>
-            {% if root_report_id %}
-                <a href="{% url 'reports:unsafes' root_report_id %}" class="ui tiny purple button">{% trans 'List of all error traces' %}</a>
-                <a href="{% url 'reports:unsafes' root_report_id %}?verdict=5" class="ui tiny red button">{% trans 'List of unmarked error traces' %}</a>
-            {% endif %}
+            <div class="ui breadcrumb">
+                {% if report.root.job.name %}
+                    {% trans 'Report' %} <a href="{% url 'jobs:job' report.root.job.pk %}">{{ report.root.job.name }}</a>
+                {% endif %}
+                {% if parents.0 %}
+                    <i class="right arrow icon divider"></i>
+                    {% if report_type == 'unsafe' %}
+                        <a href="{% url 'reports:unsafes' parents.0.id %}">{% trans 'List of all error traces' %}</a>
+                        <i class="right arrow icon divider"></i>
+                        <a href="{% url 'reports:unsafes' parents.0.id %}?verdict=5">{% trans 'List of unmarked error traces' %}</a>
+                    {% elif report_type == 'safe' %}
+                        <a href="{% url 'reports:safes' parents.0.id %}">{% trans 'List of all safes' %}</a>
+                    {% else %}
+                        <a href="{% url 'reports:unknowns' parents.0.id %}">{% trans 'List of all unknowns' %}</a>
+                    {% endif %}
+                {% endif %}
+            </div>
         </div>
         <div class="seven wide column right floated right aligned">
             {% if resources %}
@@ -94,7 +106,7 @@
                 {% endif %}
             {% endwith %}
             {% if report_type == 'unsafe' %}
-                    <a class="ui tiny white button" href="{% url 'reports:unsafe_fullscreen' report.trace_id %}">{% trans 'Full screen mode' %}</a>
+                <a class="ui tiny white button" href="{% url 'reports:unsafe_fullscreen' report.trace_id %}">{% trans 'Full screen mode' %}</a>
             {% endif %}
         </div>
     </div>
@@ -112,39 +124,41 @@
         <div class="ui red segment filecontent" style="min-height:300px;max-height: 70vh;">{{ main_content }}</div>
     {% endif %}
 
+    {# Marks #}
+    <input id="report_pk" type="hidden" value="{{ report.pk }}">
+    <input id="report_type" type="hidden" value="{{ report_type }}">
+    {% if MarkTable.values|length %}
+    <h3 class="ui horizontal divider header">
+        {% trans 'Applied marks' %}
+    </h3>
+    {% include 'reports/AssociatedMarksTable.html' with MarkTable=MarkTable %}
+    {% endif %}
+
     <div class="ui grid">
-        <div class="three wide column">
-            <h2>{% trans 'Applied marks' %}</h2>
+        <div class="eleven wide column left aligned">
+        {% if MarkTable.can_mark %}
+            <a id="create_light_mark_btn" class="ui red button inverted right aligned"><i class="star icon"></i> {% trans 'Create default mark' %}</a>
+            <a href="{% url 'marks:mark_form' report_type report.pk 'create' %}" class="ui red button"><i class="empty star icon"></i> {% trans 'Create extended mark' %}</a>
+        {% endif %}
         </div>
-        <div class="twelve wide column">
-            {% if MarkTable.can_mark %}
-                <a id="create_light_mark_btn" class="ui red button inverted"><i class="empty star icon"></i> {% trans 'Create default mark' %}</a>
-                <a href="{% url 'marks:mark_form' report_type report.pk 'create' %}" class="ui red button"><i class="star icon"></i> {% trans 'Create extended mark' %}</a>
+        <div class="five wide column right aligned">
+            {% if MarkTable.values|length %}
+            <button id="view_show_form_btn_{{ MarkTable.view.type }}" class="ui tiny violet right labeled icon button">{{ MarkTable.view.viewtitle }}<i class="right chevron icon"></i></button>
             {% endif %}
         </div>
-        <div class="nine wide column">
+        <div class="ten wide column">
             {% if MarkTable.can_mark %}
                 <div id="inline_mark_form" style="display: none"></div>
             {% endif %}
         </div>
-    </div>
-    <input id="report_pk" type="hidden" value="{{ report.pk }}">
-    <input id="report_type" type="hidden" value="{{ report_type }}">
-    <div class="ui grid">
-        <div class="column">
-        {% include 'reports/AssociatedMarksTable.html' with MarkTable=MarkTable %}
+
+        <div class="six wide column">
+            <div id="view_form_segment_{{ MarkTable.view.type }}" class="ui form yellow segment" style="margin-top: 0;display:none;">
+                {% include MarkTable.view.template with view=MarkTable.view verdicts=MarkTable.verdicts statuses=MarkTable.statuses ass_types=MarkTable.ass_types selected_columns=MarkTable.selected_columns available_columns=MarkTable.available_columns %}
+            </div>
         </div>
     </div>
-    {% if user.extended.role == '2' %}
-    <div class="ui grid">
-        <div class="eight wide column left aligned">
-            <button id="view_show_form_btn_{{ MarkTable.view.type }}" class="ui tiny violet right labeled icon button">{{ MarkTable.view.viewtitle }}<i class="right chevron icon"></i></button>
-        </div>
-        <div id="view_form_segment_{{ MarkTable.view.type }}" class="ui form yellow segment" style="margin-top: 0;display:none;">
-            {% include MarkTable.view.template with view=MarkTable.view verdicts=MarkTable.verdicts statuses=MarkTable.statuses ass_types=MarkTable.ass_types selected_columns=MarkTable.selected_columns available_columns=MarkTable.available_columns %}
-        </div>
-    </div>
-    {% endif %}
+
     <div id="file_content_modal" class="ui dinamic large modal">
         <div class="content">
             <div class="ui grid">

@@ -389,9 +389,6 @@ class ReportUnsafeView(LoggedCallMixin, Bview.DataViewMixin, DetailView):
     slug_field = 'trace_id'
 
     def get_context_data(self, **kwargs):
-        root_report = self.object
-        while root_report.parent is not None:
-            root_report = root_report.parent
         if not JobAccess(self.request.user, self.object.root.job).can_view():
             raise BridgeException(code=400)
         try:
@@ -405,8 +402,7 @@ class ReportUnsafeView(LoggedCallMixin, Bview.DataViewMixin, DetailView):
             'SelfAttrsData': reports.utils.report_attibutes(self.object),
             'MarkTable': ReportMarkTable(self.request.user, self.object, self.get_view(VIEW_TYPES[10])),
             'etv': etv, 'include_assumptions': self.request.user.extended.assumptions, 'include_jquery_ui': True,
-            'resources': reports.utils.get_leaf_resources(self.request.user, self.object),
-            'root_report_id': root_report.id
+            'resources': reports.utils.get_leaf_resources(self.request.user, self.object)
         }
 
 
