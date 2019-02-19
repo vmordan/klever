@@ -99,7 +99,7 @@
                         {% if reportdata.report %}
                             <a class="purple-link" href="{% url 'reports:component' reportdata.report.id %}">{{ job.get_status_display }} ({% trans 'components tree' %})</a>
                         {% else %}
-                            <span style="color: #f1ffff">{{ job.get_status_display }}</span>
+                            <span>{{ job.get_status_display }}</span>
                         {% endif %}
                     </td>
                 </tr>
