@@ -78,20 +78,6 @@
 
             <div class="ui green segment">
                 <div class="ui grid">
-                    {# Status #}
-                    <div class="eight wide column">
-                        <h4 class="header ui green">{% trans 'Status' %}</h4>
-                        <div style="margin-left: 25px">
-                            {% for s in markdata.statuses %}
-                                <div class="ui radio checkbox">
-                                    <input id="selected_status__{{ s.value }}" type="radio" name="selected_status" value="{{ s.value }}"{% if s.checked %} checked{% endif %}>
-                                    <label for="selected_status__{{ s.value }}" style="color: {{ s.color }}">{{ s.title }}</label>
-                                </div>
-                                <br>
-                            {% endfor %}
-                        </div>
-                    </div>
-
                     {# Verdict #}
                     {% if markdata.type != 'unknown' %}
                         <div class="eight wide column">
@@ -107,6 +93,19 @@
                             </div>
                         </div>
                     {% endif %}
+                    {# Status #}
+                    <div class="eight wide column">
+                        <h4 class="header ui green">{% trans 'Status' %}</h4>
+                        <div style="margin-left: 25px">
+                            {% for s in markdata.statuses %}
+                                <div class="ui radio checkbox">
+                                    <input id="selected_status__{{ s.value }}" type="radio" name="selected_status" value="{{ s.value }}"{% if s.checked %} checked{% endif %}>
+                                    <label for="selected_status__{{ s.value }}" style="color: {{ s.color }}">{{ s.title }}</label>
+                                </div>
+                                <br>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
             </div>
 
