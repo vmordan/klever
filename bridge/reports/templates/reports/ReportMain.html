@@ -107,29 +107,29 @@
     </div>
 
     <div class="six wide column">
-        <table class="ui selectable compact inverted blue table attached">
+        <table class="ui selectable compact table attached striped celled" style="background: #cafdff">
             <tbody>
-                <tr id="component_name_tr" data-variation="very wide">
+                <tr id="component_name_tr" data-variation="very wide" style="background: #baedef">
                     <th colspan="2" class="center aligned header">
                         <h3 class="header" style="margin-top: 5px;margin-bottom: 5px;">{{ report.component.name }}</h3>
                     </th>
                 </tr>
             {% if report.root.user %}
                 <tr>
-                    <th class="right aligned">{% trans 'Author' %}</th>
-                    <td><a class="violet-link" href="{% url 'users:show_profile' report.root.user.id %}">{{ report.root.user.get_full_name }}</a></td>
+                    <td class="right aligned">{% trans 'Author' %}</td>
+                    <td><a class="purple-link" href="{% url 'users:show_profile' report.root.user.id %}">{{ report.root.user.get_full_name }}</a></td>
                 </tr>
             {% endif %}
                 <tr>
-                    <th class="right aligned">{% trans 'Job' %}</th>
-                    <td><a class="violet-link" href="{% url 'jobs:job' report.root.job.pk %}">{{ report.root.job.name }}</a></td>
+                    <td class="right aligned">{% trans 'Job' %}</td>
+                    <td><a class="purple-link" href="{% url 'jobs:job' report.root.job.pk %}">{{ report.root.job.name }}</a></td>
                 </tr>
                 {% if status.name %}
                     <tr>
-                        <th class="right aligned">{% trans 'Status' %}</th>
+                        <td class="right aligned">{% trans 'Status' %}</td>
                         <td>
                         {% if status.href %}
-                            <a class="violet-link" href="{{ status.href }}">{{ status.name }}</a>
+                            <a class="purple-link" href="{{ status.href }}">{{ status.name }}</a>
                         {% else %}
                             <span{% if status.color %} style="color: {{ status.color }}"{% endif %}>{{ status.name }}</span>
                         {% endif %}
@@ -137,7 +137,7 @@
                     </tr>
                 {% endif %}
                 <tr id="computer_description_tr" data-variation="very wide">
-                    <th class="right aligned">{% trans 'Computer' %}</th>
+                    <td class="right aligned">{% trans 'Computer' %}</td>
                     <td>{{ computer.name }}</td>
                 </tr>
             </tbody>
