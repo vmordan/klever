@@ -45,7 +45,7 @@
             <div class="ui text loader">{% trans 'Please wait' %}</div>
         </div>
 
-        <div id="page_header" class="ui inverted menu blue compact fixed">
+        <div id="page_header" class="ui inverted menu blue fixed">
         {% if user.is_authenticated %}
             <div class="item">
                 <a href="{% url 'jobs:tree' %}">
