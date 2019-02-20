@@ -242,24 +242,33 @@ class LeavesQuery:
             self.sql.order_by(('order', subquery), self._order_direction)
 
         # Filter by attribute(s)
-        operation = '{0} = %s'
         if self.kwargs.get('attr') is not None:
-            args = self.kwargs['attr']
+            for name, args in self.kwargs['attr'].items():
+                self.__filter_by_attrs(args)
         elif 'attr' in self.view:
             args = list(Attr.objects.filter(**{
                 'name__name__iexact': self.view['attr'][0], 'value__' + self.view['attr'][1]: self.view['attr'][2]
             }).values_list('id', flat=True))
             if len(args) == 0:
                 raise EmptyQuery('There are no attributes found for filtering by it')
+            self.__filter_by_attrs(args)
         else:
             # There are no filters by attribute
             return
-        for arg in args:
-            subquery = RawQuery(ReportAttr)
-            subquery.select('report_id')
-            subquery.where(operation, 'attr_id', args_list=[arg])
-            subquery.group_by('report_id')
-            self.sql.join('INNER', subquery, 'report_id', 'id', table_to=Report)
+
+    def __filter_by_attrs(self, args):
+        args_num = len(args)
+        if args_num > 1:
+            operation = '{0} IN (%s)' % ', '.join(['%s'] * len(args))
+        elif args_num == 1:
+            operation = '{0} = %s'
+        else:
+            return
+        subquery = RawQuery(ReportAttr)
+        subquery.select('report_id')
+        subquery.where(operation, 'attr_id', args_list=args)
+        subquery.group_by('report_id')
+        self.sql.join('INNER', subquery, 'report_id', 'id', table_to=Report)
 
     def __process_component(self):
         if self.model != ReportUnknown:

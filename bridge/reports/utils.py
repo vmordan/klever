@@ -133,6 +133,22 @@ def report_resources(report, user):
     return None
 
 
+def get_attr_vals(ids: str) -> dict:
+    result = dict()
+    for attr_id in ids.split(','):
+        try:
+            attr = Attr.objects.get(id=attr_id)
+            name = attr.name.name
+            if name not in result:
+                result[name] = list()
+            result[name].append(attr_id)
+        except ObjectDoesNotExist:
+            logger.exception("Attribute with identifier {} is not found".format(attr_id), stack_info=True)
+        except ValueError:
+            logger.exception("Cannot parse integer {}".format(attr_id), stack_info=True)
+    return result
+
+
 class ReportAttrsTable:
     def __init__(self, report):
         self.report = report
@@ -193,7 +209,7 @@ class SafesTable:
                 self.title = '{0}: {1}'.format(_("Safes"), tag.tag)
                 kwargs['tag'] = tag
         if 'attr' in data:
-            kwargs['attr'] = str(data['attr']).split(",")
+            kwargs['attr'] = get_attr_vals(data['attr'])
         return kwargs
 
     @cached_property
@@ -353,7 +369,7 @@ class UnsafesTable:
                 self.title = '{0}: {1}'.format(_("Unsafes"), tag.tag)
                 kwargs['tag'] = tag
         if 'attr' in data:
-            kwargs['attr'] = str(data['attr']).split(",")
+            kwargs['attr'] = get_attr_vals(data['attr'])
         return kwargs
 
     def __selected(self):
@@ -504,7 +520,7 @@ class UnknownsTable:
                 self.title = '{0}: {1}'.format(_("Unknowns"), problem.name)
                 kwargs['problem'] = problem
         if 'attr' in data:
-            kwargs['attr'] = str(data['attr']).split(",")
+            kwargs['attr'] = get_attr_vals(data['attr'])
         return kwargs
 
     def __selected(self):
