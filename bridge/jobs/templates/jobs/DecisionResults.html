@@ -17,17 +17,17 @@
 
 {% load i18n %}
 
-{% if reportdata.totals.unsafes > 0 or reportdata.totals.safes > 0 or reportdata.totals.unknowns > 0 or reportdata.data.resources|length or children %}
+{% if reportdata.totals.unsafes.number > 0 or reportdata.totals.safes.number > 0 or reportdata.totals.unknowns.number > 0 or reportdata.data.resources|length or children %}
 <div class="ten wide column">
-    {% if reportdata.totals.unsafes > 0 or reportdata.totals.safes > 0 or reportdata.totals.unknowns > 0 %}
+    {% if reportdata.totals.unsafes.number > 0 or reportdata.totals.safes.number > 0 or reportdata.totals.unknowns.number > 0 %}
     <div class="ui equal width grid">
         <div class="column">
             <h4 class="header ui red">
-                <a href="{% url 'reports:unsafes' reportdata.report.id %}" class="ui red button fluid big {% if not reportdata.totals.unsafes %}disabled{% endif %}" title="{% trans 'Show list' %}">
-                    {% trans 'Unsafes' %}: {{ reportdata.totals.unsafes }}
+                <a href="{{ reportdata.totals.unsafes.href }}" class="ui red button fluid big {% if not reportdata.totals.unsafes.number %}disabled{% endif %}" title="{% trans 'Show list' %}">
+                    {% trans 'Unsafes' %}: {{ reportdata.totals.unsafes.number }}
                 </a>
             </h4>
-            {% if reportdata.totals.unsafes > 0 %}
+            {% if reportdata.totals.unsafes.number > 0 %}
             <div class="ui styled accordion fluid">
                 <div class="active title">
                     <i class="dropdown icon"></i>{% trans 'Details' %}
@@ -74,12 +74,12 @@
 
         <div class="column">
             <h4 class="header ui green">
-                <a href="{% url 'reports:safes' reportdata.report.id %}" class="ui green button fluid big {% if not reportdata.totals.safes %}disabled{% endif %}" title="{% trans 'Show list' %}">
-                    {% trans 'Safes' %}: {{ reportdata.totals.safes }}
+                <a href="{{ reportdata.totals.safes.href }}" class="ui green button fluid big {% if not reportdata.totals.safes.number %}disabled{% endif %}" title="{% trans 'Show list' %}">
+                    {% trans 'Safes' %}: {{ reportdata.totals.safes.number }}
                 </a>
             </h4>
 
-            {% if reportdata.totals.safes > 0 %}
+            {% if reportdata.totals.safes.number > 0 %}
             <div class="ui styled accordion">
                 <div class="title">
                     <i class="dropdown icon"></i>{% trans 'Details' %}
@@ -126,8 +126,8 @@
 
         <div class="column">
             <h4 class="header ui orange">
-                <a href="{% url 'reports:unknowns' reportdata.report.id %}" class="ui orange button fluid big {% if not reportdata.totals.unknowns %}disabled{% endif %}" title="{% trans 'Show list' %}">
-                    {% trans 'Unknowns' %}: {{ reportdata.totals.unknowns }}
+                <a href="{{ reportdata.totals.unknowns.href }}" class="ui orange button fluid big {% if not reportdata.totals.unknowns.number %}disabled{% endif %}" title="{% trans 'Show list' %}">
+                    {% trans 'Unknowns' %}: {{ reportdata.totals.unknowns.number }}
                 </a>
             </h4>
             {% if reportdata.data.unknowns|length %}

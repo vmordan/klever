@@ -15,6 +15,7 @@
 # limitations under the License.
 #
 
+import re
 import operator
 
 from django.db.models import Q, Count, Case, When, BooleanField, Value
@@ -25,7 +26,8 @@ from bridge.utils import logger, BridgeException
 from bridge.vars import SAFE_VERDICTS, UNSAFE_VERDICTS, ASSOCIATION_TYPE
 from jobs.utils import SAFES, UNSAFES, TITLES, get_resource_data
 from marks.models import MarkUnknownReport
-from reports.models import ReportAttr, ComponentInstances, ReportUnknown
+from reports.models import Attr
+from reports.models import ReportAttr, ComponentInstances, ReportUnknown, ReportUnsafe, ReportSafe
 
 COLORS = {
     'red': '#C70646',
@@ -35,7 +37,7 @@ COLORS = {
 
 
 class ViewJobData:
-    def __init__(self, user, view, report):
+    def __init__(self, user, view, report, selected_attrs={}):
         self.user = user
         self.report = report
         self.view = view
@@ -43,9 +45,36 @@ class ViewJobData:
         if self.report is None:
             return
 
+        self.attrs = self.__get_attrs(selected_attrs)
         self.totals = self.__get_totals()
         self.problems = self.__get_problems()
         self.data = self.__get_view_data()
+
+    def __parse_attrs(self, raw_attrs: dict) -> dict:
+        result = dict()
+        for raw_name, value in raw_attrs.items():
+            m = re.match('attr_(.+)_{}'.format(value), raw_name)
+            if m:
+                name = m.group(1)
+                if name not in result:
+                    result[name] = list()
+                result[name].append(value)
+            else:
+                logger.exception("Cannot parse attribute name '{}' with value '{}'".format(raw_name, value))
+        return result
+
+    def __get_attrs(self, raw_attrs: dict) -> dict:
+        # The user chooses attributes names and values, but we need corresponding ids.
+        self.parsed_raw_attrs = self.__parse_attrs(raw_attrs)
+        result = dict()
+        self.__attrs_href = list()
+        for name, values in self.parsed_raw_attrs.items():
+            attrs = Attr.objects.filter(name__name=name, value__in=values).values_list('id')
+            if attrs:
+                result[name] = attrs
+                self.__attrs_href.extend(str(v[0]) for v in attrs)
+        self.__attrs_href = ','.join(self.__attrs_href)
+        return result
 
     def __get_view_data(self):
         if 'data' not in self.view:
@@ -65,14 +94,27 @@ class ViewJobData:
                 data[d] = actions[d]()
         return data
 
+    def __get_total_href(self, href_type: str) -> str:
+        href = reverse('reports:{}'.format(href_type), args=[self.report.pk])
+        if self.__attrs_href:
+            href += "?attr={}".format(self.__attrs_href)
+        return href
+
     def __get_totals(self):
-        return self.report.leaves.aggregate(
-            safes=Count(Case(When(~Q(safe=None), then=1))),
-            safes_confirmed=Count(Case(When(safe__has_confirmed=True, then=1))),
-            unsafes=Count(Case(When(~Q(unsafe=None), then=1))),
-            unsafes_confirmed=Count(Case(When(unsafe__has_confirmed=True, then=1))),
-            unknowns=Count(Case(When(~Q(unknown=None), then=1)))
-        )
+        self.__safes = self.report.leaves.exclude(safe=None)
+        self.__unsafes = self.report.leaves.exclude(unsafe=None)
+        self.__unknowns = self.report.leaves.exclude(unknown=None)
+
+        for name, values in self.attrs.items():
+            self.__safes = self.__safes.filter(safe__attrs__attr__id__in=values)
+            self.__unsafes = self.__unsafes.filter(unsafe__attrs__attr__id__in=values)
+            self.__unknowns = self.__unknowns.filter(unknown__attrs__attr__id__in=values)
+
+        return {
+            'safes': {'number': self.__safes.count(), 'href': self.__get_total_href('safes')},
+            'unsafes': {'number': self.__unsafes.count(), 'href': self.__get_total_href('unsafes')},
+            'unknowns': {'number': self.__unknowns.count(), 'href': self.__get_total_href('unknowns')}
+        }
 
     def __get_problems(self):
         queryset = MarkUnknownReport.objects.filter(Q(report__root=self.report.root) & ~Q(type=ASSOCIATION_TYPE[2][0]))\
@@ -184,7 +226,7 @@ class ViewJobData:
         queryset_fields = ['component_id', 'component__name', 'markreport_set__problem_id',
                            'markreport_set__problem__name', 'number', 'unconfirmed']
         order_by_fields = ['component__name', 'markreport_set__problem__name']
-        queryset = ReportUnknown.objects.filter(leaves__report=self.report)
+        queryset = ReportUnknown.objects.filter(leaves__in=self.__unknowns)
         if 'unknown_component' in self.view:
             queryset = queryset.filter(**{
                 'component__name__' + self.view['unknown_component'][0]: self.view['unknown_component'][1]
@@ -221,7 +263,8 @@ class ViewJobData:
                 if c_name not in unknowns_data:
                     unknowns_data[c_name] = []
                 unknowns_data[c_name].append({'num': number, 'problem': p_name,
-                                              'href': '{0}?component={1}&problem={2}'.format(url, c_id, p_id)})
+                                              'href': '{0}?component={1}&problem={2}&attr={3}'.
+                                             format(url, c_id, p_id, self.__attrs_href)})
 
         # Get unmarked unknowns
         for c_name in unmarked:
@@ -229,7 +272,7 @@ class ViewJobData:
                 unknowns_data[c_name] = []
             unknowns_data[c_name].append({
                 'num': unmarked[c_name][0], 'problem': _('Without marks'),
-                'href': '{0}?component={1}&problem=0'.format(url, unmarked[c_name][1])
+                'href': '{0}?component={1}&problem=0&attr={2}'.format(url, unmarked[c_name][1], self.__attrs_href)
             })
 
         if not total_hidden:
@@ -238,19 +281,22 @@ class ViewJobData:
                 if c_name not in unknowns_data:
                     unknowns_data[c_name] = []
                 unknowns_data[c_name].append({
-                    'num': number, 'problem': 'total', 'href': '{0}?component={1}'.format(url, c_id)
+                    'num': number, 'problem': 'total', 'href': '{0}?component={1}&attr={2}'.
+                        format(url, c_id, self.__attrs_href)
                 })
         return list({'component': c_name, 'problems': unknowns_data[c_name]} for c_name in sorted(unknowns_data))
 
     def __safes_info(self):
         safes_numbers = {}
         tags = self.__obtain_tags('safe')
-        for verdict, total in self.report.leaves.exclude(safe=None).values('safe__verdict').annotate(
+        for verdict, total in self.__safes.exclude(safe=None).values('safe__verdict').annotate(
                 total=Count('id')
         ).values_list('safe__verdict', 'total'):
             href = None
             if total > 0:
                 href = '%s?verdict=%s' % (reverse('reports:safes', args=[self.report.pk]), verdict)
+            if self.__attrs_href:
+                href += "&attr={}".format(self.__attrs_href)
 
             value = total
 
@@ -315,9 +361,9 @@ class ViewJobData:
     def __obtain_tags(self, leaf_type: str) -> dict:
         tags = {}
         if leaf_type == 'unsafe':
-            leaves = self.report.leaves.exclude(unsafe=None)
+            leaves = self.__unsafes
         elif leaf_type == 'safe':
-            leaves = self.report.leaves.exclude(safe=None)
+            leaves = self.__safes
         else:
             return {}
         for leaf in leaves.values(leaf_type + '__verdict', leaf_type + '__tags__tag', leaf_type + '__tags__tag__tag',
@@ -349,12 +395,14 @@ class ViewJobData:
 
         tags = self.__obtain_tags('unsafe')
 
-        for verdict, total in self.report.leaves.exclude(unsafe=None).values('unsafe__verdict').annotate(
+        for verdict, total in self.__unsafes.values('unsafe__verdict').annotate(
                 total=Count('id')
         ).values_list('unsafe__verdict', 'total'):
             href = None
             if total > 0:
                 href = '%s?verdict=%s' % (reverse('reports:unsafes', args=[self.report.pk]), verdict)
+            if self.__attrs_href:
+                href += "&attr={}".format(self.__attrs_href)
 
             value = total
 

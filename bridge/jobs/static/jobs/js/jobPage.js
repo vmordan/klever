@@ -236,6 +236,21 @@ function clear_verification_files() {
     $.post('/reports/clear_verification_files/' + $('#job_id').val() + '/', {}, error_or_reload);
 }
 
+function get_attrs() {
+    var elems = $('input:checkbox');
+    var attrs = {};
+    for (var elem in elems) {
+        if (elems[elem].id && elems[elem].checked && elems[elem].id.startsWith('attr_')) {
+            attrs[elems[elem].id] = elems[elem].value;
+        }
+    }
+    if ($.isEmptyObject(attrs)) {
+        $('#apply_attributes').removeClass('disabled');
+        return;
+    }
+    window.location.replace(get_url_with_get_parameter(window.location.href, 'data', JSON.stringify(attrs)));
+}
+
 $(document).ready(function () {
     $('.ui.dropdown').dropdown();
     $('#resources-note').popup();
@@ -285,6 +300,10 @@ $(document).ready(function () {
         file_input.replaceWith(file_input.clone( true ));
         $('#upload_reports_filename').empty();
         $('#upload_reports_popup').modal('hide');
+    });
+    $('#apply_attributes').click(function () {
+        $(this).addClass('disabled');
+        get_attrs();
     });
     $('#upload_reports_start').click(function () {
         var files = $('#upload_reports_file_input')[0].files,
