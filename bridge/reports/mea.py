@@ -543,11 +543,11 @@ def __transfrom_to_threads(edited_error_trace: list, compared_error_trace: list)
 
 def __sublist(sublist: tuple, biglist: tuple) -> bool:
     """
-    Check that list lst1 is included into the list lst2.
+    Check that list sublist is included into the list biglist.
     """
-    sublist = list(sublist)
-    common_part = [element for element in biglist if element in sublist]
-    return sublist and sublist == common_part
+    sublist = ",".join(str(v) for v in sublist)
+    biglist = ",".join(str(v) for v in biglist)
+    return sublist in biglist
 
 
 def __compare_equal(edited_error_trace: dict, compared_error_trace: dict) -> int:
