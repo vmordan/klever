@@ -45,6 +45,8 @@ ASSIGN_MARK = " = "
 
 DEFAULT_SIMILARITY_THRESHOLD = 100  # in % (all threads are equal)
 
+DEBUG_ERROR_TRACE_COMPARISON = False
+
 
 def get_or_convert_error_trace(unsafe, conversion_function: str, args: dict) -> list:
     """
@@ -104,6 +106,15 @@ def compare_error_traces(edited_error_trace: list, compared_error_trace: list, c
     """
     edited_error_trace = __load_json(edited_error_trace)
     compared_error_trace = error_trace_pretty_parse(error_trace_pretty_print(__load_json(compared_error_trace)))
+    if DEBUG_ERROR_TRACE_COMPARISON:
+        print("***************** Edited trace *****************")
+        print(json.dumps(edited_error_trace, sort_keys=True, indent=4))
+        print("**************** Compared trace ****************")
+        print(json.dumps(compared_error_trace, sort_keys=True, indent=4))
+        print("************** Edited trace (str) **************")
+        print(error_trace_pretty_print(edited_error_trace))
+        print("************* Compared trace (str) *************")
+        print(error_trace_pretty_print(compared_error_trace))
     et1_threaded, et2_threaded = __transfrom_to_threads(edited_error_trace, compared_error_trace)
     if not et1_threaded and not et2_threaded:
         # Return true for empty converted error traces (so they will be applied to all unsafes with the same attributes)
