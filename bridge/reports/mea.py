@@ -215,8 +215,6 @@ def error_trace_pretty_parse(pretty_error_trace: str) -> list:
             line = m.group(1)
             level = len(m.group(2))
             func = m.group(3)
-            if level == 0 and cur_level != -1:
-                cur_level = -1
             if level == cur_level:
                 ret_func = stack.pop()
                 converted_error_trace.append({
@@ -240,7 +238,8 @@ def error_trace_pretty_parse(pretty_error_trace: str) -> list:
                     })
             if func == CET_END:
                 cur_thread += 1
-            if not func == CET_END:
+                cur_level = -1
+            else:
                 converted_error_trace.append({
                     CET_OP: CET_OP_CALL,
                     CET_THREAD: cur_thread,
@@ -249,8 +248,8 @@ def error_trace_pretty_parse(pretty_error_trace: str) -> list:
                     CET_ID: 0,
                     CET_LINE: line
                 })
-            cur_level = level
-            stack.append(func)
+                cur_level = level
+                stack.append(func)
             continue
         m = re.match(r'^\s*(\d+)\s*{}({}*){}\((!?)(.+)\)$'.format(CODE_LINE_SEPARATOR_FOR_REGEXP,
                                                                   FUNCTION_CALL_SEPARATOR, CET_OP_ASSUME), line)
