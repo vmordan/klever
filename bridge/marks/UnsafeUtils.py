@@ -25,8 +25,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from bridge.utils import logger, BridgeException
 from bridge.utils import unique_id
-from bridge.vars import UNKNOWN_ERROR, UNSAFE_VERDICTS
-from bridge.vars import USER_ROLES, MARK_STATUS, MARK_UNSAFE, MARK_TYPE, ASSOCIATION_TYPE
+from bridge.vars import UNKNOWN_ERROR, UNSAFE_VERDICTS, USER_ROLES, MARK_STATUS, MARK_UNSAFE, MARK_TYPE, \
+    ASSOCIATION_TYPE
 from marks.models import ConvertedTraces
 from marks.models import MarkUnsafe, MarkUnsafeHistory, MarkUnsafeReport, MarkUnsafeAttr, \
     MarkUnsafeTag, UnsafeTag, UnsafeReportTag, ReportUnsafeTag
@@ -378,26 +378,34 @@ class ConnectMarks:
         for converted in ConvertedTraces.objects.filter(id__in=set(self.edited_error_trace.values())):
             with converted.file as fp:
                 patterns[converted.id] = json.loads(fp.read().decode('utf8'))
+        marks = {}
         for m_id in self.edited_error_trace:
             self.edited_error_trace[m_id] = patterns[self.edited_error_trace[m_id]]
+            marks[m_id] = MarkUnsafe.objects.get(id=m_id)
 
         new_markreports = []
 
-        time_start = time.process_time()
-        for unsafe in ReportUnsafe.objects.filter(id__in=unsafes_ids):
+        if self.apply_for_current:
+            # Optimizations.
+            target_job_ids = []
+            for mark_id in self.edited_error_trace:
+                try:
+                    target_job_ids.append(marks[mark_id].report.root.job.id)
+                except:
+                    # Do not process old format (report was not saved, so we cannot use this optimization).
+                    pass
+            target_unsafes = None
+            if target_job_ids:
+                target_unsafes = ReportUnsafe.objects.filter(id__in=unsafes_ids, root__job__id__in=target_job_ids)
+            if not target_unsafes:
+                target_unsafes = ReportUnsafe.objects.filter(id__in=unsafes_ids)
+        else:
+            target_unsafes = ReportUnsafe.objects.filter(id__in=unsafes_ids)
+
+        for unsafe in target_unsafes:
             for mark_id in self.edited_error_trace:
                 if unsafe.id not in marks_reports[mark_id]:
                     continue
-                if self.apply_for_current:
-                    try:
-                        current_job_id = MarkUnsafe.objects.get(id=mark_id).report.root.job.id
-                        compared_job_id = unsafe.root.job.id
-                        if not current_job_id == compared_job_id:
-                            # Skip comparison for other reports for faster results.
-                            continue
-                    except:
-                        # Do not process old format (report was not saved, so we cannot use this heuristic).
-                        pass
                 compare_error = None
                 compare_result = 0
                 try:
@@ -431,8 +439,6 @@ class ConnectMarks:
                         'kind': '+', 'result2': compare_result, 'verdict1': unsafe.verdict
                     }
         MarkUnsafeReport.objects.bulk_create(new_markreports)
-        time_start = time.process_time() - time_start
-        print("Filtering time is {}".format(time_start))
 
     def __update_verdicts(self):
         unsafe_verdicts = {}
