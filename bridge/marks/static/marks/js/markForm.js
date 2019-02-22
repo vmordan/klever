@@ -187,25 +187,39 @@ function test_unknown_function() {
     );
 }
 
+function save_mark() {
+    $('#progress_bar_popup').modal('show');
+    var mark_id = 0;
+    var update_progress_interval = null;
+    var time_start = performance.now();
+    if ($('#action').val() == 'edit') {
+        mark_id = $('#obj_id').val();
+    }
+    update_progress_interval = setInterval(function() {mark_id = update_progress(mark_id, time_start);}, 1000);
+
+    $(this).addClass('disabled');
+    $.post('', {data: collect_markdata()}, function (data) {
+        if (data.error) {
+            $('#save_mark_btn').removeClass('disabled');
+            $('#progress_bar_popup').modal('hide');
+            $('#progress_bar_popup').modal('hide');
+            clearInterval(update_progress_interval);
+            err_notify(data.error);
+        }
+        else if ('cache_id' in data) {
+            var overall_time = (performance.now() - time_start) / 1000;
+            window.location.replace('/marks/' + $('#obj_type').val() + '/association_changes/' + data['cache_id'] + '/?time=' + overall_time);
+        }
+    });
+}
+
 $(document).ready(function () {
     activate_tags();
+    $('#progress_bar_popup').modal('setting', 'closable', false);
     $('.ui.dropdown').each(function () { if (!$(this).hasClass('search')) $(this).dropdown() });
     $('#compare_function').change(set_action_on_func_change);
     $('#test_unknown_mark').click(test_unknown_function);
-
-    $('#save_mark_btn').click(function () {
-        $(this).addClass('disabled');
-        $.post('', {data: collect_markdata()}, function (data) {
-            if (data.error) {
-                $('#save_mark_btn').removeClass('disabled');
-                err_notify(data.error);
-            }
-            else if ('cache_id' in data) {
-                window.location.replace('/marks/' + $('#obj_type').val() + '/association_changes/' + data['cache_id'] + '/');
-            }
-        });
-    });
-
+    $('#save_mark_btn').click(save_mark);
     $('#mark_version_selector').change(function () {
         window.location.replace(get_url_with_get_parameter(window.location.href, 'version', $(this).val()));
     });

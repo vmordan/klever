@@ -82,5 +82,15 @@
         <h1 class="header" style="text-align:center;">{% trans 'No changes with total expert evaluations or the view has filtered all results' %}</h1>
     {% endif %}
     <br>
+    {% if wall_time or applied_reports %}
+    <div class="ui horizontal segments">
+        {% if wall_time %}
+        <div class="ui segment">{% trans 'Wall time of mark application' %}: {{wall_time}} {% trans 's' %}</div>
+        {% endif %}
+        {% if applied_reports %}
+        <div class="ui segment">{% trans 'Number of successful applications' %}: {{applied_reports}}</div>
+        {% endif %}
+    </div>
+    {% endif %}
     <a href="{{ TableData.href }}" class="ui tiny olive button" style="float:right;margin-right: 10px;">{% trans 'Show mark' %}</a>
 {% endblock %}

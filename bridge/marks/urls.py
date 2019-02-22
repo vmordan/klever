@@ -63,6 +63,8 @@ urlpatterns = [
     # Utils
     path('delete/', views.DeleteMarksView.as_view()),
     path('get_func_description/<int:pk>/', views.GetFuncDescription.as_view()),
+    path('get_progress/<int:pk>/', views.GetProgress.as_view()),
+    path('get_last_mark/', views.GetLastMark.as_view()),
     path('get_converted_trace/<int:pk>/', views.GetConvertedTrace.as_view()),
     path('check-unknown-mark/<int:pk>/', views.CheckUnknownMarkView.as_view()),
 ]

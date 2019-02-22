@@ -3134,3 +3134,15 @@ msgstr "Список всех проблем в компонентах"
 
 msgid "Apply"
 msgstr "Применить"
+
+msgid "Progress of mark application"
+msgstr "Прогресс применения оценки"
+
+msgid "Mark identifier"
+msgstr "Идентификатор оценки"
+
+msgid "Wall time of mark application"
+msgstr "Астрономическое время применения оценки"
+
+msgid "Number of successful applications"
+msgstr "Число успешных применений"

@@ -28,6 +28,7 @@
     <link href="{% static 'marks/css/tagsmap.css' %}" rel="stylesheet">
     <script type="text/javascript" src="{% static 'marks/js/tags.js' %}"></script>
     <script type="text/javascript" src="{% static 'marks/js/tagsmap.js' %}"></script>
+    <script type="text/javascript" src="{% static 'marks/js/commonMarkForm.js' %}"></script>
     <script type="text/javascript" src="{% static 'marks/js/markForm.js' %}"></script>
 
     {% if markdata.type == 'unsafe' %}<link href="{% static 'reports/css/ETV.css' %}" rel="stylesheet">{% endif %}
@@ -267,6 +268,8 @@
             {% endif %}
         </div>
     </div>
+
+    {% include 'marks/MarkProgress.html' %}
 
     <input id="obj_type" type="hidden" value="{{ markdata.type }}">
     <input id="obj_id" type="hidden" value="{% if mark %}{{ mark.id }}{% elif report %}{{ report.id }}{% else %}0{% endif %}">

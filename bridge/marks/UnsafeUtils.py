@@ -37,6 +37,8 @@ from reports.mea import error_trace_pretty_parse, \
 from reports.models import ReportComponentLeaf, ReportAttr, ReportUnsafe, Attr, AttrName
 from users.models import User
 
+UNSAFE_MARK_TIME_THRESHOLD = 1  # sec
+
 
 class NewMark:
     def __init__(self, user, args, mark_unsafe=None):
@@ -361,6 +363,19 @@ class ConnectMarks:
             self.changes[mr.mark_id][mr.report] = {'kind': '-', 'result1': mr.result, 'verdict1': mr.report.verdict}
         MarkUnsafeReport.objects.filter(mark__in=self._marks).delete()
 
+    def __update_progress(self, mark, counter_all, counter_applied, number_of_target_unsafes, time_previous):
+        if time.time() - time_previous > UNSAFE_MARK_TIME_THRESHOLD:
+            try:
+                cur_progress = round(100.0 * counter_all / number_of_target_unsafes)
+                mes = (counter_applied << 8) | cur_progress
+                mark.format = mes
+                mark.save()
+            except:
+                # Since this is aux action, do not stop the whole process only because of it.
+                pass
+            time_previous = time.time()
+        return time_previous
+
     def __connect(self):
         marks_reports = {}
         unsafes_ids = set()
@@ -385,6 +400,10 @@ class ConnectMarks:
 
         new_markreports = []
 
+        time_previous = time.time()
+        counter_all = 0
+        counter_applied = 0
+
         if self.apply_for_current:
             # Optimizations.
             target_job_ids = []
@@ -402,6 +421,8 @@ class ConnectMarks:
         else:
             target_unsafes = ReportUnsafe.objects.filter(id__in=unsafes_ids)
 
+        number_of_target_unsafes = target_unsafes.count()
+
         for unsafe in target_unsafes:
             for mark_id in self.edited_error_trace:
                 if unsafe.id not in marks_reports[mark_id]:
@@ -413,8 +434,15 @@ class ConnectMarks:
                                                                        self.conversion_function_args)
                     compare_result = compare_error_traces(self.edited_error_trace[mark_id], converted_error_trace,
                                                           self.comparison_functions[mark_id])
+                    counter_all += 1
+
+                    time_previous = self.__update_progress(marks[mark_id], counter_all, counter_applied,
+                                                           number_of_target_unsafes, time_previous)
                     if not is_equivalent(compare_result, self.similarity_threshold):
                         continue
+                    counter_applied += 1
+                    time_previous = self.__update_progress(marks[mark_id], counter_all, counter_applied,
+                                                           number_of_target_unsafes, time_previous)
 
                 except BridgeException as e:
                     compare_error = str(e)
@@ -439,6 +467,9 @@ class ConnectMarks:
                         'kind': '+', 'result2': compare_result, 'verdict1': unsafe.verdict
                     }
         MarkUnsafeReport.objects.bulk_create(new_markreports)
+        for mark_id in marks:
+            marks[mark_id].format = 1
+            marks[mark_id].save()
 
     def __update_verdicts(self):
         unsafe_verdicts = {}

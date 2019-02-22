@@ -17,7 +17,9 @@
 
 import json
 import re
-
+import datetime
+from django.db.models import Q
+from django.utils.timezone import now
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db.models import F
@@ -127,12 +129,16 @@ class AssociationChangesView(LoggedCallMixin, Bview.DataViewMixin, DetailView):
         trace_id = None
         root_report_id = None
         job_id = None
+        wall_time = self.request.GET.get('time', None)
+        applied_reports = None
+
         if self.kwargs['type'] == "unsafe":
             table = json.loads(self.object.table_data)
             href = table['href']
             m = re.search('/(\d+)/', href)
             if m:
                 mark_id = m.group(1)
+                applied_reports = MarkUnsafeReport.objects.filter(mark_id=mark_id).count()
                 mark = MarkUnsafe.objects.get(id=mark_id)
                 if mark.report:
                     component_report = ReportComponent.objects.get(parent=None, root=mark.report.root)
@@ -141,7 +147,8 @@ class AssociationChangesView(LoggedCallMixin, Bview.DataViewMixin, DetailView):
                     root_report_id = component_report.id
         view_type_map = {'safe': VIEW_TYPES[16], 'unsafe': VIEW_TYPES[17], 'unknown': VIEW_TYPES[18]}
         return {'TableData': AssociationChangesTable(self.object, self.get_view(view_type_map[self.kwargs['type']])),
-                'job_id': job_id, 'trace_id': trace_id, 'root_report_id': root_report_id}
+                'job_id': job_id, 'trace_id': trace_id, 'root_report_id': root_report_id, 'wall_time': wall_time,
+                'applied_reports': applied_reports}
 
 
 @method_decorator(login_required, name='dispatch')
@@ -639,6 +646,50 @@ class GetFuncDescription(LoggedCallMixin, Bview.JsonDetailPostView):
             'convert_desc': self.object.convert.description,
             'convert_name': self.object.convert.name
         }
+
+
+def get_latest_created_mark():
+    created_time = now() - datetime.timedelta(minutes=1)
+    try:
+        return MarkUnsafe.objects.filter(~Q(format=1), change_date__gte=created_time).last()
+    except:
+        return None
+
+
+class GetProgress(LoggedCallMixin, Bview.JsonDetailPostView):
+    model = MarkUnsafe
+
+    def post(self, *args, **kwargs):
+        try:
+            self.object = self.get_object()
+        except:
+            self.object = get_latest_created_mark()
+        return JsonResponse(self.get_context_data(object=self.object))
+
+    def get_context_data(self, **kwargs):
+        results = {
+            'progress': 0,
+            'mark_id': 0,
+            'applied': 0
+        }
+        if self.object:
+            if self.object.format != 1:
+                results['progress'] = self.object.format & 255
+                results['applied'] = (self.object.format >> 8) & 255
+            else:
+                results['applied'] = MarkUnsafeReport.objects.filter(mark_id=self.object.id).count()
+            results['mark_id'] = self.object.id
+
+        return results
+
+
+class GetLastMark(LoggedCallMixin, Bview.JsonView):
+    def get_context_data(self, **kwargs):
+        results = {'mark': 0}
+        mark = get_latest_created_mark()
+        if mark:
+            results['mark'] = mark.id
+        return results
 
 
 class GetConvertedTrace(LoggedCallMixin, Bview.JsonDetailPostView):

@@ -1,0 +1,29 @@
+
+{% load i18n %}
+
+<div id="progress_bar_popup" class="ui modal">
+    <div class="header"><h1 align="center">{% trans 'Progress of mark application' %}</h1></div>
+    <div class="content">
+        <div class="ui indicating progress active" data-value="0" data-total="100" id="progress_bar">
+            <div class="bar">
+                <div class="progress"></div>
+            </div>
+        </div>
+        <div class="ui purple segment">
+            <h3>{% trans 'Mark identifier' %}:
+                <span id="progress_bar_mark_id"></span>
+            </h3>
+        </div>
+        <div class="ui purple segment">
+            <h3>{% trans 'Wall time of mark application' %}:
+                <span id="progress_bar_mark_wall_time">0</span>
+                {% trans 's' %}
+            </h3>
+        </div>
+        <div class="ui purple segment">
+            <h3>{% trans 'Number of successful applications' %}:
+                <span id="progress_bar_mark_applied">0</span>
+            </h3>
+        </div>
+    </div>
+</div>

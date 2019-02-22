@@ -92,6 +92,8 @@
         <input id="comparison_function" type="hidden" value="{{ comparison_function }}">
     {% endif %}
 
+    {% include 'marks/MarkProgress.html' %}
+
     <input id="obj_id" type="hidden" value="{{ obj_id }}">
     <input id="obj_type" type="hidden" value="{{ markdata.type }}">
     <input id="inline_action" type="hidden" value="{{ action }}">

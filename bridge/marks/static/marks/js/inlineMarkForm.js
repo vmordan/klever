@@ -52,17 +52,30 @@ function collect_markdata() {
 }
 
 function save_inline_mark() {
-    $('#dimmer_of_page').addClass('active');
+    $('#progress_bar_popup').modal('show');
+    var mark_id = 0;
+    var update_progress_interval = null;
+    var time_start = performance.now();
+    if ($('#action').val() == 'edit') {
+        mark_id = $('#obj_id').val();
+    }
+    update_progress_interval = setInterval(function() {mark_id = update_progress(mark_id, time_start);}, 1000);
+
+    $(this).addClass('disabled');
     $.post(
         '/marks/' + $('#obj_type').val() + '/' + $('#obj_id').val() + '/' + $('#inline_action').val() + '/',
         {data: collect_markdata()},
         function (data) {
             if (data.error) {
-                $('#dimmer_of_page').removeClass('active');
+                $('#save_mark_btn').removeClass('disabled');
+                $('#progress_bar_popup').modal('hide');
+                $('#progress_bar_popup').modal('hide');
+                clearInterval(update_progress_interval);
                 err_notify(data.error);
             }
             else if ('cache_id' in data) {
-                window.location.href = '/marks/' + $('#obj_type').val() + '/association_changes/' + data['cache_id'] + '/';
+                var overall_time = (performance.now() - time_start) / 1000;
+                window.location.href = '/marks/' + $('#obj_type').val() + '/association_changes/' + data['cache_id'] + '/?time=' + overall_time;
             }
         }
     );
@@ -81,6 +94,7 @@ window.get_inline_mark_form = function(container, obj_id, action) {
             container.show();
             $('#close_inline_mark_form').click(function () { $('#inline_mark_form').hide().empty() });
             $('#save_inline_mark_btn').click(save_inline_mark);
+            $('#progress_bar_popup').modal('setting', 'closable', false);
         }
         init_tags();
     });
