@@ -182,8 +182,9 @@ def error_trace_pretty_print(converted_error_trace: list) -> str:
             if name == last_call:
                 level -= 1
             else:
-                print("Warning: there was no call for function {}. Last called function is {}. "
-                      "Current id is {}".format(name, last_call, elem[CET_ID]))
+                if DEBUG_ERROR_TRACE_COMPARISON:
+                    print("Warning: there was no call for function {}. Last called function is {}. "
+                          "Current id is {}".format(name, last_call, elem[CET_ID]))
                 stack.append(last_call)
                 continue
         # Pretty print.
