@@ -15,20 +15,19 @@
 # limitations under the License.
 #
 
+import datetime
 import json
 import re
-import datetime
-from django.db.models import Q
-from django.utils.timezone import now
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.db.models import F
+from django.db.models import F, Q
 from django.http import JsonResponse, Http404
 from django.template.defaulttags import register
 from django.template.loader import get_template
 from django.urls import reverse
 from django.utils.decorators import method_decorator
-from django.utils.timezone import pytz
+from django.utils.timezone import now, pytz
 from django.utils.translation import ugettext as _, override
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import SingleObjectMixin, DetailView
@@ -45,6 +44,7 @@ from marks.models import MarkSafe, MarkUnsafe, MarkUnknown, MarkSafeHistory, Mar
     SafeAssociationLike, UnsafeAssociationLike, UnknownAssociationLike, ReportComponent
 from marks.tables import MarkData, MarkChangesTable, MarkReportsTable, MarksList, AssociationChangesTable
 from marks.tags import GetTagsData, GetParents, SaveTag, TagsInfo, CreateTagsFromFile, TagAccess
+from marks.UnsafeUtils import decode_optimizations
 from reports.mea import error_trace_pretty_print, get_or_convert_error_trace, COMPARISON_FUNCTIONS, \
     CONVERSION_FUNCTIONS, DEFAULT_CONVERSION_FUNCTION, DEFAULT_COMPARISON_FUNCTION, obtain_pretty_error_trace, \
     TAG_ADDITIONAL_MODEL_FUNCTIONS, DEFAULT_SIMILARITY_THRESHOLD
@@ -114,7 +114,7 @@ class MarkPage(LoggedCallMixin, Bview.DataViewMixin, DetailView):
                                         page=self.request.GET.get('page', 1)),
             'desc': desc,
             'similarity': similarity,
-            'args': args
+            'args': args, 'optimizations': ", ".join(sorted(decode_optimizations(self.object.optimizations)))
         }
 
 
@@ -243,6 +243,7 @@ class MarkFormView(LoggedCallMixin, DetailView):
             context['cancel_url'] = reverse('marks:mark', args=[self.kwargs['type'], self.object.id])
             if self.kwargs['type'] == 'unsafe':
                 context['similarity'] = context['markdata'].mark_version.similarity
+                context['optimizations'] = decode_optimizations(self.object.optimizations)
                 args = context['markdata'].mark_version.args
                 if args:
                     args = json.loads(args)

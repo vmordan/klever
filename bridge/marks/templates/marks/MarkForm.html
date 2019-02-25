@@ -220,11 +220,17 @@
                 </div>
 
                 <div class="ui segment">
-                    <h4 class="header ui">{% trans 'Optimizations (use carefully)' %}</h4>
+                    <h4 class="header ui">{% trans 'Optimizations' %} ({% trans 'use carefully' %})</h4>
                     <div class="ui toggle checkbox">
-                        <input type="checkbox" id="apply_for_current">
+                        <input type="checkbox" id="apply_for_current" {% if 'apply_for_current' in optimizations %} checked {% endif %}>
                         <label for="apply_for_current">{% trans 'Apply only to current report' %}</label>
                     </div>
+                    {% if action == 'edit' %}
+                    <div class="ui toggle checkbox">
+                        <input type="checkbox" id="do_not_recalc" {% if 'do_not_recalc' in optimizations %} checked {% endif %}>
+                        <label for="do_not_recalc">{% trans 'Do not recalculate mark application cache' %}</label>
+                    </div>
+                    {% endif %}
                 </div>
 
                 {% if mark_report %}

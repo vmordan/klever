@@ -23,12 +23,10 @@ from django.db.models import F
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
-from bridge.utils import logger, BridgeException
-from bridge.utils import unique_id
+from bridge.utils import logger, BridgeException, unique_id
 from bridge.vars import UNKNOWN_ERROR, UNSAFE_VERDICTS, USER_ROLES, MARK_STATUS, MARK_UNSAFE, MARK_TYPE, \
     ASSOCIATION_TYPE
-from marks.models import ConvertedTraces
-from marks.models import MarkUnsafe, MarkUnsafeHistory, MarkUnsafeReport, MarkUnsafeAttr, \
+from marks.models import ConvertedTraces, MarkUnsafe, MarkUnsafeHistory, MarkUnsafeReport, MarkUnsafeAttr, \
     MarkUnsafeTag, UnsafeTag, UnsafeReportTag, ReportUnsafeTag
 from reports.mea import error_trace_pretty_parse, \
     compare_error_traces, TAG_CONVERSION_FUNCTION, TAG_COMPARISON_FUNCTION, TAG_EDITED_ERROR_TRACE, \
@@ -38,6 +36,20 @@ from reports.models import ReportComponentLeaf, ReportAttr, ReportUnsafe, Attr, 
 from users.models import User
 
 UNSAFE_MARK_TIME_THRESHOLD = 1  # sec
+
+OPTIMIZATION_APPLY_FOR_CURRENT = 'apply_for_current'
+OPTIMIZATION_DO_NOT_RECALC = 'do_not_recalc'
+OPTIMIZATIONS = [OPTIMIZATION_APPLY_FOR_CURRENT, OPTIMIZATION_DO_NOT_RECALC]
+
+
+def decode_optimizations(encoded) -> set:
+    counter = 0
+    decoded = set()
+    for name in OPTIMIZATIONS:
+        if (encoded >> counter) & 1:
+            decoded.add(name)
+        counter += 1
+    return decoded
 
 
 class NewMark:
@@ -52,7 +64,12 @@ class NewMark:
         self.similarity_threshold = round(int(args.get('similarity_threshold', 0)))
         self.initial_error_trace = args.get('initial_error_trace')
         self.conversion_function_args = json.loads(args.get('conversion_function_args', "{}"))
-        self.apply_for_current = args.get('apply_for_current', False)
+
+        # Optimizations.
+        self.optimizations = set()
+        for optimization in OPTIMIZATIONS:
+            if args.get(optimization, False):
+                self.optimizations.add(optimization)
 
         if mark_unsafe:
             self.__check_mark_applicability(mark_unsafe)
@@ -117,13 +134,21 @@ class NewMark:
             tags |= tags_parents
         self._args['tags'] = tags
 
+    def __encode_optimizations(self) -> int:
+        encoded = 0
+        counter = 0
+        for name in OPTIMIZATIONS:
+            encoded += (int(name in self.optimizations) & 1) << counter
+            counter += 1
+        return encoded
+
     def create_mark(self, report):
         mark = MarkUnsafe.objects.create(
             identifier=unique_id(), author=self._user, change_date=now(), format=report.root.job.format,
             job=report.root.job, description=str(self._args.get('description', '')),
             verdict=self._args['verdict'], status=self._args['status'], is_modifiable=self._args['is_modifiable'],
             comparison_function=self.comparison_function, conversion_function=self.conversion_function,
-            report=report
+            report=report, optimizations=self.__encode_optimizations()
         )
 
         try:
@@ -133,7 +158,7 @@ class NewMark:
             mark.delete()
             raise
         self.changes = ConnectMarks([mark], self.similarity_threshold, self.conversion_function_args,
-                                    prime_id=report.id, apply_for_current=self.apply_for_current).\
+                                    prime_id=report.id, optimizations=self.optimizations).\
             changes.get(mark.id, {})
         self.__get_tags_changes(RecalculateTags(list(self.changes)).changes)
         update_confirmed_cache([report])
@@ -142,6 +167,7 @@ class NewMark:
     def change_mark(self, mark, recalculate_cache=True):
         last_v = MarkUnsafeHistory.objects.get(mark=mark, version=F('mark__version'))
 
+        old_optimizations = decode_optimizations(mark.optimizations)
         mark.author = self._user
         mark.change_date = now()
         mark.status = self._args['status']
@@ -170,6 +196,10 @@ class NewMark:
         if not last_v.similarity == self.similarity_threshold:
             do_recalc = True
 
+        if old_optimizations != self.optimizations:
+            mark.optimizations = self.__encode_optimizations()
+            do_recalc = True
+
         markversion = self.__create_version(mark, self.error_trace_id)
 
         try:
@@ -179,10 +209,13 @@ class NewMark:
             raise
         mark.save()
 
+        if OPTIMIZATION_DO_NOT_RECALC in self.optimizations:
+            do_recalc = False
+
         if recalculate_cache:
             if do_recalc:
                 changes = ConnectMarks([mark], self.similarity_threshold, self.conversion_function_args,
-                                       apply_for_current=self.apply_for_current).changes
+                                       optimizations=self.optimizations).changes
             else:
                 changes = self.__create_changes(mark)
                 if recalc_verdicts:
@@ -207,7 +240,8 @@ class NewMark:
             identifier=self._args['identifier'], author=self._user, change_date=now(), format=self._args['format'],
             type=MARK_TYPE[2][0], description=str(self._args.get('description', '')),
             verdict=self._args['verdict'], status=self._args['status'], is_modifiable=self._args['is_modifiable'],
-            comparison_function=self.comparison_function, conversion_function=self.conversion_function
+            comparison_function=self.comparison_function, conversion_function=self.conversion_function,
+            optimizations=self.__encode_optimizations()
         )
 
         try:
@@ -303,7 +337,7 @@ class NewMark:
 
 class ConnectMarks:
     def __init__(self, marks, similarity_threshold, conversion_function_args: dict, prime_id=None,
-                 apply_for_current=False):
+                 optimizations=set()):
         self._marks = marks
         self._prime_id = prime_id
         self.changes = {}
@@ -312,7 +346,7 @@ class ConnectMarks:
         self.conversion_functions = {}
         self.comparison_functions = {}
         self.edited_error_trace = {}
-        self.apply_for_current = apply_for_current
+        self.optimizations = optimizations
 
         self._marks_attrs = self.__get_marks_attrs()
         self._unsafes_attrs = self.__get_unsafes_attrs()
@@ -404,7 +438,7 @@ class ConnectMarks:
         counter_all = 0
         counter_applied = 0
 
-        if self.apply_for_current:
+        if OPTIMIZATION_APPLY_FOR_CURRENT in self.optimizations:
             # Optimizations.
             target_job_ids = []
             for mark_id in self.edited_error_trace:

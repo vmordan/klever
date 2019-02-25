@@ -72,6 +72,7 @@ function collect_markdata() {
         mark_data['initial_error_trace'] = $('#report_id').val();
         mark_data['conversion_function_args'] = get_conversion_function_args();
         mark_data['apply_for_current'] = $('#apply_for_current').is(':checked');
+        mark_data['do_not_recalc'] = $('#do_not_recalc').is(':checked');
     }
     return JSON.stringify(mark_data);
 }

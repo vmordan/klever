@@ -19,9 +19,10 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import pre_delete
 from django.dispatch.dispatcher import receiver
+
 from bridge.vars import FORMAT, MARK_STATUS, MARK_UNSAFE, MARK_SAFE, MARK_TYPE, ASSOCIATION_TYPE
-from reports.models import Attr, ReportUnsafe, ReportSafe, ReportComponent, Component, ReportUnknown
 from jobs.models import Job
+from reports.models import Attr, ReportUnsafe, ReportSafe, ReportComponent, Component, ReportUnknown
 
 CONVERTED_DIR = 'Error-traces'
 
@@ -160,6 +161,7 @@ class MarkUnsafe(Mark):
     comparison_function = models.CharField(max_length=64, default='')
     conversion_function = models.CharField(max_length=64, default='')
     report = models.ForeignKey(ReportUnsafe, models.CASCADE, null=True)
+    optimizations = models.PositiveIntegerField(default=0)
 
     class Meta:
         db_table = 'mark_unsafe'

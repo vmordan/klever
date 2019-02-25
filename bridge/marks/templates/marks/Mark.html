@@ -164,6 +164,14 @@
                         <td><b>{{ similarity }}%</b></td>
                     </tr>
                     {% endif %}
+
+                    {% if optimizations %}
+                    <tr>
+                        <td class="right aligned">{% trans 'Optimizations' %}</td>
+                        <td>{{ optimizations }}</td>
+                    </tr>
+                    {% endif %}
+
                     {% endif %}
                     {% if markdata.description|length > 0 %}
                         <tr><td class="right aligned">{% trans 'Description' %}</td><td>{{ markdata.description|safe }}</td></tr>
