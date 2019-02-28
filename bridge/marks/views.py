@@ -87,8 +87,10 @@ class MarkPage(LoggedCallMixin, Bview.DataViewMixin, DetailView):
         edited_error_trace = None
         similarity = None
         args = None
+        optimizations = None
         if self.kwargs['type'] == 'unsafe':
             similarity = history_set.first().similarity
+            optimizations = ", ".join(sorted(decode_optimizations(self.object.optimizations)))
             args = history_set.first().args
             if args:
                 args = json.loads(args)
@@ -114,7 +116,7 @@ class MarkPage(LoggedCallMixin, Bview.DataViewMixin, DetailView):
                                         page=self.request.GET.get('page', 1)),
             'desc': desc,
             'similarity': similarity,
-            'args': args, 'optimizations': ", ".join(sorted(decode_optimizations(self.object.optimizations)))
+            'args': args, 'optimizations': optimizations
         }
 
 
