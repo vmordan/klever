@@ -3155,3 +3155,24 @@ msgstr "используйте осторожно"
 
 msgid "Do not recalculate mark application cache"
 msgstr "Не пересчитывать кэш применения оценки"
+
+msgid "Optimizations for all marks were resolved"
+msgstr "Оптимизации для всех оценок были отменены"
+
+msgid "Download all marks"
+msgstr "Сохранить все оценки"
+
+msgid "Upload all marks"
+msgstr "Загрузить оценки на сервер"
+
+msgid "Resolve optimizations for all marks"
+msgstr "Отменить оптимизации для всех оценок"
+
+msgid "Delete all marks before upload"
+msgstr "Удалить все старые оценки перед загрузкой"
+
+msgid "Cache of instances of components"
+msgstr "Кэш компонентов"
+
+msgid "Remove call log that is older than 30 days"
+msgstr "Удалить внутренние логи, созданные более 30 дней назад"

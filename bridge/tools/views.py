@@ -15,25 +15,26 @@
 # limitations under the License.
 #
 
+import json
 import os
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.db.models import F, Q
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from django.utils.translation import ugettext as _, activate
 
-from bridge.vars import USER_ROLES, JOB_STATUS, UNKNOWN_ERROR
 from bridge.utils import BridgeException, logger
-
+from bridge.vars import USER_ROLES, JOB_STATUS, UNKNOWN_ERROR
 from jobs.models import Job, JobFile
+from marks.UnsafeUtils import ConnectMarks, RecalculateTags
+from marks.models import MarkUnsafe, MarkUnsafeHistory, UnknownProblem, ConvertedTraces
 from reports.models import Component, Computer
-from marks.models import UnknownProblem, ConvertedTraces
 from service.models import Task
 from tools.models import LockTable
-
-from tools.utils import objects_without_relations, ClearFiles, Recalculation
 from tools.profiling import unparallel_group, ProfileData, clear_old_logs, ExecLocker
+from tools.utils import objects_without_relations, ClearFiles, Recalculation
 
 
 @login_required
@@ -107,6 +108,28 @@ def clear_system(request):
     objects_without_relations(Component).delete()
     objects_without_relations(UnknownProblem).delete()
     return JsonResponse({'message': _("All unused files and DB rows were deleted")})
+
+
+@login_required
+@unparallel_group([JobFile, ConvertedTraces, Computer, Component, UnknownProblem])
+def resolve_marks(request):
+    activate(request.user.extended.language)
+    if request.method != 'POST':
+        return JsonResponse({'error': str(UNKNOWN_ERROR)})
+    if request.user.extended.role != USER_ROLES[2][0]:
+        return JsonResponse({'error': _("No access")})
+    marks = MarkUnsafe.objects.filter(~Q(optimizations=0))
+    for mark in marks:
+        try:
+            last_v = MarkUnsafeHistory.objects.get(mark=mark, version=F('mark__version'))
+            changes = ConnectMarks([mark], last_v.similarity, json.loads(last_v.args)).changes.get(mark.id, [])
+            RecalculateTags(list(changes))
+            mark.optimizations = 0
+            mark.save()
+        except Exception as e:
+            logger.exception(e)
+
+    return JsonResponse({'message': _("Optimizations for all marks were resolved")})
 
 
 @login_required

@@ -79,6 +79,22 @@ $(document).ready(function () {
             }
         );
     });
+    $('#resolve_marks').click(function () {
+        $('#dimmer_of_page').addClass('active');
+        $.post(
+            '/tools/ajax/resolve_marks/',
+            {},
+            function (data) {
+                $('#dimmer_of_page').removeClass('active');
+                if (data.error) {
+                    err_notify(data.error);
+                }
+                else {
+                    success_notify(data.message);
+                }
+            }
+        );
+    });
     $('#clear_call_logs').click(function () {
         $('#dimmer_of_page').addClass('active');
         $.post(

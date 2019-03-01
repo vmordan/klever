@@ -27,6 +27,7 @@ urlpatterns = [
     path('ajax/clear_components/', views.clear_components),
     path('ajax/clear_problems/', views.clear_problems),
     path('ajax/clear_system/', views.clear_system),
+    path('ajax/resolve_marks/', views.resolve_marks),
     path('ajax/recalculation/', views.recalculation),
     path('ajax/call_list/', views.call_list),
     path('ajax/call_stat/', views.call_statistic),
