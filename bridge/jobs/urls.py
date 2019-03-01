@@ -32,6 +32,7 @@ urlpatterns = [
     path('remove/', views.RemoveJobsView.as_view()),
     path('save_job_copy/<int:pk>/', views.SaveJobCopyView.as_view()),
     path('decision_results_json/<int:pk>/', views.DecisionResultsJson.as_view()),
+    path('set_attrs/<int:pk>/', views.SetJobViewAttrs.as_view()),
 
     # Job form
     re_path(r'^form/(?P<pk>[0-9]+)/(?P<action>edit|copy)/$', views.JobFormPage.as_view(), name='form'),

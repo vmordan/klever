@@ -244,11 +244,18 @@ function get_attrs() {
             attrs[elems[elem].id] = elems[elem].value;
         }
     }
-    if ($.isEmptyObject(attrs)) {
-        $('#apply_attributes').removeClass('disabled');
-        return;
-    }
-    window.location.replace(get_url_with_get_parameter(window.location.href, 'data', JSON.stringify(attrs)));
+    $.post('/jobs/set_attrs/' + $('#job_id').val() + '/', {'data': JSON.stringify(attrs)},
+        function (data) {
+            $('#apply_attributes').removeClass('disabled');
+            if (data.error) {
+                err_notify(data.error);
+                return false;
+            }
+            if (data.is_reload) {
+                window.location.replace('');
+            }
+        }
+    );
 }
 
 $(document).ready(function () {
@@ -304,6 +311,10 @@ $(document).ready(function () {
     $('#apply_attributes').click(function () {
         $(this).addClass('disabled');
         get_attrs();
+    });
+    $('#cancel_attributes').click(function () {
+        $(this).addClass('disabled');
+        $.post('/jobs/set_attrs/' + $('#job_id').val() + '/', {'data': {}}, error_or_reload);
     });
     $('#upload_reports_start').click(function () {
         var files = $('#upload_reports_file_input')[0].files,

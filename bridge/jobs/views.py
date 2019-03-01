@@ -45,7 +45,7 @@ from service.utils import StartJobDecision, StopDecision, GetJobsProgresses
 import jobs.utils
 from jobs.jobForm import JobForm, role_info, LoadFilesTree, UserRolesForm
 from jobs.models import Job, RunHistory, JobHistory, JobFile, FileSystem
-from jobs.ViewJobData import ViewJobData
+from jobs.ViewJobData import ViewJobData, update_job_view_attrs
 from jobs.JobTableProperties import TableTree
 from jobs.Download import UploadJob, JobArchiveGenerator, KleverCoreArchiveGen, JobsArchivesGen,\
     UploadReportsWithoutDecision, JobsTreesGen, UploadTree
@@ -71,7 +71,6 @@ class JobPage(LoggedCallMixin, Bview.DataViewMixin, DetailView):
     template_name = 'jobs/viewJob.html'
 
     def get_context_data(self, **kwargs):
-        selected_attrs = json.loads(self.request.GET.get('data', '{}'))
         job_access = jobs.utils.JobAccess(self.request.user, self.object)
         if not job_access.can_view():
             raise BridgeException(code=400)
@@ -105,8 +104,7 @@ class JobPage(LoggedCallMixin, Bview.DataViewMixin, DetailView):
             'parents': jobs.utils.get_job_parents(self.request.user, self.object),
             'children': jobs.utils.get_job_children(self.request.user, self.object),
             'progress': GetJobsProgresses(self.request.user, [self.object.id]).data[self.object.id],
-            'reportdata': ViewJobData(self.request.user, self.get_view(VIEW_TYPES[2]), report,
-                                      selected_attrs=selected_attrs),
+            'reportdata': ViewJobData(self.request.user, self.get_view(VIEW_TYPES[2]), report),
             'attrs': attrs
         }
 
@@ -500,6 +498,15 @@ class StartDecision(LoggedCallMixin, Bview.JsonView):
 
         StartJobDecision(self.request.user, self.kwargs['job_id'], GetConfiguration(**getconf_kwargs).configuration)
         return {}
+
+
+class SetJobViewAttrs(LoggedCallMixin, Bview.JsonDetailPostView):
+    model = Job
+
+    def get_context_data(self, **kwargs):
+        raw_attrs = json.loads(self.request.POST.get('data', '{}'))
+        is_reload = update_job_view_attrs(raw_attrs, self.request.user, self.object)
+        return {"is_reload": is_reload}
 
 
 class StopDecisionView(LoggedCallMixin, Bview.JsonDetailPostView):

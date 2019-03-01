@@ -108,8 +108,8 @@
                         <td class="ui header center aligned" colspan="2"  style="background: #baedef">
                             {% trans 'Attributes' %}
                             <button id="apply_attributes" class="ui tiny red button basic "><b><i class="ui icon crosshairs"></i>{% trans 'Apply' %}</b></button>
-                            {% if reportdata.parsed_raw_attrs %}
-                                <a href="{% url 'jobs:job' job.id %}" class="ui tiny orange button basic ">{% trans 'Cancel' %}</a>
+                            {% if reportdata.attrs %}
+                                <button id="cancel_attributes" class="ui tiny red button basic ">{% trans 'Cancel' %}</button>
                             {% endif %}
                         </td>
                     </tr>
@@ -125,11 +125,11 @@
                                     {% for val in vals %}
                                     <div class="ui checkbox">
                                         <input type="checkbox" id="attr_{{ name }}_{{ val }}" value="{{val}}"
-                                        {% if name in reportdata.parsed_raw_attrs %}
-                                            {% for s_name, s_vals in reportdata.parsed_raw_attrs.items %}
+                                        {% if name in reportdata.attrs %}
+                                            {% for s_name, s_vals in reportdata.attrs.items %}
                                                 {% if name == s_name %}
                                                     {% for s_val in s_vals %}
-                                                        {% if s_val == val %}
+                                                        {% if s_val.value == val %}
                                                             checked
                                                         {% endif %}
                                                     {% endfor %}

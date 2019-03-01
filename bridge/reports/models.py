@@ -392,3 +392,12 @@ class CoverageDataStatistics(models.Model):
 def coverage_data_stat_delete_signal(**kwargs):
     covdatastat = kwargs['instance']
     covdatastat.data.storage.delete(covdatastat.data.path)
+
+
+class JobViewAttrs(models.Model):
+    user = models.ForeignKey(User, models.CASCADE)
+    job = models.ForeignKey(Job, models.CASCADE)
+    attr = models.ForeignKey(Attr, models.CASCADE, related_name='+')
+
+    class Meta:
+        db_table = 'job_view_attrs'

@@ -26,7 +26,7 @@ from bridge.utils import logger, BridgeException
 from bridge.vars import SAFE_VERDICTS, UNSAFE_VERDICTS, ASSOCIATION_TYPE
 from jobs.utils import SAFES, UNSAFES, TITLES, get_resource_data
 from marks.models import MarkUnknownReport
-from reports.models import Attr
+from reports.models import Attr, JobViewAttrs
 from reports.models import ReportAttr, ComponentInstances, ReportUnknown, ReportUnsafe, ReportSafe
 
 COLORS = {
@@ -36,8 +36,35 @@ COLORS = {
 }
 
 
+def update_job_view_attrs(raw_attrs: dict, user, job) -> bool:
+    saved_attrs = set()
+    for view in JobViewAttrs.objects.filter(job=job, user=user).only('attr'):
+        saved_attrs.add(view.attr)
+
+    new_attrs = set()
+    for raw_name, value in raw_attrs.items():
+        m = re.match('attr_(.+)_{}'.format(value), raw_name)
+        if m:
+            name = m.group(1)
+            new_attrs.add(Attr.objects.get(name__name=name, value=value))
+        else:
+            logger.exception("Cannot parse attribute name '{}' with value '{}'".format(raw_name, value))
+    add_attrs = new_attrs - saved_attrs
+    delete_attrs = saved_attrs - new_attrs
+
+    # Delete attrs from job view.
+    JobViewAttrs.objects.filter(job=job, user=user, attr__in=delete_attrs).delete()
+
+    # Add attrs to job view.
+    job_view_attrs = list()
+    for attr in add_attrs:
+        job_view_attrs.append(JobViewAttrs(job=job, user=user, attr=attr))
+    JobViewAttrs.objects.bulk_create(job_view_attrs)
+    return bool(add_attrs) or bool(delete_attrs)
+
+
 class ViewJobData:
-    def __init__(self, user, view, report, selected_attrs={}):
+    def __init__(self, user, view, report):
         self.user = user
         self.report = report
         self.view = view
@@ -45,34 +72,21 @@ class ViewJobData:
         if self.report is None:
             return
 
-        self.attrs = self.__get_attrs(selected_attrs)
+        self.attrs = self.__get_attrs()
         self.totals = self.__get_totals()
         self.problems = self.__get_problems()
         self.data = self.__get_view_data()
 
-    def __parse_attrs(self, raw_attrs: dict) -> dict:
+    def __get_attrs(self) -> dict:
         result = dict()
-        for raw_name, value in raw_attrs.items():
-            m = re.match('attr_(.+)_{}'.format(value), raw_name)
-            if m:
-                name = m.group(1)
-                if name not in result:
-                    result[name] = list()
-                result[name].append(value)
-            else:
-                logger.exception("Cannot parse attribute name '{}' with value '{}'".format(raw_name, value))
-        return result
-
-    def __get_attrs(self, raw_attrs: dict) -> dict:
-        # The user chooses attributes names and values, but we need corresponding ids.
-        self.parsed_raw_attrs = self.__parse_attrs(raw_attrs)
-        result = dict()
-        self.__attrs_href = list()
-        for name, values in self.parsed_raw_attrs.items():
-            attrs = Attr.objects.filter(name__name=name, value__in=values).values_list('id')
-            if attrs:
-                result[name] = attrs
-                self.__attrs_href.extend(str(v[0]) for v in attrs)
+        self.__attrs_href = set()
+        for view in JobViewAttrs.objects.filter(job=self.report.root.job, user=self.user).only('attr'):
+            attr = view.attr
+            name = attr.name.name
+            if name not in result:
+                result[name] = list()
+            result[name].append(attr)
+            self.__attrs_href.add(str(attr.id))
         self.__attrs_href = ','.join(self.__attrs_href)
         return result
 
@@ -106,9 +120,9 @@ class ViewJobData:
         self.__unknowns = self.report.leaves.exclude(unknown=None)
 
         for name, values in self.attrs.items():
-            self.__safes = self.__safes.filter(safe__attrs__attr__id__in=values)
-            self.__unsafes = self.__unsafes.filter(unsafe__attrs__attr__id__in=values)
-            self.__unknowns = self.__unknowns.filter(unknown__attrs__attr__id__in=values)
+            self.__safes = self.__safes.filter(safe__attrs__attr__in=values)
+            self.__unsafes = self.__unsafes.filter(unsafe__attrs__attr__in=values)
+            self.__unknowns = self.__unknowns.filter(unknown__attrs__attr__in=values)
 
         return {
             'safes': {'number': self.__safes.count(), 'href': self.__get_total_href('safes')},
