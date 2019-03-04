@@ -98,15 +98,15 @@
                 </thead>
                 <tbody>
                     {% for row_data in TableData.table_data.values %}
-                        <tr onclick="document.location = '{{row_data.0.href}}'" style="cursor:pointer;">
+                        <tr>
                             {% for v in row_data %}
                                 <td>
                                     {% if v.html %}
                                         <span>{{ v.value|safe }}</span>
                                     {% elif v.href %}
-                                        <a href="{{ v.href }}">{{ v.value }}</a>
+                                        <a class="black-link" href="{{ v.href }}">{{ v.value }}</a>
                                     {% else %}
-                                        <span{% if v.color %} style="color:{{ v.color }}"{% endif %}>{{ v.value }}</span>
+                                        <a class="black-link" href="{{ row_data.0.href }}" {% if v.color %} style="color:{{ v.color }}"{% endif %}>{{ v.value }}</a>
                                     {% endif %}
                                 </td>
                             {% endfor %}
