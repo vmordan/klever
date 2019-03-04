@@ -63,7 +63,7 @@ class NewMark:
         self.comparison_function = args.get(TAG_COMPARISON_FUNCTION, DEFAULT_COMPARISON_FUNCTION)
         self.similarity_threshold = round(int(args.get('similarity_threshold', 0)))
         self.initial_error_trace = args.get('initial_error_trace')
-        self.conversion_function_args = json.loads(args.get('conversion_function_args', "{}"))
+        self.conversion_function_args = self.__get_conversion_function_args()
 
         # Optimizations.
         self.optimizations = set()
@@ -77,6 +77,13 @@ class NewMark:
         self.changes = {}
         self._comparison = None
         self.__check_args()
+
+    def __get_conversion_function_args(self) -> dict:
+        result = {}
+        for arg, value in json.loads(self._args.get('conversion_function_args', "{}")).items():
+            if value:
+                result[arg] = value
+        return result
 
     def __check_mark_applicability(self, mark_unsafe):
         if not self.edited_error_trace:
