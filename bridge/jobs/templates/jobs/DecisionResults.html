@@ -232,13 +232,13 @@
                     {% for child in children %}
                         {% if child.pk %}
                             <tr class="center aligned">
-                                <td><a style="display:block;" href="{% url 'jobs:job' child.pk %}">{{ child.name }}</a></td>
-                                <td><a style="display:block;" href="{% url 'jobs:job' child.pk %}">{{ child.unsafes }}</a></td>
-                                <td><a style="display:block;" href="{% url 'jobs:job' child.pk %}">{{ child.safes }}</a></td>
-                                <td><a style="display:block;" href="{% url 'jobs:job' child.pk %}">{{ child.unknowns }}</a></td>
-                                <td><a style="display:block;" href="{% url 'jobs:job' child.pk %}">{{ child.wall }}</a></td>
-                                <td><a style="display:block;" href="{% url 'jobs:job' child.pk %}">{{ child.cpu }}</a></td>
-                                <td><a style="display:block;" href="{% url 'jobs:job' child.pk %}">{{ child.mem }}</a></td>
+                                <td><a class="black-link" href="{% url 'jobs:job' child.pk %}">{{ child.name }}</a></td>
+                                <td><a class="black-link" href="{% url 'jobs:job' child.pk %}">{{ child.unsafes }}</a></td>
+                                <td><a class="black-link" href="{% url 'jobs:job' child.pk %}">{{ child.safes }}</a></td>
+                                <td><a class="black-link" href="{% url 'jobs:job' child.pk %}">{{ child.unknowns }}</a></td>
+                                <td><a class="black-link" href="{% url 'jobs:job' child.pk %}">{{ child.wall }}</a></td>
+                                <td><a class="black-link" href="{% url 'jobs:job' child.pk %}">{{ child.cpu }}</a></td>
+                                <td><a class="black-link" href="{% url 'jobs:job' child.pk %}">{{ child.mem }}</a></td>
                             </tr>
                         {% endif %}
                     {% endfor %}
