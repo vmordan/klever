@@ -853,7 +853,6 @@ class CheckErrorTraces:
         if not manager:
             raise ValueError("Can't check error traces without manager in the system")
 
-        files = self.__get_list_of_sources()
         for tr_name in self._traces:
             res = GetETV(self.__read_trace(tr_name), manager.user)
 
@@ -861,10 +860,6 @@ class CheckErrorTraces:
                 self.add_attrs[tr_name] = res.data['attrs']
             if 'files' not in res.data:
                 raise ValueError('Wrong format of error trace')
-
-            trace_files = set(f[1:] if f.startswith('/') else f for f in res.data['files'])
-            if any(x not in files for x in trace_files):
-                raise ValueError("Sources doesn't have needed source for error trace")
 
     def __read_trace(self, trace_name):
         with zipfile.ZipFile(self._traces[trace_name], mode='r') as zfp:
