@@ -15,8 +15,8 @@
 # limitations under the License.
 #
 
-import os
 import json
+import os
 import zipfile
 from io import BytesIO
 
@@ -25,25 +25,23 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q, F
 from django.utils.timezone import now
 
-from bridge.vars import REPORT_ARCHIVE, JOB_WEIGHT, JOB_STATUS, USER_ROLES
-from bridge.utils import logger, unique_id
-
 import marks.SafeUtils as SafeUtils
-import marks.UnsafeUtils as UnsafeUtils
 import marks.UnknownUtils as UnknownUtils
-
-from users.models import Extended
-from reports.models import Report, ReportRoot, ReportComponent, ReportSafe, ReportUnsafe, ReportUnknown,\
-    Component, ComponentResource, ReportAttr, ReportComponentLeaf, Computer, ComponentInstances,\
-    CoverageArchive, ErrorTraceSource
-from service.models import Task
-from reports.utils import AttrData
-from service.utils import FinishJobDecision, KleverCoreStartDecision
-from tools.utils import RecalculateLeaves
-
+import marks.UnsafeUtils as UnsafeUtils
+from bridge.utils import logger, unique_id, ArchiveFileContent
+from bridge.vars import REPORT_ARCHIVE, JOB_WEIGHT, JOB_STATUS, USER_ROLES, CONVERTED_ERROR_TRACES_FILE
+from marks.models import ErrorTraceConvertionCache
 from reports.coverage import FillCoverageCache
 from reports.etv import GetETV
-
+from reports.mea.wrapper import dump_converted_error_trace
+from reports.models import Report, ReportRoot, ReportComponent, ReportSafe, ReportUnsafe, ReportUnknown, \
+    Component, ComponentResource, ReportAttr, ReportComponentLeaf, Computer, ComponentInstances, \
+    CoverageArchive, ErrorTraceSource
+from reports.utils import AttrData
+from service.models import Task
+from service.utils import FinishJobDecision, KleverCoreStartDecision
+from tools.utils import RecalculateLeaves
+from users.models import Extended
 
 AVTG_TOTAL_NAME = 'total number of abstract verification task descriptions to be generated in ideal'
 AVTG_FAIL_NAME = 'faulty generated abstract verification task descriptions'
@@ -670,6 +668,21 @@ class UploadReport:
         for p in self._parents_branch:
             leaves.extend(list(ReportComponentLeaf(report=p, unsafe=unsafe) for unsafe in reports))
         ReportComponentLeaf.objects.bulk_create(leaves)
+        cache = []
+        for leaf in reports:
+            try:
+                converted_traces = json.loads(
+                    ArchiveFileContent(leaf, 'error_trace', CONVERTED_ERROR_TRACES_FILE).content.decode('utf8'))
+                for conversion_function, converted_trace in converted_traces.items():
+                    et_file = dump_converted_error_trace(converted_trace)
+                    cache.append(ErrorTraceConvertionCache(unsafe=leaf, function=conversion_function, converted=et_file,
+                                                           args="{}"))
+            except:
+                # Old format.
+                pass
+        if cache:
+            ErrorTraceConvertionCache.objects.bulk_create(cache)
+
         for leaf in reports:
             UnsafeUtils.ConnectReport(leaf)
         UnsafeUtils.RecalculateTags(reports)

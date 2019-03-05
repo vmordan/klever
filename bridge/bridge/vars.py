@@ -196,6 +196,7 @@ REPORT_ARCHIVE = {
 LOG_FILE = 'log.txt'
 COVERAGE_FILE = 'coverage.json'
 ERROR_TRACE_FILE = 'error trace.json'
+CONVERTED_ERROR_TRACES_FILE = "converted error traces.json"
 PROBLEM_DESC_FILE = 'problem desc.txt'
 PROOF_FILE = 'proof.txt'
 
