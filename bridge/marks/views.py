@@ -36,7 +36,7 @@ import bridge.CustomViews as Bview
 import marks.utils as mutils
 from bridge.utils import logger, extract_archive, ArchiveFileContent, BridgeException
 from bridge.vars import USER_ROLES, MARK_STATUS, MARK_SAFE, MARK_UNSAFE, MARK_TYPE, ASSOCIATION_TYPE, \
-    VIEW_TYPES, PROBLEM_DESC_FILE
+    VIEW_TYPES, PROBLEM_DESC_FILE, COMPARISON_FUNCTIONS_DESCRIPTION, CONVERSION_FUNCTIONS_DESCRIPTION
 from marks.Download import UploadMark, MarkArchiveGenerator, AllMarksGen, UploadAllMarks, PresetMarkFile
 from marks.models import MarkSafe, MarkUnsafe, MarkUnknown, MarkSafeHistory, MarkUnsafeHistory, MarkUnknownHistory, \
     MarkUnsafeCompare, UnsafeTag, SafeTag, SafeTagAccess, UnsafeTagAccess, \
@@ -45,7 +45,7 @@ from marks.models import MarkSafe, MarkUnsafe, MarkUnknown, MarkSafeHistory, Mar
 from marks.tables import MarkData, MarkChangesTable, MarkReportsTable, MarksList, AssociationChangesTable
 from marks.tags import GetTagsData, GetParents, SaveTag, TagsInfo, CreateTagsFromFile, TagAccess
 from marks.UnsafeUtils import decode_optimizations
-from reports.mea import error_trace_pretty_print, get_or_convert_error_trace, COMPARISON_FUNCTIONS, \
+from reports.mea.wrapper import error_trace_pretty_print, get_or_convert_error_trace, COMPARISON_FUNCTIONS, \
     CONVERSION_FUNCTIONS, DEFAULT_CONVERSION_FUNCTION, DEFAULT_COMPARISON_FUNCTION, obtain_pretty_error_trace, \
     TAG_ADDITIONAL_MODEL_FUNCTIONS, DEFAULT_SIMILARITY_THRESHOLD
 from reports.models import ReportSafe, ReportUnsafe, ReportUnknown
@@ -96,10 +96,10 @@ class MarkPage(LoggedCallMixin, Bview.DataViewMixin, DetailView):
                 args = json.loads(args)
             for func in COMPARISON_FUNCTIONS:
                 if func['name'] == self.object.comparison_function:
-                    desc["comparison"] = (func['desc'])
+                    desc["comparison"] = (COMPARISON_FUNCTIONS_DESCRIPTION[func['id']])
             for func in CONVERSION_FUNCTIONS:
                 if func['name'] == self.object.conversion_function:
-                    desc["conversion"] = (func['desc'])
+                    desc["conversion"] = (CONVERSION_FUNCTIONS_DESCRIPTION[func['id']])
             try:
                 edited_error_trace = error_trace_pretty_print(markdata.error_trace)
             except:

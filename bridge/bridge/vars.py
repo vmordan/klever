@@ -210,29 +210,18 @@ ASSOCIATION_TYPE = (
 
 ROOT_REPORT = "Root report"
 
-CONVERSION_FUNCTION_CALL_TREE = "call tree"
-CONVERSION_FUNCTION_MODEL_FUNCTIONS = "model functions"
-CONVERSION_FUNCTION_CONDITIONS = "conditions"
-CONVERSION_FUNCTION_ASSIGNMENTS = "assignments"
-CONVERSION_FUNCTION_NOTES = "error descriptions"
-CONVERSION_FUNCTION_FULL = "full"
-CONVERSION_FUNCTIONS = [
-    {'name': CONVERSION_FUNCTION_MODEL_FUNCTIONS, 'id': 1,
-     'desc': _('Functions call tree, in which each leaf is a model function')},
-    {'name': CONVERSION_FUNCTION_CALL_TREE, 'id': 2, 'desc': _('Functions call tree')},
-    {'name': CONVERSION_FUNCTION_CONDITIONS, 'id': 3, 'desc': _('Error trace conditions')},
-    {'name': CONVERSION_FUNCTION_ASSIGNMENTS, 'id': 4, 'desc': _('Error trace assignments')},
-    {'name': CONVERSION_FUNCTION_NOTES, 'id': 5, 'desc': _('Added by the verifier description of error locations')},
-    {'name': CONVERSION_FUNCTION_FULL, 'id': 6, 'desc': _('Full error trace')}
+CONVERSION_FUNCTIONS_DESCRIPTION = [
+    _('Functions call tree, in which each leaf is a model function'),
+    _('Functions call tree'),
+    _('Error trace conditions'),
+    _('Error trace assignments'),
+    _('Added by the verifier description of error locations'),
+    _('Full error trace')
 ]
 
-COMPARISON_FUNCTION_EQUAL = "equal"
-COMPARISON_FUNCTION_INCLUDE = "include"
-COMPARISON_FUNCTION_INCLUDE_PARTIAL = "partial include"
-COMPARISON_FUNCTIONS = [
-    {'name': COMPARISON_FUNCTION_EQUAL, 'id': 1, 'desc': _('Converted error traces are the same')},
-    {'name': COMPARISON_FUNCTION_INCLUDE, 'id': 2,
-     'desc': _('Edited error trace is included in compared trace as a whole sequence')},
-    {'name': COMPARISON_FUNCTION_INCLUDE_PARTIAL, 'id': 3,
-     'desc': _('All elements of the edited error trace are included into compared trace')}
+COMPARISON_FUNCTIONS_DESCRIPTION = [
+    _('Converted error traces are the same'),
+    _('Edited error trace is included in compared trace as a whole sequence'),
+    _('All elements of the edited error trace are included into compared trace'),
+    _('Skip traces comparison (compare by attributes only)')
 ]

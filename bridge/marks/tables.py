@@ -28,16 +28,16 @@ from django.utils.translation import ugettext_lazy as _, ungettext_lazy
 from bridge.tableHead import Header
 from bridge.utils import unique_id, get_templated_text
 from bridge.vars import MARK_SAFE, MARK_UNSAFE, MARK_STATUS, VIEW_TYPES, ASSOCIATION_TYPE, SAFE_VERDICTS, \
-    UNSAFE_VERDICTS
+    UNSAFE_VERDICTS, COMPARISON_FUNCTIONS_DESCRIPTION, CONVERSION_FUNCTIONS_DESCRIPTION
 from jobs.utils import JobAccess
 from marks.models import MarkSafe, MarkUnsafe, MarkUnknown, MarkAssociationsChanges, \
     MarkSafeAttr, MarkUnsafeAttr, MarkUnknownAttr, \
-    MarkUnsafeCompare, MarkSafeHistory, MarkUnsafeHistory, MarkUnknownHistory, ConvertedTraces, \
+    MarkSafeHistory, MarkUnsafeHistory, MarkUnknownHistory, ConvertedTraces, \
     MarkSafeTag, MarkUnsafeTag, UnknownProblem
 from marks.querysets import ListQuery
 from marks.tags import TagsInfo
 from marks.utils import UNSAFE_COLOR, SAFE_COLOR, STATUS_COLOR, MarkAccess
-from reports.mea import COMPARISON_FUNCTIONS, CONVERSION_FUNCTIONS
+from reports.mea.wrapper import COMPARISON_FUNCTIONS, CONVERSION_FUNCTIONS
 from reports.models import ReportSafe, ReportUnsafe, ReportUnknown
 from users.utils import DEF_NUMBER_OF_ELEMENTS
 
@@ -475,6 +475,10 @@ class MarkData:
         if self.type == 'unsafe':
             self.conversion = CONVERSION_FUNCTIONS
             self.comparison = COMPARISON_FUNCTIONS
+            for func in self.comparison:
+                func['desc'] = COMPARISON_FUNCTIONS_DESCRIPTION[func['id']]
+            for func in self.conversion:
+                func['desc'] = CONVERSION_FUNCTIONS_DESCRIPTION[func['id']]
         self.unknown_data = self.__unknown_info()
         self.attributes = self.__get_attributes(report)
 

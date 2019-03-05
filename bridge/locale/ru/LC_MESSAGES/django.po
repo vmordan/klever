@@ -3176,3 +3176,6 @@ msgstr "Кэш компонентов"
 
 msgid "Remove call log that is older than 30 days"
 msgstr "Удалить внутренние логи, созданные более 30 дней назад"
+
+msgid "Skip traces comparison (compare by attributes only)"
+msgstr "Пропустить сравнение трасс (сравнивать только по атрибутам)"

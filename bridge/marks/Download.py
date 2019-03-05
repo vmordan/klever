@@ -28,7 +28,7 @@ import marks.UnknownUtils as UnknownUtils
 import marks.UnsafeUtils as UnsafeUtils
 from bridge.ZipGenerator import ZipStream, CHUNK_SIZE
 from bridge.utils import logger, BridgeException
-from reports.mea import obtain_pretty_error_trace, error_trace_pretty_parse
+from reports.mea.wrapper import obtain_pretty_error_trace, error_trace_pretty_parse
 from marks.models import MarkSafe, MarkUnsafe, MarkUnknown, SafeTag, UnsafeTag, MarkUnsafeReport, ReportUnsafe
 
 
