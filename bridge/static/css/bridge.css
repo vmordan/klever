@@ -88,15 +88,15 @@ body {
 }
 
 .red-pale-link:link {
-    color: #ca2e2a;
+    color: #ee2222;
 }
 
 .red-pale-link:visited {
-    color: #ca2e2a;
+    color: #ee2222;
 }
 
 .red-pale-link:hover {
-    color: #ff2e2a;
+    color: #ff5555;
 }
 
 .red-link:link {
@@ -123,7 +123,7 @@ body {
 }
 
 .black-link:hover {
-    color: #4d4d4d;
+    color: #444444;
 }
 
 .orange-link:link {
@@ -135,7 +135,7 @@ body {
 }
 
 .orange-link:hover {
-    color: #ff9800;
+    color: #FFA633;
 }
 
 .purple-link:link {
@@ -147,7 +147,7 @@ body {
 }
 
 .purple-link:hover {
-    color: #ff00ff;
+    color: #ff8bff;
 }
 
 .fake-link:hover {
