@@ -15,8 +15,8 @@
 # limitations under the License.
 #
 
-import os
 import json
+import os
 from collections import Counter
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
@@ -24,23 +24,20 @@ from django.core.files import File
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Count
 from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
 from django.utils.functional import cached_property
+from django.utils.translation import ugettext_lazy as _
 
-from bridge.vars import UNSAFE_VERDICTS, SAFE_VERDICTS
+from bridge.ZipGenerator import ZipStream
 from bridge.tableHead import Header
 from bridge.utils import logger, extract_archive, BridgeException
-from bridge.ZipGenerator import ZipStream
-
-from reports.models import ReportComponent, AttrFile, Attr, AttrName, ReportAttr, ReportUnsafe, ReportSafe,\
-    ReportUnknown, ReportRoot
-from marks.models import UnknownProblem, SafeTag, UnsafeTag
-
-from users.utils import DEF_NUMBER_OF_ELEMENTS
+from bridge.vars import UNSAFE_VERDICTS, SAFE_VERDICTS
 from jobs.utils import get_resource_data, get_user_time, get_user_memory
-from marks.utils import SAFE_COLOR, UNSAFE_COLOR
+from marks.models import UnknownProblem, SafeTag, UnsafeTag
+from marks.utils import SAFE_COLOR, UNSAFE_COLOR, SAFE_LINK_CLASS, UNSAFE_LINK_CLASS
+from reports.models import ReportComponent, AttrFile, Attr, AttrName, ReportAttr, ReportUnsafe, ReportSafe, \
+    ReportUnknown, ReportRoot
 from reports.querysets import LeavesQuery
-
+from users.utils import DEF_NUMBER_OF_ELEMENTS
 
 REP_MARK_TITLES = {
     'mark_num': _('Mark'),
@@ -280,6 +277,7 @@ class SafesTable:
                 val = '-'
                 href = None
                 color = None
+                style = None
                 if col in attributes:
                     val = attributes[col].get(rep_id, '-')
                 elif col == 'number':
@@ -295,7 +293,9 @@ class SafesTable:
                         if s[0] == safes[rep_id]['verdict']:
                             val = s[1]
                             break
-                    color = SAFE_COLOR[safes[rep_id]['verdict']]
+                    verdict = safes[rep_id]['verdict']
+                    color = SAFE_COLOR[verdict]
+                    style = SAFE_LINK_CLASS[verdict]
                 elif col == 'tags':
                     if 'tags' in safes[rep_id] and safes[rep_id]['tags']:
                         if isinstance(safes[rep_id]['tags'], str):
@@ -311,7 +311,7 @@ class SafesTable:
                     val = get_user_time(self.user, safes[rep_id]['wall_time'])
                 elif col == 'verifiers:memory':
                     val = get_user_memory(self.user, safes[rep_id]['memory'])
-                values_row.append({'value': val, 'color': color, 'href': href})
+                values_row.append({'value': val, 'color': color, 'href': href, 'style': style})
             values_data.append(values_row)
             cnt += 1
 
@@ -445,6 +445,7 @@ class UnsafesTable:
                 val = '-'
                 href = None
                 color = None
+                style = None
                 if col in attributes:
                     val = attributes[col].get(rep_id, '-')
                 elif col == 'number':
@@ -462,7 +463,9 @@ class UnsafesTable:
                         if u[0] == unsafes[rep_id]['verdict']:
                             val = u[1]
                             break
-                    color = UNSAFE_COLOR[unsafes[rep_id]['verdict']]
+                    verict = unsafes[rep_id]['verdict']
+                    color = UNSAFE_COLOR[verict]
+                    style = UNSAFE_LINK_CLASS[verict]
                 elif col == 'tags':
                     if 'tags' in unsafes[rep_id] and unsafes[rep_id]['tags']:
                         val = unsafes[rep_id]['tags']
@@ -472,7 +475,7 @@ class UnsafesTable:
                     val = get_user_time(self.user, unsafes[rep_id]['wall_time'])
                 elif col == 'verifiers:memory':
                     val = get_user_memory(self.user, unsafes[rep_id]['memory'])
-                values_row.append({'value': val, 'color': color, 'href': href})
+                values_row.append({'value': val, 'color': color, 'href': href, 'style': style})
             values_data.append(values_row)
             cnt += 1
 

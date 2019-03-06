@@ -106,7 +106,14 @@
                                     {% elif v.href %}
                                         <a class="black-link" href="{{ v.href }}">{{ v.value }}</a>
                                     {% else %}
-                                        <a class="black-link" href="{{ row_data.0.href }}" {% if v.color %} style="color:{{ v.color }}"{% endif %}>{{ v.value }}</a>
+                                        <a href="{{ row_data.0.href }}"
+                                           {% if v.style %} class="{{ v.style }}"
+                                           {% elif v.color %} style="color:{{ v.color }}"
+                                           {% else %} class="black-link"
+                                           {% endif %}
+                                        >
+                                            {{ v.value }}
+                                        </a>
                                     {% endif %}
                                 </td>
                             {% endfor %}

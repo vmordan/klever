@@ -21,18 +21,15 @@ from difflib import unified_diff
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import ugettext_lazy as _
 
-from bridge.vars import USER_ROLES, JOB_ROLES
-from bridge.utils import BridgeException
-
 import marks.SafeUtils as SafeUtils
-import marks.UnsafeUtils as UnsafeUtils
 import marks.UnknownUtils as UnknownUtils
-
-from users.models import User
-from reports.models import ReportUnsafe, ReportSafe, ReportUnknown
-from marks.models import MarkSafe, MarkUnsafe, MarkUnknown, MarkSafeHistory, MarkUnsafeHistory,\
+import marks.UnsafeUtils as UnsafeUtils
+from bridge.utils import BridgeException
+from bridge.vars import USER_ROLES, JOB_ROLES
+from marks.models import MarkSafe, MarkUnsafe, MarkUnknown, MarkSafeHistory, MarkUnsafeHistory, \
     SafeTag, UnsafeTag, ConvertedTraces, MarkSafeReport, MarkUnsafeReport, MarkUnknownReport
-
+from reports.models import ReportUnsafe, ReportSafe, ReportUnknown
+from users.models import User
 
 STATUS_COLOR = {
     '0': '#e81919',
@@ -50,12 +47,29 @@ UNSAFE_COLOR = {
     '5': '#000000',  # Without marks
 }
 
+UNSAFE_LINK_CLASS = {
+    '0': 'purple-link',
+    '1': 'red-pale-link',
+    '2': 'red-pale-link',
+    '3': 'orange-link',
+    '4': 'purple-link',  # Incompatible marks
+    '5': 'black-link',  # Without marks
+}
+
 SAFE_COLOR = {
     '0': '#cb58ec',
     '1': '#FF8533',
     '2': '#e81919',
     '3': '#D11919',  # Incompatible marks
     '4': '#000000',  # Without marks
+}
+
+SAFE_LINK_CLASS = {
+    '0': 'purple-link',
+    '1': 'orange-link',
+    '2': 'red-pale-link',
+    '3': 'purple-link',  # Incompatible marks
+    '4': 'black-link',  # Without marks
 }
 
 

@@ -15,8 +15,8 @@
 # limitations under the License.
 #
 
-import re
 import operator
+import re
 
 from django.db.models import Q, Count, Case, When, BooleanField, Value
 from django.urls import reverse
@@ -26,8 +26,8 @@ from bridge.utils import logger, BridgeException
 from bridge.vars import SAFE_VERDICTS, UNSAFE_VERDICTS, ASSOCIATION_TYPE
 from jobs.utils import SAFES, UNSAFES, TITLES, get_resource_data
 from marks.models import MarkUnknownReport
-from reports.models import Attr, JobViewAttrs
-from reports.models import ReportAttr, ComponentInstances, ReportUnknown, ReportUnsafe, ReportSafe
+from marks.utils import UNSAFE_LINK_CLASS, SAFE_LINK_CLASS
+from reports.models import Attr, JobViewAttrs, ReportAttr, ComponentInstances, ReportUnknown
 
 COLORS = {
     'red': '#C70646',
@@ -316,26 +316,21 @@ class ViewJobData:
 
             color = None
             safe_name = 'safe:'
-            style = None
+            style = SAFE_LINK_CLASS[verdict]
             if verdict == SAFE_VERDICTS[0][0]:
                 safe_name += SAFES[2]
                 color = COLORS['purple']
-                style = 'purple-link'
             elif verdict == SAFE_VERDICTS[1][0]:
                 safe_name += SAFES[1]
                 color = COLORS['orange']
-                style = 'orange-link'
             elif verdict == SAFE_VERDICTS[2][0]:
                 safe_name += SAFES[0]
                 color = COLORS['red']
-                style = 'red-pale-link'
             elif verdict == SAFE_VERDICTS[3][0]:
                 safe_name += SAFES[3]
                 color = COLORS['red']
-                style = 'purple-link'
             elif verdict == SAFE_VERDICTS[4][0]:
                 safe_name += SAFES[4]
-                style = 'black-link'
 
             if verdict in tags:
                 if not verdict == SAFE_VERDICTS[4][0]:
@@ -422,30 +417,24 @@ class ViewJobData:
 
             color = None
             unsafe_name = 'unsafe:'
-            style = None
+            style = UNSAFE_LINK_CLASS[verdict]
             if verdict == UNSAFE_VERDICTS[0][0]:
                 unsafe_name += UNSAFES[3]
                 color = COLORS['purple']
-                style = 'purple-link'
             elif verdict == UNSAFE_VERDICTS[1][0]:
                 unsafe_name += UNSAFES[0]
                 color = COLORS['red']
-                style = 'red-pale-link'
             elif verdict == UNSAFE_VERDICTS[2][0]:
                 unsafe_name += UNSAFES[1]
                 color = COLORS['red']
-                style = 'red-pale-link'
             elif verdict == UNSAFE_VERDICTS[3][0]:
                 unsafe_name += UNSAFES[2]
                 color = COLORS['orange']
-                style = 'orange-link'
             elif verdict == UNSAFE_VERDICTS[4][0]:
                 unsafe_name += UNSAFES[4]
                 color = COLORS['red']
-                style = 'purple-link'
             elif verdict == UNSAFE_VERDICTS[5][0]:
                 unsafe_name += UNSAFES[5]
-                style = 'black-link'
 
             if verdict in tags:
                 if not verdict == UNSAFE_VERDICTS[5][0]:
