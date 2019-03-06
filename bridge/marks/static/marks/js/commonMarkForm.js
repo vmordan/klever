@@ -23,7 +23,7 @@ function update_progress(mark_id, time_start) {
                 $('#progress_bar').progress('set progress', data['progress']);
             }
             $('#progress_bar_mark_id').text(data['mark_id']);
-            $('#progress_bar_mark_wall_time').text((performance.now() - time_start) / 1000);
+            $('#progress_bar_mark_wall_time').text(Number((performance.now() - time_start) / 1000).toFixed(3));
             $('#progress_bar_mark_applied').text(data['applied']);
         }
     );
