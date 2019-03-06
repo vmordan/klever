@@ -472,7 +472,7 @@ class ConnectMarks:
                 try:
                     converted_error_trace = get_or_convert_error_trace(unsafe, self.conversion_functions[mark_id],
                                                                        self.conversion_function_args)
-                    compare_result, is_equal = is_trace_equal(self.edited_error_trace[mark_id], converted_error_trace,
+                    is_equal, compare_result = is_trace_equal(self.edited_error_trace[mark_id], converted_error_trace,
                                                               self.comparison_functions[mark_id],
                                                               self.similarity_threshold)
                     counter_all += 1
@@ -601,7 +601,7 @@ class ConnectReport:
                 converted_error_trace = get_or_convert_error_trace(self._unsafe,
                                                                    self._marks[mark_id]['conversion_functions'],
                                                                    json.loads(self._marks[mark_id]['args'] or "{}"))
-                compare_result, is_equal = is_trace_equal(self._marks[mark_id]['edited_error_trace'],
+                is_equal, compare_result = is_trace_equal(self._marks[mark_id]['edited_error_trace'],
                                                           converted_error_trace,
                                                           self._marks[mark_id]['comparison_functions'],
                                                           self._marks[mark_id]['similarity_threshold'])
