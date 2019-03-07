@@ -165,9 +165,9 @@ def get_job_children(user, job):
                 res = ComponentResource.objects.filter(report__root=report.root, report__parent=None, component__name="Core") \
                     .annotate(root_id=F('report__root_id')).first()
                 (wall, cpu, mem) = get_resource_data('hum', 2, res)
-                unsafes = len(ReportUnsafe.objects.filter(root=report.root))
-                safes = len(ReportSafe.objects.filter(root=report.root))
-                unknowns = len(ReportUnknown.objects.filter(root=report.root))
+                unsafes = ReportUnsafe.objects.filter(root=report.root).count()
+                safes = ReportSafe.objects.filter(root=report.root).count()
+                unknowns = ReportUnknown.objects.filter(root=report.root).count()
             else:
                 (wall, cpu, mem, unsafes, safes, unknowns) = ('-', '-', '-', '-', '-', '-')
             children.append({'pk': child.pk, 'name': child.name, 'wall': wall, 'cpu': cpu, 'mem': mem,
