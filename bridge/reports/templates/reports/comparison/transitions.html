@@ -1,0 +1,25 @@
+{% load i18n %}
+
+<div class="ui accordion">
+    <div class="title center aligned"><div class="black-link"><b>
+        {{type_trans}}: {{old_reports}} -> {{cur_reports}}
+        {% if lost_reports or new_reports %}
+            ({% if lost_reports %}<span style="color:red">-{{lost_reports}} {% trans 'lost' %}</span>{% endif %}
+             {% if lost_reports and new_reports %} / {% endif %}
+             {% if new_reports %}<span style="color:green">+{{new_reports}} {% trans 'new' %}</span>{% endif %})
+        {% endif %}
+    </b></div></div>
+
+    {% if to_safes|length or to_unsafes|length or to_unsafe_incompletes|length or to_unknowns|length %}
+    <div class="content">
+        <div class="ui list">
+
+            {% include 'reports/comparison/transition_table.html' with table=to_safes to_trans=safes_trans to_url='reports:safe' to_type='safe' %}
+            {% include 'reports/comparison/transition_table.html' with table=to_unsafes to_trans=unsafes_trans to_url='reports:unsafe' to_type='unsafe' %}
+            {% include 'reports/comparison/transition_table.html' with table=to_unsafe_incompletes to_trans=unsafe_incompletes_trans to_url='unsafe-incomplete' %}
+            {% include 'reports/comparison/transition_table.html' with table=to_unknowns to_trans=unknowns_trans to_url='reports:unknown' to_type='unknown' %}
+
+        </div>
+    </div>
+    {% endif %}
+</div>

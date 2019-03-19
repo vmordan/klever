@@ -39,7 +39,7 @@ from jobs.models import Job
 from jobs.utils import JobAccess
 from marks.tables import ReportMarkTable
 from reports.UploadReport import UploadReport
-from reports.comparison import CompareTree, ComparisonTableData, ComparisonData, can_compare
+from reports.comparison import CompareTree, ComparisonTableData, ComparisonData, can_compare, JobsComparison
 from reports.coverage import GetCoverage, GetCoverageSrcHTML
 from reports.etv import GetSource, GetETV
 from reports.models import ReportRoot, Report, ReportComponent, ReportSafe, ReportUnknown, ReportUnsafe, \
@@ -49,6 +49,19 @@ from tools.profiling import LoggedCallMixin
 
 
 # These filters are used for visualization component specific data. They should not be used for any other purposes.
+@register.filter
+def get(dictionary, key):
+    if dictionary:
+        return dictionary.get(key)
+    else:
+        return None
+
+
+@register.filter
+def index(List, i):
+    return List[int(i)]
+
+
 @register.filter
 def get_dict_val(d, key):
     return d.get(key)
@@ -491,7 +504,7 @@ class FillComparisonCacheView(LoggedCallMixin, Bview.JsonView):
 
 
 @method_decorator(login_required, name='dispatch')
-class ReportsComparisonView(LoggedCallMixin, TemplateView):
+class ReportsComparisonOldView(LoggedCallMixin, TemplateView):
     template_name = 'reports/comparison.html'
 
     def get_context_data(self, **kwargs):
@@ -507,6 +520,23 @@ class ReportsComparisonView(LoggedCallMixin, TemplateView):
             'job1': root1.job, 'job2': root2.job,
             'tabledata': res.data, 'compare_info': res.info, 'attrs': res.attrs
         }
+
+
+@method_decorator(login_required, name='dispatch')
+class ReportsComparisonView(LoggedCallMixin, TemplateView):
+    template_name = 'reports/comparison/two_reports.html'
+
+    def get_context_data(self, **kwargs):
+        try:
+            root1 = ReportRoot.objects.get(job_id=self.kwargs['job1_id'])
+            root2 = ReportRoot.objects.get(job_id=self.kwargs['job2_id'])
+        except ObjectDoesNotExist:
+            raise BridgeException(code=406)
+        if self.request.GET:
+            args = json.loads(self.request.GET.get('data', '{}'))
+        else:
+            args = {}
+        return {'data': JobsComparison([root1, root2], args)}
 
 
 class ReportsComparisonData(LoggedCallMixin, Bview.DetailPostView):

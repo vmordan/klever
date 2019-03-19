@@ -1,0 +1,408 @@
+{% extends 'base.html' %}
+{% comment "License" %}
+% Copyright (c) 2018 ISP RAS (http://www.ispras.ru)
+% Ivannikov Institute for System Programming of the Russian Academy of Sciences
+%
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
+%
+%    http://www.apache.org/licenses/LICENSE-2.0
+%
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License.
+{% endcomment %}
+
+{% load i18n %}
+{% load staticfiles %}
+
+{% block title %}{% trans 'Job reports comparison' %}{% endblock %}
+
+{% block head_block %}
+    <script src="{% static 'reports/js/comparison_2_reports.js' %}"></script>
+{% endblock %}
+
+{% block body_block %}
+
+
+{% trans "Safes" as safes_trans %}
+{% trans "Unsafes" as unsafes_trans %}
+{% trans "Unsafe-incompletes" as unsafe_incompletes_trans %}
+{% trans "Unknowns" as unknowns_trans %}
+
+<div class="ui accordion styled fluid">
+    <div class="title right aligned"><div class="black-link">
+        <i class="cogs icon"></i><i>{% trans 'Settings' %}</i>
+    </div></div>
+
+    <div class="content">
+        <div class="ui horizontal segments">
+            <div class="ui segment purple">
+                <div align="center">{% trans 'Compare by attributes' %}</div>
+                <div class="ui ordered list">
+                    {% for attr, compare in data.common_attrs %}
+                    <div class="item">
+                        <div class="ui checkbox">
+                            <input type="checkbox" id="cs1__{{ attr }}" {% if compare %} checked {% endif %}>
+                            <label>
+                                {{attr}}
+                            </label>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="ui segment purple">
+                <div align="center">{% trans 'Select attributes values' %}</div>
+                <div class="ui ordered list">
+                {% for name, vals in data.common_attrs_vals %}
+                    <div class="item">
+                        <div class="black-link" onclick="toggle_by_id('settings_2_{{name}}')" style="cursor:pointer;">
+                            {{ name }}: {{ vals|length }}
+                            {% if vals|length == 1 %} {% trans 'element' %} {% else %} {% trans 'elements' %} {% endif %}
+                        </div>
+                        <ul id="settings_2_{{name}}" hidden style="list-style-type:none;">
+                            {% for val in vals %}
+                            <li class="item">
+                                <div class="ui checkbox">
+                                    <input type="checkbox" id="cs2__{{ name }}<::>{{ val }}"
+                                           {% if name not in data.filtered_values or val not in data.filtered_values|get:name %} checked {% endif %}>
+                                    <label>{{ val }}</label>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endfor %}
+                </div>
+            </div>
+            <div class="ui segment purple">
+                <div align="center">{% trans 'Show the same transitions' %}</div>
+                <div class="ui bulleted list">
+                    <div class="item">
+                        <div class="ui checkbox">
+                            <input type="checkbox" id="cs3__safes" {% if data.show_same_transitions|get:'safes' %} checked {% endif %}>
+                            <label>{{safes_trans}}
+                            </label>
+                        </div>
+                    </div>
+                    <div class="item">
+                        <div class="ui checkbox">
+                            <input type="checkbox" id="cs3__unsafes" {% if data.show_same_transitions|get:'unsafes' %} checked {% endif %}>
+                            <label>{{unsafes_trans}}</label>
+                        </div>
+                    </div>
+                    <div class="item">
+                        <div class="ui checkbox">
+                            <input type="checkbox" id="cs3__unsafe_incompletes" {% if data.show_same_transitions|get:'unsafe_incompletes' %} checked {% endif %}>
+                            <label>{{unsafe_incompletes_trans}}</label>
+                        </div>
+                    </div>
+                    <div class="item">
+                        <div class="ui checkbox">
+                            <input type="checkbox" id="cs3__unknowns" {% if data.show_same_transitions|get:'unknowns' %} checked {% endif %}>
+                            <label>{{unknowns_trans}}</label>
+                        </div>
+                    </div>
+                </div>
+                <div align="center">{% trans 'Show reports without common attributes' %}</div>
+                <div class="ui bulleted list">
+                    <div class="item">
+                        <div class="ui checkbox">
+                            <input type="checkbox" id="cs4__safe" {% if data.show_lost_transitions|get:'safe' %} checked {% endif %}>
+                            <label>{{safes_trans}}
+                            </label>
+                        </div>
+                    </div>
+                    <div class="item">
+                        <div class="ui checkbox">
+                            <input type="checkbox" id="cs4__unsafe" {% if data.show_lost_transitions|get:'unsafe' %} checked {% endif %}>
+                            <label>{{unsafes_trans}}</label>
+                        </div>
+                    </div>
+                    <div class="item">
+                        <div class="ui checkbox">
+                            <input type="checkbox" id="cs4__unknown" {% if data.show_lost_transitions|get:'unknown' %} checked {% endif %}>
+                            <label>{{unknowns_trans}}</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="ui segment purple">
+                <div align="center">{% trans 'Error trace clustering' %}</div>
+                <div class="ui toggle checkbox" onclick="toggle_by_id('settings_clustering')">
+                    <input type="checkbox" id="cs5__auto_cluster_traces" {% if data.enable_clustering %} checked {% endif %}>
+                    <label for="cs5__auto_cluster_traces">
+                        {% trans 'Apply automatic clustering of error traces without marks' %}<br>
+                        <span style="color:red"><b>{% trans 'Warning' %}: {% trans 'this operation *will* require a lot of time' %}</b></span>
+                    </label>
+                </div>
+
+                <div id="settings_clustering" class="ui basic segment" {% if not data.enable_clustering %} hidden {% endif %}>
+                    <h4 class="header ui">{% trans 'Error traces conversion function' %}</h4>
+                    <select id="cs5__conversion_function" class="ui selection dropdown">
+                        {% for f in data.conversion_functions %}
+                            <option value="{{ f.name }}" {% if f.name == data.conversion_function %} selected{% endif %}>{{ f.name }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <h4 class="header ui">{% trans 'Error traces comparison function' %}</h4>
+                    <select id="cs5__comparison_function" class="ui selection dropdown">
+                        {% for f in data.comparison_functions %}
+                            <option value="{{ f.name }}" {% if f.name == data.comparison_function %} selected{% endif %}>{{ f.name }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <h4 class="header ui">
+                        {% trans 'Similarity threshold' %} ({% trans 'in percents' %}, 1% &le; threshold &le; 100%)
+                        <i class="question icon red" title="{% trans 'Jaccard index of threads sets' %}"></i>
+                    </h4>
+                    <div class="ui form">
+                        <input type="number" id="cs5__similarity_threshold" min="1" max="100" value="{{ data.similarity }}">
+                    </div>
+
+                    <h4 class="header ui"> {% trans 'Show results for' %}:</h4>
+                    <div class="ui bulleted list">
+                        <div class="item">
+                            <div class="ui radio checkbox">
+                                <input type="radio" id="cs5__show_diff_clusters" name="cs5__show" {% if data.clustering_type == 'diff_clusters' %} checked {% endif %}>
+                                <label>{% trans 'Different clusters' %}</label>
+                            </div>
+                        </div>
+                        <div class="item">
+                            <div class="ui radio checkbox">
+                                <input type="radio" id="cs5__show_diff_traces" name="cs5__show" {% if data.clustering_type == 'diff_traces' %} checked {% endif %}>
+                                <label>{% trans 'Clusters with different number of error traces' %}</label>
+                            </div>
+                        </div>
+                        <div class="item">
+                            <div class="ui radio checkbox">
+                                <input type="radio" id="cs5__show_all" name="cs5__show" {% if data.clustering_type == 'all' %} checked {% endif %}>
+                                <label>{% trans 'All clusters' %}</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button id="apply_new_settings" class="ui tiny red button basic"><b><i class="ui icon crosshairs"></i>{% trans 'Apply' %}</b></button>
+        {% if data.is_modified %}
+        <button id="cancel_settings" class="ui tiny red button basic">{% trans 'Cancel' %}</button>
+        {% endif %}
+    </div>
+</div>
+
+<table class="ui selectable compact table celled striped">
+    <thead>
+        <tr bgcolor="#d3d3d3">
+            {% for cmp in data.comparison %}
+            <td width="49%">
+                <input id="job_id_{{forloop.counter}}" value="{{cmp.job.pk}}" hidden>
+                <p class="ui center aligned">
+                    <b><a class="black-link" href="{% url 'jobs:job' cmp.job.pk %}">{{ cmp.job.name }}</a></b>
+                    {% if forloop.counter == 1 %}
+                    <button id="exchange" class="ui tiny button right aligned"><b><i class="exchange icon"></i></b></button>
+                    {% endif %}
+                </p>
+            </td>
+            {% endfor %}
+        </tr>
+
+    </thead>
+    <tbody>
+        <tr>
+            {% for cmp in data.comparison %}
+            <td class="center aligned"><b>{{ cmp.job.change_date }}</b></td>
+            {% endfor %}
+        </tr>
+        <tr style="vertical-align: top">
+            {% for cmp in data.comparison %}
+            <td>
+                <div class="ui accordion" id="acc_row_attrs_{{forloop.counter}}">
+                    <div class="title center aligned"><div class="black-link"><b>
+                        {{ cmp.launches }} {% trans 'launches' %} ({{cmp.elems_by_attrs}} {% trans 'compared elements by attributes' %})
+                    </b></div></div>
+                    <div class="content">
+                        <span>{% trans 'Attributes' %}</span>
+                        <div class="ui ordered list">
+
+                        {% for name, vals in cmp.attrs_vals %}
+                            <div class="item">
+                                <div class="black-link" onclick="toggle_by_id('acc_attrs_{{cmp.job.id}}_{{name}}')"
+                                     style="cursor:pointer; {% if data.common_attrs_as_dict|get:name %} font-weight: bold {% endif %}">
+                                    {{ name }}: {{ vals|length }}
+                                    {% if vals|length == 1 %} {% trans 'element' %} {% else %} {% trans 'elements' %} {% endif %}
+                                </div>
+                                <ul id="acc_attrs_{{cmp.job.id}}_{{name}}" hidden>
+                                    {% for val in vals %}
+                                        <li class="item">
+                                            <span {% if val.1 %}style="background: #77dd77"{% endif %}>{{ val.0 }}</span>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endfor %}
+                        </div>
+
+                        <div class="ui accordion">
+                            <div class="title"><div class="black-link">{% trans 'Failures before verifier' %}: {{cmp.other_components_unknowns|length}}</div></div>
+                            {% if cmp.other_components_unknowns %}
+                            <div class="content">
+                                <table class="ui selectable compact table celled striped">
+                                    <thead>
+                                        <tr>
+                                            <td style="background: #d3d3d3">#</td>
+                                            <td style="background: #d3d3d3">{% trans 'Component' %}</td>
+                                            <td style="background: #d3d3d3">{% trans 'Problem' %}</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for unk in cmp.other_components_unknowns %}
+                                        <tr>
+                                            <td><a class="black-link" href="{% url 'reports:unknown' unk.id %}">{{forloop.counter}}</a></td>
+                                            <td><a class="black-link" href="{% url 'reports:unknown' unk.id %}">{{unk.component}}</a></td>
+                                            <td><a class="black-link" href="{% url 'reports:unknown' unk.id %}">{{unk.problem}}</a></td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        {% include 'reports/comparison/transitions_lost.html' with lost_transitions=cmp.lost|get:'safe' verdict_trans=safes_trans lost_url='reports:safe' %}
+                        {% include 'reports/comparison/transitions_lost.html' with lost_transitions=cmp.lost|get:'unsafe' verdict_trans=unsafes_trans lost_url='reports:unsafe' %}
+                        {% include 'reports/comparison/transitions_lost.html' with lost_transitions=cmp.lost|get:'unknown' verdict_trans=unknowns_trans lost_url='reports:unknown' %}
+
+                    </div>
+                </div>
+            </td>
+            {% endfor %}
+        </tr>
+
+        <tr style="vertical-align: top">
+            {% for cmp in data.comparison %}
+            <td>
+                <div class="ui accordion" id="acc_row_res_{{cmp.job.id}}">
+                    <div class="title center aligned"><div class="black-link"><b>{% trans 'CPU time' %}: {{cmp.compared_cpu}}</b></div></div>
+                    <div class="content">
+                        <div class="ui bulleted list">
+                            <div class="item">{% trans 'Full launch CPU time' %}: {{cmp.overall_cpu}}</div>
+                            <div class="item">{% trans 'Full launch wall time' %}: {{cmp.overall_wall}}</div>
+                            <div class="item">{% trans 'Full launch memory usage' %}: {{cmp.overall_mem}}</div>
+                        </div>
+                    </div>
+                </div>
+            </td>
+            {% endfor %}
+        </tr>
+
+        <tr>
+            {% for cmp in data.comparison|slice:"1:" %}
+                <td {% if forloop.counter == 1 %} colspan="2" {% endif %}>
+                    {% include 'reports/comparison/transitions.html' with cmp=cmp old_reports=data.comparison.0.safes_len cur_reports=cmp.safes_len lost_reports=cmp.safes_lost new_reports=cmp.safes_new type_trans=safes_trans type='safe' url_report='reports:safe' to_safes=cmp.safes_safes to_unsafes=cmp.safes_unsafes to_unsafe_incompletes=cmp.safes_unsafe_incompletes to_unknowns=cmp.safes_unknowns %}
+                </td>
+            {% endfor %}
+        </tr>
+        <tr>
+            {% for cmp in data.comparison|slice:"1:" %}
+                <td {% if forloop.counter == 1 %} colspan="2" {% endif %}>
+                    {% include 'reports/comparison/transitions.html' with cmp=cmp old_reports=data.comparison.0.unsafes_len cur_reports=cmp.unsafes_len lost_reports=cmp.unsafes_lost new_reports=cmp.unsafes_new type_trans=unsafes_trans type='unsafe' url_report='reports:unsafe' to_safes=cmp.unsafes_safes to_unsafes=cmp.unsafes_unsafes to_unsafe_incompletes=cmp.unsafes_unsafe_incompletes to_unknowns=cmp.unsafes_unknowns %}
+                </td>
+            {% endfor %}
+        </tr>
+        <tr>
+            {% for cmp in data.comparison|slice:"1:" %}
+                <td {% if forloop.counter == 1 %} colspan="2" {% endif %}>
+                    {% include 'reports/comparison/transitions.html' with cmp=cmp old_reports=data.comparison.0.unsafe_incompletes_len cur_reports=cmp.unsafe_incompletes_len lost_reports=cmp.unsafe_incompletes_lost new_reports=cmp.unsafe_incompletes_new type_trans=unsafe_incompletes_trans url_report='unsafe-incomplete' to_safes=cmp.unsafe_incompletes_safes to_unsafes=cmp.unsafe_incompletes_unsafes to_unsafe_incompletes=cmp.unsafe_incompletes_unsafe_incompletes to_unknowns=cmp.unsafe_incompletes_unknowns %}
+                </td>
+            {% endfor %}
+        </tr>
+        <tr>
+            {% for cmp in data.comparison|slice:"1:" %}
+                <td {% if forloop.counter == 1 %} colspan="2" {% endif %}>
+                    {% include 'reports/comparison/transitions.html' with cmp=cmp old_reports=data.comparison.0.unknowns_len cur_reports=cmp.unknowns_len lost_reports=cmp.unknowns_lost new_reports=cmp.unknowns_new type_trans=unknowns_trans type='unknown' url_report='reports:unknown' to_safes=cmp.unknowns_safes to_unsafes=cmp.unknowns_unsafes to_unsafe_incompletes=cmp.unknowns_unsafe_incompletes to_unknowns=cmp.unknowns_unknowns %}
+                </td>
+            {% endfor %}
+        </tr>
+
+        {% if data.enable_clustering %}
+        <tr style="vertical-align: top">
+            {% for cmp in data.comparison %}
+                <td>
+                    <div class="ui accordion" id="acc_row_et_1">
+                        <div class="title center aligned">
+                            <div class="black-link"><b>
+                                {{cmp.error_traces}} {% trans 'error traces' %} -> {{cmp.clusters|length}} {% trans 'clusters' %}
+                                {% if cmp.clusters_new or cmp.clusters_lost %}
+                                ({% if cmp.clusters_lost %}<span style="color:red">{{cmp.clusters_lost}} {% trans 'lost' %}</span>{% endif %}
+                                {% if cmp.clusters_new and cmp.clusters_lost %} / {% endif %}
+                                {% if cmp.clusters_new %}<span style="color:green">{{cmp.clusters_new}} {% trans 'new' %}</span>{% endif %})
+                                {% endif %}
+                            </b></div>
+                        </div>
+                        <div class="content">
+                            <div class="header">
+                                {% trans 'Statistics' %}:
+                            </div>
+                            <div class="ui bulleted list">
+                                <div class="item">{% trans 'Applied marks' %}: {{cmp.cluster_marks}} ({% trans 'error traces' %}: {{cmp.cluster_marks_traces}})</div>
+                                <div class="item">{% trans 'Applied marks' %} ({% trans 'common' %}): {{cmp.clusters_common_marks}} ({% trans 'error traces' %}: {{cmp.cluster_marks_common_traces}})</div>
+                                <div class="item">{% trans 'Automatic marks application' %}: {{cmp.cluster_ama}} ({% trans 'error traces' %}: {{cmp.cluster_ama_traces}})</div>
+                                <div class="item">{% trans 'Automatic marks application' %} ({% trans 'common' %}): {{cmp.clusters_common_ama}} ({% trans 'error traces' %}: {{cmp.cluster_ama_common_traces}})</div>
+
+                            </div>
+
+                            <table class="ui selectable compact table celled striped">
+                                <thead>
+                                    <tr>
+                                        <td style="background: #d3d3d3">#</td>
+                                        <td style="background: #d3d3d3">{% trans 'Attributes' %}</td>
+                                        <td style="background: #d3d3d3">{% trans 'Origin' %}</td>
+                                        <td style="background: #d3d3d3">{% trans 'Error traces' %}</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                {% for cluster in cmp.clusters %}
+                                    <tr>
+                                        <td {% if cluster.color %}style="background: {{cluster.color}}"{% endif %}>{{forloop.counter}}</td>
+                                        <td {% if cluster.color %}style="background: {{cluster.color}}"{% endif %}>{{cluster.attrs}}</td>
+                                        {% if cluster.mark %}
+                                        <td {% if cluster.color %}style="background: {{cluster.color}}"{% endif %}><a {% if cluster.color %} class="black-link" {% endif %} href="{% url 'marks:mark' 'unsafe' cluster.mark %}">{% trans 'Mark' %} {{cluster.mark}}</a></td>
+                                        {% else %}
+                                        <td {% if cluster.color %}style="background: {{cluster.color}}"{% endif %}>{% trans 'Auto' %} {{cluster.id}}</td>
+                                        {% endif %}
+                                        <td {% if cluster.color %}style="background: {{cluster.color}}"{% endif %}>
+                                            {% if cluster.reports|length > 1 %}
+                                            <div class="black-link" onclick="toggle_by_id('acc_et_{{forloop.parentloop.counter}}_{{forloop.counter}}')" style="cursor:pointer;">
+                                                {{cluster.reports|length}} {% trans 'error traces' %}
+                                            </div>
+                                            <div id="acc_et_{{forloop.parentloop.counter}}_{{forloop.counter}}" class="ui list" hidden>
+                                                {% for report in cluster.reports %}
+                                                    <div class="item">
+                                                        <a  {% if cluster.color %} class="black-link" {% endif %} href="{% url 'reports:unsafe' report %}">{% trans 'trace' %}</a>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                            {% else %}
+                                            <a  {% if cluster.color %} class="black-link" {% endif %} href="{% url 'reports:unsafe' cluster.reports.0 %}">{% trans 'trace' %}</a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </td>
+            {% endfor %}
+        </tr>
+        {% endif %}
+
+    </tbody>
+</table>
+
+{% endblock %}

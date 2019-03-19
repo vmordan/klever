@@ -93,7 +93,7 @@ function check_jobs_access(jobs) {
     return status;
 }
 
-function compare_reports() {
+function compare_reports_old() {
     var sel_jobs = [];
     $('input[id^="job_checkbox__"]:checked').each(function () {
         sel_jobs.push($(this).attr('id').replace('job_checkbox__', ''));
@@ -111,10 +111,23 @@ function compare_reports() {
         else {
             $.post('/reports/fill_compare_cache/' + sel_jobs[0] + '/' + sel_jobs[1] + '/', {}, function (data) {
                 $('#dimmer_of_page').removeClass('active');
-                data.error ? err_notify(data.error) : window.location.href = '/reports/comparison/' + sel_jobs[0] + '/' + sel_jobs[1] + '/';
+                data.error ? err_notify(data.error) : window.location.href = '/reports/comparison_old/' + sel_jobs[0] + '/' + sel_jobs[1] + '/';
             }, 'json');
         }
     }, 'json');
+}
+
+function compare_reports() {
+    var sel_jobs = [];
+    $('input[id^="job_checkbox__"]:checked').each(function () {
+        sel_jobs.push($(this).attr('id').replace('job_checkbox__', ''));
+    });
+    if (sel_jobs.length !== 2) {
+        err_notify($('#error__no_jobs_to_compare').text());
+        return false;
+    }
+    $('#dimmer_of_page').addClass('active');
+    window.location.href = '/reports/comparison/' + sel_jobs[0] + '/' + sel_jobs[1] + '/';
 }
 
 function compare_files() {

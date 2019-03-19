@@ -44,6 +44,7 @@ urlpatterns = [
 
     # Reports comparison
     path('fill_compare_cache/<int:job1_id>/<int:job2_id>/', views.FillComparisonCacheView.as_view()),
+    path('comparison_old/<int:job1_id>/<int:job2_id>/', views.ReportsComparisonOldView.as_view(), name='comparison_old'),
     path('comparison/<int:job1_id>/<int:job2_id>/', views.ReportsComparisonView.as_view(), name='comparison'),
     path('get_compare_jobs_data/<int:info_id>/', views.ReportsComparisonData.as_view()),
 

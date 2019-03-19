@@ -1,0 +1,25 @@
+{% load i18n %}
+
+{% if lost_transitions %}
+<div class="ui accordion">
+    <div class="title"><div class="black-link">{{verdict_trans}} ({% trans 'no common attributes' %}): {{lost_transitions|length}}</div></div>
+    <div class="content">
+        <table class="ui selectable compact table celled striped">
+            <thead>
+                <tr>
+                    <td style="background: #d3d3d3">#</td>
+                    <td style="background: #d3d3d3">{% trans 'Attributes' %}</td>
+                </tr>
+            </thead>
+            <tbody>
+            {% for lost in lost_transitions %}
+                <tr>
+                    <td><a class="black-link" href="{% url lost_url lost.id %}">{{forloop.counter}}</a></td>
+                    <td><a class="black-link" href="{% url lost_url lost.id %}">{{lost.attrs}}</a></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}

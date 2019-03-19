@@ -1,0 +1,74 @@
+{% load i18n %}
+
+{% if table|length %}
+<div class="item">
+    <div class="accordion">
+        <div class="title center aligned"><div class="black-link">
+            {{type_trans}}<i class="arrow circle right icon"></i>{{to_trans}}: {{table|length}}
+        </div></div>
+        <div class="content">
+            <table class="ui selectable compact table celled striped">
+                <tbody>
+                {% for old_reports, attrs, new_reports in table %}
+                    <tr>
+                        <td width="25%" style="text-align: right">
+                            {% if old_reports|length > 2 %}
+                            <div class="item">
+                                <div class="accordion">
+                                    <div class="title"><div class="black-link">{{old_reports|length}} {%trans 'elements'%}</div></div>
+                                    <div class="content">
+                            {% endif %}
+                            {% if url_report == 'unsafe-incomplete' %}
+                                {% for report_id, verdict in old_reports %}
+                                {% if verdict == 'unsafe' %}
+                                    <a href="{% url 'reports:unsafe' report_id %}">unsafe</a>
+                                {% else %}
+                                    <a href="{% url 'reports:unknown' report_id %}">unknown</a>
+                                {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                {% for report_id in old_reports %}
+                                    <a href="{% url url_report report_id %}">{{type}}</a>
+                                {% endfor %}
+                            {% endif %}
+                            {% if old_reports|length > 2 %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center">{{attrs}}</td>
+                        <td width="25%" style="text-align: left">
+                            {% if new_reports|length > 2 %}
+                            <div class="item">
+                                <div class="accordion">
+                                    <div class="title"><div class="black-link">{{new_reports|length}} {%trans 'elements'%}</div></div>
+                                    <div class="content">
+                            {% endif %}
+                            {% if to_url == 'unsafe-incomplete' %}
+                                {% for report_id, verdict in new_reports %}
+                                    {% if verdict == 'unsafe' %}
+                                        <a href="{% url 'reports:unsafe' report_id %}">unsafe</a>
+                                    {% else %}
+                                        <a href="{% url 'reports:unknown' report_id %}">unknown</a>
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                {% for report_id in new_reports %}
+                                <a href="{% url to_url report_id %}">{{to_type}}</a>
+                                {% endfor %}
+                            {% endif %}
+                            {% if old_reports|length > 2 %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
