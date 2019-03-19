@@ -196,8 +196,13 @@ def error_trace_pretty_parse(pretty_error_trace: str) -> list:
     cur_thread = 0
     cur_level = -1
     stack = list()
+    not_parsed = None
     for line in pretty_error_trace.splitlines():
-        line = line.strip()
+        if not_parsed:
+            line = not_parsed + line.strip()
+            not_parsed = None
+        else:
+            line = line.strip()
         m = re.match(r'^\s*(\d+)\s*{}({}*)(\w+)$'.format(CODE_LINE_SEPARATOR_FOR_REGEXP, FUNCTION_CALL_SEPARATOR), line)
         if m:
             line = m.group(1)
@@ -271,6 +276,8 @@ def error_trace_pretty_parse(pretty_error_trace: str) -> list:
                 CET_LINE: line
             })
             continue
+        not_parsed = line
+    if not_parsed:
         raise ValueError("Cannot parse line '{}' in edited error trace".format(line))
     return converted_error_trace
 
