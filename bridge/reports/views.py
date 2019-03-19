@@ -15,8 +15,8 @@
 # limitations under the License.
 #
 
-import os
 import json
+import os
 from io import BytesIO
 from wsgiref.util import FileWrapper
 
@@ -24,29 +24,28 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseRedirect
+from django.template.defaulttags import register
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _, override
-from django.template.defaulttags import register
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import SingleObjectMixin, DetailView
 
 import bridge.CustomViews as Bview
-from tools.profiling import LoggedCallMixin
-from bridge.vars import JOB_STATUS, VIEW_TYPES, LOG_FILE, ERROR_TRACE_FILE, PROOF_FILE, PROBLEM_DESC_FILE
-from bridge.utils import logger, ArchiveFileContent, BridgeException, BridgeErrorResponse
-from jobs.ViewJobData import ViewJobData
-from jobs.utils import JobAccess
-from jobs.models import Job
-from marks.tables import ReportMarkTable
-from service.models import Task
-from reports.models import ReportRoot, Report, ReportComponent, ReportSafe, ReportUnknown, ReportUnsafe,\
-    AttrName, ReportAttr, CompareJobsInfo, CoverageArchive
-
 import reports.utils
+from bridge.utils import logger, ArchiveFileContent, BridgeException, BridgeErrorResponse
+from bridge.vars import JOB_STATUS, VIEW_TYPES, LOG_FILE, ERROR_TRACE_FILE, PROOF_FILE, PROBLEM_DESC_FILE
+from jobs.ViewJobData import ViewJobData
+from jobs.models import Job
+from jobs.utils import JobAccess
+from marks.tables import ReportMarkTable
 from reports.UploadReport import UploadReport
-from reports.etv import GetSource, GetETV
 from reports.comparison import CompareTree, ComparisonTableData, ComparisonData, can_compare
 from reports.coverage import GetCoverage, GetCoverageSrcHTML
+from reports.etv import GetSource, GetETV
+from reports.models import ReportRoot, Report, ReportComponent, ReportSafe, ReportUnknown, ReportUnsafe, \
+    AttrName, ReportAttr, CompareJobsInfo, CoverageArchive
+from service.models import Task
+from tools.profiling import LoggedCallMixin
 
 
 # These filters are used for visualization component specific data. They should not be used for any other purposes.
@@ -378,6 +377,29 @@ class ReportUnknownView(LoggedCallMixin, Bview.DataViewMixin, DetailView):
             'main_content': ArchiveFileContent(
                 self.object, 'problem_description', PROBLEM_DESC_FILE).content.decode('utf8'),
             'MarkTable': ReportMarkTable(self.request.user, self.object, self.get_view(VIEW_TYPES[12]))
+        }
+
+
+@method_decorator(login_required, name='dispatch')
+class ReportUnsafeViewById(LoggedCallMixin, Bview.DataViewMixin, DetailView):
+    template_name = 'reports/reportLeaf.html'
+    model = ReportUnsafe
+
+    def get_context_data(self, **kwargs):
+        if not JobAccess(self.request.user, self.object.root.job).can_view():
+            raise BridgeException(code=400)
+        try:
+            etv = GetETV(ArchiveFileContent(self.object, 'error_trace', ERROR_TRACE_FILE).content.decode('utf8'),
+                         self.request.user)
+        except Exception as e:
+            logger.exception(e, stack_info=True)
+            etv = None
+        return {
+            'report': self.object, 'report_type': 'unsafe', 'parents': reports.utils.get_parents(self.object),
+            'SelfAttrsData': reports.utils.report_attibutes(self.object),
+            'MarkTable': ReportMarkTable(self.request.user, self.object, self.get_view(VIEW_TYPES[10])),
+            'etv': etv, 'include_assumptions': self.request.user.extended.assumptions, 'include_jquery_ui': True,
+            'resources': reports.utils.get_leaf_resources(self.request.user, self.object)
         }
 
 

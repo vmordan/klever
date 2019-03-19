@@ -36,6 +36,7 @@ urlpatterns = [
     # Pages of verdicts
     path('safe/<int:pk>/', views.ReportSafeView.as_view(), name='safe'),
     path('unknown/<int:pk>/', views.ReportUnknownView.as_view(), name='unknown'),
+    path('unsafe/<int:pk>/', views.ReportUnsafeViewById.as_view(), name='unsafe'),
     path('unsafe/<slug:trace_id>/', views.ReportUnsafeView.as_view(), name='unsafe'),
     path('unsafe/<slug:trace_id>/fullscreen/', views.FullscreenReportUnsafe.as_view(), name='unsafe_fullscreen'),
     path('get_source/<int:unsafe_id>/', views.SourceCodeView.as_view()),
