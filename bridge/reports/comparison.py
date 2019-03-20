@@ -139,6 +139,7 @@ class JobsComparison:
         # 2nd iteration.
         counter = 0
         clusters = list()
+        cpu_time_first = 0
         for cmp in self.comparison:
             marked_attrs = list()
 
@@ -154,12 +155,14 @@ class JobsComparison:
                 cmp[VERDICTS_UNSAFE_INCOMPLETE] = unsafe_incompletes
                 cmp[VERDICTS_UNKNOWN] = unknowns
                 cmp[VERDICTS_SAFE] = safes
+                cpu_time_first = cpu_time
             else:
                 for verdicts_type in VERDICTS_ALL:
                     self.__process_verdicts_transitions(verdicts_type, safes, unsafes, unsafe_incompletes, unknowns,
                                                         cmp)
                     if not self.show_same_transitions[verdicts_type]:
                         cmp['{0}_{0}'.format(verdicts_type)] = []
+                cmp['speedup'] = round(cpu_time_first / cpu_time, 2)
 
             if self.enable_clustering:
                 clusters.append(self.perform_clustering(unsafes, unsafe_incompletes, cmp))
