@@ -32,6 +32,10 @@
 {% trans "Unsafes" as unsafes_trans %}
 {% trans "Unsafe-incompletes" as unsafe_incompletes_trans %}
 {% trans "Unknowns" as unknowns_trans %}
+{% trans "Error trace clusters" as error_trace_clusters_trans %}
+{% trans "Applied marks" as am_trans %}
+{% trans "Automatic marks application" as ama_trans %}
+
 
 <div class="ui accordion styled fluid">
     <div class="title right aligned"><div class="black-link">
@@ -341,74 +345,74 @@
 
         {% if data.enable_clustering %}
         <tr style="vertical-align: top">
-            {% for cmp in data.comparison %}
-                <td>
+            <td colspan="2">
+                {% for cmp_new in data.comparison|slice:"1:" %}
                     <div class="ui accordion" id="acc_row_et_1">
                         <div class="title center aligned">
                             <div class="black-link"><b>
-                                {{cmp.error_traces}} {% trans 'error traces' %} -> {{cmp.clusters_len}} {% trans 'clusters' %}
-                                {% if cmp.clusters_new or cmp.clusters_lost %}
-                                ({% if cmp.clusters_lost %}<span style="color:red">{{cmp.clusters_lost}} {% trans 'lost' %}</span>{% endif %}
-                                {% if cmp.clusters_new and cmp.clusters_lost %} / {% endif %}
-                                {% if cmp.clusters_new %}<span style="color:green">{{cmp.clusters_new}} {% trans 'new' %}</span>{% endif %})
-                                {% endif %}
+                                {% include 'reports/comparison/lost_new_text.html' with value_trans=error_trace_clusters_trans number_all_old=data.comparison.0.clusters_len number_all_new=cmp_new.clusters_len number_new=cmp_new.clusters_new number_lost=cmp_new.clusters_lost %}
                             </b></div>
                         </div>
                         <div class="content">
-                            <div class="header">
-                                {% trans 'Statistics' %}:
+                            <div class="ui list">
+                                <div class="item center aligned"><i>{% trans 'Statistics' %}:</i></div>
+                                <div class="item center aligned">{% trans 'Error traces' %}: {{data.comparison.0.error_traces}} -> {{cmp_new.error_traces}}</div>
+                                <div class="item center aligned">
+                                    {% include 'reports/comparison/lost_new_text.html' with value_trans=am_trans number_all_old=data.comparison.0.cluster_marks number_all_new=cmp_new.cluster_marks number_new=cmp_new.clusters_am_new number_lost=cmp_new.clusters_am_lost %}
+                                </div>
+                                <div class="item center aligned">
+                                    {% include 'reports/comparison/lost_new_text.html' with value_trans=ama_trans number_all_old=data.comparison.0.cluster_ama number_all_new=cmp_new.cluster_ama number_new=cmp_new.clusters_ama_new number_lost=cmp_new.clusters_ama_lost %}
+                                </div>
                             </div>
-                            <div class="ui bulleted list">
-                                <div class="item">{% trans 'Applied marks' %}: {{cmp.cluster_marks}} ({% trans 'error traces' %}: {{cmp.cluster_marks_traces}})</div>
-                                <div class="item">{% trans 'Applied marks' %} ({% trans 'common' %}): {{cmp.clusters_common_marks}} ({% trans 'error traces' %}: {{cmp.cluster_marks_common_traces}})</div>
-                                <div class="item">{% trans 'Automatic marks application' %}: {{cmp.cluster_ama}} ({% trans 'error traces' %}: {{cmp.cluster_ama_traces}})</div>
-                                <div class="item">{% trans 'Automatic marks application' %} ({% trans 'common' %}): {{cmp.clusters_common_ama}} ({% trans 'error traces' %}: {{cmp.cluster_ama_common_traces}})</div>
-
-                            </div>
-
-                            <table class="ui selectable compact table celled striped">
-                                <thead>
-                                    <tr>
-                                        <td style="background: #d3d3d3">#</td>
-                                        <td style="background: #d3d3d3">{% trans 'Attributes' %}</td>
-                                        <td style="background: #d3d3d3">{% trans 'Origin' %}</td>
-                                        <td style="background: #d3d3d3">{% trans 'Error traces' %}</td>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                {% for cluster in cmp.clusters %}
-                                    <tr>
-                                        <td {% if cluster.color %}style="background: {{cluster.color}}"{% endif %}>{{forloop.counter}}</td>
-                                        <td {% if cluster.color %}style="background: {{cluster.color}}"{% endif %}>{{cluster.attrs}}</td>
-                                        {% if cluster.mark %}
-                                        <td {% if cluster.color %}style="background: {{cluster.color}}"{% endif %}><a {% if cluster.color %} class="black-link" {% endif %} href="{% url 'marks:mark' 'unsafe' cluster.mark %}">{% trans 'Mark' %} {{cluster.mark}}</a></td>
-                                        {% else %}
-                                        <td {% if cluster.color %}style="background: {{cluster.color}}"{% endif %}>{% trans 'Auto' %} {{cluster.id}}</td>
-                                        {% endif %}
-                                        <td {% if cluster.color %}style="background: {{cluster.color}}"{% endif %}>
-                                            {% if cluster.reports|length > 1 %}
-                                            <div class="black-link" onclick="toggle_by_id('acc_et_{{forloop.parentloop.counter}}_{{forloop.counter}}')" style="cursor:pointer;">
-                                                {{cluster.reports|length}} {% trans 'error traces' %}
-                                            </div>
-                                            <div id="acc_et_{{forloop.parentloop.counter}}_{{forloop.counter}}" class="ui list" hidden>
-                                                {% for report in cluster.reports %}
-                                                    <div class="item">
-                                                        <a  {% if cluster.color %} class="black-link" {% endif %} href="{% url 'reports:unsafe' report %}">{% trans 'trace' %}</a>
+                            <div class="ui equal width grid">
+                                {% for cmp in data.comparison %}
+                                <div class="column">
+                                    <table class="ui selectable compact table celled striped">
+                                        <thead>
+                                            <tr>
+                                                <td style="background: #d3d3d3">#</td>
+                                                <td style="background: #d3d3d3">{% trans 'Attributes' %}</td>
+                                                <td style="background: #d3d3d3">{% trans 'Origin' %}</td>
+                                                <td style="background: #d3d3d3">{% trans 'Error traces' %}</td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for cluster in cmp.clusters %}
+                                            <tr>
+                                                <td {% if cluster.color %}style="background: {{cluster.color}}"{% endif %}>{{forloop.counter}}</td>
+                                                <td {% if cluster.color %}style="background: {{cluster.color}}"{% endif %}>{{cluster.attrs}}</td>
+                                                {% if cluster.mark %}
+                                                <td {% if cluster.color %}style="background: {{cluster.color}}"{% endif %}><a {% if cluster.color %} class="black-link" {% endif %} href="{% url 'marks:mark' 'unsafe' cluster.mark %}">{% trans 'Mark' %} {{cluster.mark}}</a></td>
+                                                {% else %}
+                                                <td {% if cluster.color %}style="background: {{cluster.color}}"{% endif %}>{% trans 'Auto' %} {{cluster.id}}</td>
+                                                {% endif %}
+                                                <td {% if cluster.color %}style="background: {{cluster.color}}"{% endif %}>
+                                                    {% if cluster.reports|length > 1 %}
+                                                    <div class="black-link" onclick="toggle_by_id('acc_et_{{forloop.parentloop.counter}}_{{forloop.counter}}')" style="cursor:pointer;">
+                                                        {{cluster.reports|length}} {% trans 'error traces' %}
                                                     </div>
-                                                {% endfor %}
-                                            </div>
-                                            {% else %}
-                                            <a  {% if cluster.color %} class="black-link" {% endif %} href="{% url 'reports:unsafe' cluster.reports.0 %}">{% trans 'trace' %}</a>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
+                                                    <div id="acc_et_{{forloop.parentloop.counter}}_{{forloop.counter}}" class="ui list" hidden>
+                                                        {% for report in cluster.reports %}
+                                                            <div class="item">
+                                                                <a  {% if cluster.color %} class="black-link" {% endif %} href="{% url 'reports:unsafe' report %}">{% trans 'trace' %}</a>
+                                                            </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                    {% else %}
+                                                    <a  {% if cluster.color %} class="black-link" {% endif %} href="{% url 'reports:unsafe' cluster.reports.0 %}">{% trans 'trace' %}</a>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
                                 {% endfor %}
-                                </tbody>
-                            </table>
+                            </div>
                         </div>
                     </div>
-                </td>
-            {% endfor %}
+                {% endfor %}
+            </td>
         </tr>
         {% endif %}
 

@@ -1,0 +1,6 @@
+{% load i18n %}
+
+{{value_trans}}: {{number_all_old}} -> {{number_all_new}}
+{% if number_new or number_lost %}
+    ({% if number_lost %}<span style="color:red">-{{number_lost}} {% trans 'lost' %}</span>{% endif %}{% if number_new and number_lost %} / {% endif %}{% if number_new %}<span style="color:green">+{{number_new}} {% trans 'new' %}</span>{% endif %})
+{% endif %}

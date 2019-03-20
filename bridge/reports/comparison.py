@@ -223,14 +223,32 @@ class JobsComparison:
             for cluster in clusters:
                 self.comparison[counter]['clusters_len'] = len(cluster)
                 self.__post_process_cluster(cluster, common_marks, counter)
-                self.comparison[counter]['clusters_common_marks'] = len(common_marks)
-                self.comparison[counter]['clusters_common_ama'] = common_ama_counter
                 common_clusters = len(common_marks) + common_ama_counter
                 if counter:
+                    all_new = 0
+                    all_lost = 0
+                    am_new = 0
+                    am_lost = 0
+                    ama_new = 0
+                    ama_lost = 0
                     if len(cluster) > common_clusters:
-                        self.comparison[counter]['clusters_new'] = len(cluster) - common_clusters
+                        all_new = len(cluster) - common_clusters
                     if len(clusters[0]) > common_clusters:
-                        self.comparison[counter]['clusters_lost'] = len(clusters[0]) - common_clusters
+                        all_lost = len(clusters[0]) - common_clusters
+                    if len(desc_2.get(CLUSTERING_ORIGIN_MARK, set())) > len(common_marks):
+                        am_new = len(desc_2.get(CLUSTERING_ORIGIN_MARK, set())) - len(common_marks)
+                    if len(desc_1.get(CLUSTERING_ORIGIN_MARK, set())) > len(common_marks):
+                        am_lost = len(desc_1.get(CLUSTERING_ORIGIN_MARK, set())) - len(common_marks)
+                    if all_new > am_new:
+                        ama_new = all_new - am_new
+                    if all_lost > am_lost:
+                        ama_lost = all_lost - am_lost
+                    self.comparison[counter]['clusters_new'] = all_new
+                    self.comparison[counter]['clusters_lost'] = all_lost
+                    self.comparison[counter]['clusters_am_new'] = am_new
+                    self.comparison[counter]['clusters_am_lost'] = am_lost
+                    self.comparison[counter]['clusters_ama_new'] = ama_new
+                    self.comparison[counter]['clusters_ama_lost'] = ama_lost
 
                 counter += 1
 
@@ -250,8 +268,6 @@ class JobsComparison:
 
     def __post_process_cluster(self, clusters: list, common_marks: set, counter: int):
         common_clusters = list()
-        common_marks_error_traces = 0
-        common_ama_error_traces = 0
         diff_clusters = list()
         for cluster in sorted(clusters, key=lambda x: (x.get(TAG_MARK, sys.maxsize), x[TAG_ATTRS], x.get(TAG_AUTO_ID, 0))):
             cluster_origin = cluster[TAG_ORIGIN]
@@ -261,19 +277,15 @@ class JobsComparison:
                     diff_clusters.append(cluster)
                 else:
                     self.__process_common_cluster(cluster, common_clusters)
-                    common_marks_error_traces += len(cluster[TAG_REPORTS])
             elif cluster_origin == CLUSTERING_ORIGIN_AUTO:
                 if cluster.get(TAG_AUTO_ID, 0):
                     self.__process_common_cluster(cluster, common_clusters)
-                    common_ama_error_traces += len(cluster[TAG_REPORTS])
                 else:
                     cluster[TAG_COLOR] = CLUSTERING_COLORS[counter]
                     diff_clusters.append(cluster)
             else:
                 raise Exception("Unknown cluster origin {}".format(cluster_origin))
         self.comparison[counter]['clusters'] = common_clusters + diff_clusters
-        self.comparison[counter]['cluster_marks_common_traces'] = common_marks_error_traces
-        self.comparison[counter]['cluster_ama_common_traces'] = common_ama_error_traces
 
     def __process_common_cluster(self, cluster: dict, common_clusters: list):
         if self.clustering_type == CLUSTERING_TYPE_ALL:
@@ -307,14 +319,12 @@ class JobsComparison:
         cmp['error_traces'] = len(traces)
 
         mark_to_reports = dict()
-        marks_traces_counter = 0
         for mark_id, report_id in MarkUnsafeReport.objects.filter(report__id__in=traces). \
                 values_list('mark__id', 'report__id'):
             if mark_id not in mark_to_reports:
                 mark_to_reports[mark_id] = set()
             mark_to_reports[mark_id].add(report_id)
             if report_id in traces:
-                marks_traces_counter += 1
                 traces.remove(report_id)
 
         for mark_id, report_ids in mark_to_reports.items():
@@ -333,10 +343,8 @@ class JobsComparison:
                 TAG_REPORTS: sorted(report_ids)
             })
         cmp['cluster_marks'] = len(mark_to_reports)
-        cmp['cluster_marks_traces'] = marks_traces_counter
 
         auto_clusters_counter = 0
-        auto_traces_counter = 0
         for attrs, reports in clusters_by_attrs.items():
             converted_error_traces = dict()
             for report_id in sorted(reports):
@@ -365,10 +373,8 @@ class JobsComparison:
                         TAG_REPORTS: sorted(report_ids)
                     })
                     auto_clusters_counter += 1
-                    auto_traces_counter += len(report_ids)
 
         cmp['cluster_ama'] = auto_clusters_counter
-        cmp['cluster_ama_traces'] = auto_traces_counter
         return clusters
 
     def __init_args(self, args: dict):

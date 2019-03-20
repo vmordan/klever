@@ -2,12 +2,7 @@
 
 <div class="ui accordion">
     <div class="title center aligned"><div class="black-link"><b>
-        {{type_trans}}: {{old_reports}} -> {{cur_reports}}
-        {% if lost_reports or new_reports %}
-            ({% if lost_reports %}<span style="color:red">-{{lost_reports}} {% trans 'lost' %}</span>{% endif %}
-             {% if lost_reports and new_reports %} / {% endif %}
-             {% if new_reports %}<span style="color:green">+{{new_reports}} {% trans 'new' %}</span>{% endif %})
-        {% endif %}
+        {% include 'reports/comparison/lost_new_text.html' with value_trans=type_trans number_all_old=old_reports number_all_new=cur_reports number_new=new_reports number_lost=lost_reports %}
     </b></div></div>
 
     {% if to_safes|length or to_unsafes|length or to_unsafe_incompletes|length or to_unknowns|length %}

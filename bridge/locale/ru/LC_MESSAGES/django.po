@@ -3275,3 +3275,6 @@ msgstr "Кластеров с разным числом трасс ошибок"
 
 msgid "All clusters"
 msgstr "Всех кластеров"
+
+msgid "Error trace clusters"
+msgstr "Кластеры трасс ошибок"
