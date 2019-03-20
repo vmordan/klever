@@ -187,6 +187,16 @@ class JobsComparison:
             common_marks = desc_1.get(CLUSTERING_ORIGIN_MARK, set()).\
                 intersection(desc_2.get(CLUSTERING_ORIGIN_MARK, set()))
 
+            if self.clustering_type == CLUSTERING_TYPE_DIFF_TRACES:
+                for cluster_1 in clusters_1:
+                    if cluster_1[TAG_ORIGIN] == CLUSTERING_ORIGIN_MARK and cluster_1[TAG_MARK] in common_marks:
+                        for cluster_2 in clusters_2:
+                            if cluster_2[TAG_ORIGIN] == CLUSTERING_ORIGIN_MARK and \
+                                    cluster_2[TAG_MARK] == cluster_1[TAG_MARK]:
+                                if len(cluster_1[TAG_REPORTS]) == len(cluster_2[TAG_REPORTS]):
+                                    cluster_1[TAG_HIDE] = True
+                                    cluster_2[TAG_HIDE] = True
+
             common_compared_attrs = desc_1.get(CLUSTERING_ORIGIN_AUTO, set()). \
                 intersection(desc_2.get(CLUSTERING_ORIGIN_AUTO, set()))
 
@@ -211,6 +221,7 @@ class JobsComparison:
 
             counter = 0
             for cluster in clusters:
+                self.comparison[counter]['clusters_len'] = len(cluster)
                 self.__post_process_cluster(cluster, common_marks, counter)
                 self.comparison[counter]['clusters_common_marks'] = len(common_marks)
                 self.comparison[counter]['clusters_common_ama'] = common_ama_counter

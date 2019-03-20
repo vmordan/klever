@@ -346,7 +346,7 @@
                     <div class="ui accordion" id="acc_row_et_1">
                         <div class="title center aligned">
                             <div class="black-link"><b>
-                                {{cmp.error_traces}} {% trans 'error traces' %} -> {{cmp.clusters|length}} {% trans 'clusters' %}
+                                {{cmp.error_traces}} {% trans 'error traces' %} -> {{cmp.clusters_len}} {% trans 'clusters' %}
                                 {% if cmp.clusters_new or cmp.clusters_lost %}
                                 ({% if cmp.clusters_lost %}<span style="color:red">{{cmp.clusters_lost}} {% trans 'lost' %}</span>{% endif %}
                                 {% if cmp.clusters_new and cmp.clusters_lost %} / {% endif %}
