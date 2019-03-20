@@ -503,13 +503,7 @@ class JobsComparison:
             lost_verdicts = old_reports_number - len(to_unknowns)
             new_reports = len(unknowns)
         cmp['{}_lost'.format(verdicts_type)] = lost_verdicts
-        diff = abs(old_reports_number - new_reports)
-        # TODO: shit!
-        if lost_verdicts >= diff:
-            new_verdicts = lost_verdicts - diff
-        else:
-            new_verdicts = lost_verdicts + diff
-        cmp['{}_new'.format(verdicts_type)] = new_verdicts
+        cmp['{}_new'.format(verdicts_type)] = new_reports - len(first_reports) + lost_verdicts
 
     def sort_internals_by_attrs(self, number: int, common_attrs_ids: set) -> tuple:
         safes = dict()
