@@ -83,7 +83,8 @@ $(document).ready(function () {
         window.location.replace('/reports/comparison/' + $('#job_id_1').val() + "/" + $('#job_id_2').val());
     });
      $('#exchange').click(function () {
-        window.location.replace('/reports/comparison/' + $('#job_id_2').val() + "/" + $('#job_id_1').val());
+        var settings = window.location.search;
+        window.location.replace('/reports/comparison/' + $('#job_id_2').val() + "/" + $('#job_id_1').val() + settings);
     });
 
 });

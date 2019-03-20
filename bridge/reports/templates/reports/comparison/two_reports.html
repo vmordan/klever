@@ -198,24 +198,34 @@
 <table class="ui selectable compact table celled striped">
     <thead>
         <tr bgcolor="#d3d3d3">
-            {% for cmp in data.comparison %}
-            <td width="49%">
-                <input id="job_id_{{forloop.counter}}" value="{{cmp.job.pk}}" hidden>
-                <p class="ui center aligned">
-                    <b><a class="black-link" href="{% url 'jobs:job' cmp.job.pk %}">{{ cmp.job.name }}</a></b>
+            <td colspan="{{data.comparison|length}}">
+                <div class="ui grid">
+                    <div class="one wide column"></div>
+                    {% for cmp in data.comparison %}
+                    <div class="six wide column center floated center aligned">
+                        <input id="job_id_{{forloop.counter}}" value="{{cmp.job.pk}}" hidden>
+                        <div class="ui center aligned" style="text-align: center; vertical-align: middle">
+                            <b><a class="black-link" href="{% url 'jobs:job' cmp.job.pk %}">{{ cmp.job.name }}</a></b>
+                        </div>
+                    </div>
                     {% if forloop.counter == 1 %}
-                    <button id="exchange" class="ui tiny button right aligned"><b><i class="exchange icon"></i></b></button>
+                    <div class="two wide column center floated center aligned">
+                        <div id="exchange"><b  style="cursor:pointer" class="center aligned black-link"><i class="exchange icon"></i></b></div>
+                    </div>
                     {% endif %}
-                </p>
+                    {% endfor %}
+                    <div class="one wide column"></div>
+
+                </div>
+
             </td>
-            {% endfor %}
         </tr>
 
     </thead>
     <tbody>
         <tr>
             {% for cmp in data.comparison %}
-            <td class="center aligned"><b>{{ cmp.job.change_date }}</b></td>
+            <td width="50%" class="center aligned"><b>{{ cmp.job.change_date }}</b></td>
             {% endfor %}
         </tr>
         <tr style="vertical-align: top">
