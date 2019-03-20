@@ -364,51 +364,67 @@
                                     {% include 'reports/comparison/lost_new_text.html' with value_trans=ama_trans number_all_old=data.comparison.0.cluster_ama number_all_new=cmp_new.cluster_ama number_new=cmp_new.clusters_ama_new number_lost=cmp_new.clusters_ama_lost %}
                                 </div>
                             </div>
-                            <div class="ui equal width grid">
-                                {% for cmp in data.comparison %}
-                                <div class="column">
-                                    <table class="ui selectable compact table celled striped">
-                                        <thead>
-                                            <tr>
-                                                <td style="background: #d3d3d3">#</td>
-                                                <td style="background: #d3d3d3">{% trans 'Attributes' %}</td>
-                                                <td style="background: #d3d3d3">{% trans 'Origin' %}</td>
-                                                <td style="background: #d3d3d3">{% trans 'Error traces' %}</td>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                        {% for cluster in cmp.clusters %}
-                                            <tr>
-                                                <td {% if cluster.color %}style="background: {{cluster.color}}"{% endif %}>{{forloop.counter}}</td>
-                                                <td {% if cluster.color %}style="background: {{cluster.color}}"{% endif %}>{{cluster.attrs}}</td>
-                                                {% if cluster.mark %}
-                                                <td {% if cluster.color %}style="background: {{cluster.color}}"{% endif %}><a {% if cluster.color %} class="black-link" {% endif %} href="{% url 'marks:mark' 'unsafe' cluster.mark %}">{% trans 'Mark' %} {{cluster.mark}}</a></td>
+                                <table class="ui selectable compact table celled striped">
+                                    <thead>
+                                        <tr>
+                                            <td style="background: #d3d3d3" width="25%">{% trans 'Error traces' %}</td>
+                                            <td style="background: #d3d3d3; text-align: center">{% trans 'Attributes' %} ({% trans 'Origin' %})</td>
+                                            <td style="background: #d3d3d3" width="25%">{% trans 'Error traces' %}</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for cluster in cmp_new.clusters %}
+                                        {% if not cluster.hide %}
+                                        <tr>
+                                            <td {% if cluster.color %}style="background: {{cluster.color}}; text-align: right"{% endif %} style="text-align: right">
+                                                {% if cluster.reports_0|length > 1 %}
+                                                <div class="black-link" onclick="toggle_by_id('acc_et_{{forloop.parentloop.counter}}_{{forloop.counter}}_0')" style="cursor:pointer;">
+                                                    {{cluster.reports_0|length}} {% trans 'error traces' %}
+                                                </div>
+                                                <div id="acc_et_{{forloop.parentloop.counter}}_{{forloop.counter}}_0" class="ui list" hidden>
+                                                    {% for report in cluster.reports_0 %}
+                                                        <div class="item">
+                                                            <a  {% if cluster.color %} class="black-link" {% endif %} href="{% url 'reports:unsafe' report %}">{% trans 'trace' %}</a>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                                {% elif cluster.reports_0 %}
+                                                <a {% if cluster.color %} class="black-link" {% endif %} href="{% url 'reports:unsafe' cluster.reports_0.0 %}">{% trans 'trace' %}</a>
                                                 {% else %}
-                                                <td {% if cluster.color %}style="background: {{cluster.color}}"{% endif %}>{% trans 'Auto' %} {{cluster.id}}</td>
+                                                -
                                                 {% endif %}
-                                                <td {% if cluster.color %}style="background: {{cluster.color}}"{% endif %}>
-                                                    {% if cluster.reports|length > 1 %}
-                                                    <div class="black-link" onclick="toggle_by_id('acc_et_{{forloop.parentloop.counter}}_{{forloop.counter}}')" style="cursor:pointer;">
-                                                        {{cluster.reports|length}} {% trans 'error traces' %}
-                                                    </div>
-                                                    <div id="acc_et_{{forloop.parentloop.counter}}_{{forloop.counter}}" class="ui list" hidden>
-                                                        {% for report in cluster.reports %}
-                                                            <div class="item">
-                                                                <a  {% if cluster.color %} class="black-link" {% endif %} href="{% url 'reports:unsafe' report %}">{% trans 'trace' %}</a>
-                                                            </div>
-                                                        {% endfor %}
-                                                    </div>
-                                                    {% else %}
-                                                    <a  {% if cluster.color %} class="black-link" {% endif %} href="{% url 'reports:unsafe' cluster.reports.0 %}">{% trans 'trace' %}</a>
-                                                    {% endif %}
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                                {% endfor %}
-                            </div>
+                                            </td>
+                                            <td {% if cluster.color %}style="background: {{cluster.color}}; text-align: center"{% endif %} style="text-align: center">
+                                                {{cluster.attrs}}
+                                                {% if cluster.mark %}
+                                                   (<a {% if cluster.color %} class="black-link" {% endif %} href="{% url 'marks:mark' 'unsafe' cluster.mark %}">{% trans 'Mark' %} {{cluster.mark}}</a>)
+                                                {% else %}
+                                                    <!--{% trans 'Auto' %} {{cluster.id}}-->
+                                                {% endif %}
+                                            </td>
+                                            <td {% if cluster.color %}style="background: {{cluster.color}}"{% endif %}>
+                                                {% if cluster.reports_1|length > 1 %}
+                                                <div class="black-link" onclick="toggle_by_id('acc_et_{{forloop.parentloop.counter}}_{{forloop.counter}}_1')" style="cursor:pointer;">
+                                                    {{cluster.reports_1|length}} {% trans 'error traces' %}
+                                                </div>
+                                                <div id="acc_et_{{forloop.parentloop.counter}}_{{forloop.counter}}_1" class="ui list" hidden>
+                                                    {% for report in cluster.reports_1 %}
+                                                        <div class="item">
+                                                            <a  {% if cluster.color %} class="black-link" {% endif %} href="{% url 'reports:unsafe' report %}">{% trans 'trace' %}</a>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                                {% elif cluster.reports_1 %}
+                                                <a {% if cluster.color %} class="black-link" {% endif %} href="{% url 'reports:unsafe' cluster.reports_1.0 %}">{% trans 'trace' %}</a>
+                                                {% else %}
+                                                -
+                                                {% endif %}
+                                            </td>
+                                            {% endif %}
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
                         </div>
                     </div>
                 {% endfor %}

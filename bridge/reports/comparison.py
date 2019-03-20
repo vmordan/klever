@@ -222,9 +222,9 @@ class JobsComparison:
             counter = 0
             for cluster in clusters:
                 self.comparison[counter]['clusters_len'] = len(cluster)
-                self.__post_process_cluster(cluster, common_marks, counter)
                 common_clusters = len(common_marks) + common_ama_counter
                 if counter:
+                    self.__post_process_cluster(clusters, common_marks)
                     all_new = 0
                     all_lost = 0
                     am_new = 0
@@ -266,37 +266,49 @@ class JobsComparison:
                 raise Exception("Unknown cluster origin {}".format(cluster_origin))
         return res
 
-    def __post_process_cluster(self, clusters: list, common_marks: set, counter: int):
+    def __post_process_cluster(self, clusters_list: list, common_marks: set):
         common_clusters = list()
         diff_clusters = list()
-        for cluster in sorted(clusters, key=lambda x: (x.get(TAG_MARK, sys.maxsize), x[TAG_ATTRS], x.get(TAG_AUTO_ID, 0))):
-            cluster_origin = cluster[TAG_ORIGIN]
-            if cluster_origin == CLUSTERING_ORIGIN_MARK:
-                if cluster[TAG_MARK] not in common_marks:
-                    cluster[TAG_COLOR] = CLUSTERING_COLORS[counter]
-                    diff_clusters.append(cluster)
+        counter = 0
+        for clusters in clusters_list:
+            common_counter = 0
+            diff_clusters.append(list())
+            for cluster in sorted(clusters,
+                                  key=lambda x: (x.get(TAG_MARK, sys.maxsize), x[TAG_ATTRS], x.get(TAG_AUTO_ID, 0))):
+                cluster_origin = cluster[TAG_ORIGIN]
+                if cluster_origin == CLUSTERING_ORIGIN_MARK:
+                    if cluster[TAG_MARK] not in common_marks:
+                        self.__change_reports_tag(cluster, counter)
+                        #cluster[TAG_COLOR] = CLUSTERING_COLORS[counter]
+                        diff_clusters[counter].append(cluster)
+                    else:
+                        self.__process_common_cluster(cluster, common_clusters, counter, common_counter)
+                        common_counter += 1
+                elif cluster_origin == CLUSTERING_ORIGIN_AUTO:
+                    if cluster.get(TAG_AUTO_ID, 0):
+                        self.__process_common_cluster(cluster, common_clusters, counter, common_counter)
+                        common_counter += 1
+                    else:
+                        self.__change_reports_tag(cluster, counter)
+                        #cluster[TAG_COLOR] = CLUSTERING_COLORS[counter]
+                        diff_clusters[counter].append(cluster)
                 else:
-                    self.__process_common_cluster(cluster, common_clusters)
-            elif cluster_origin == CLUSTERING_ORIGIN_AUTO:
-                if cluster.get(TAG_AUTO_ID, 0):
-                    self.__process_common_cluster(cluster, common_clusters)
-                else:
-                    cluster[TAG_COLOR] = CLUSTERING_COLORS[counter]
-                    diff_clusters.append(cluster)
-            else:
-                raise Exception("Unknown cluster origin {}".format(cluster_origin))
-        self.comparison[counter]['clusters'] = common_clusters + diff_clusters
+                    raise Exception("Unknown cluster origin {}".format(cluster_origin))
+            counter += 1
+        self.comparison[counter - 1]['clusters'] = common_clusters + sum(diff_clusters, list())
 
-    def __process_common_cluster(self, cluster: dict, common_clusters: list):
-        if self.clustering_type == CLUSTERING_TYPE_ALL:
-            common_clusters.append(cluster)
-        elif self.clustering_type == CLUSTERING_TYPE_DIFF_TRACES:
-            if not cluster.get(TAG_HIDE):
-                common_clusters.append(cluster)
-        elif self.clustering_type == CLUSTERING_TYPE_DIFF_CLUSTERS:
-            pass
-        else:
-            raise Exception("Clustering type {} is not known".format(self.clustering_type))
+    def __change_reports_tag(self, cluster: dict, counter: int):
+        cluster[TAG_REPORTS + "_{}".format(counter)] = cluster[TAG_REPORTS]
+        del cluster[TAG_REPORTS]
+
+    def __process_common_cluster(self, cluster: dict, common_clusters: list, counter: int, common_counter: int):
+        if counter:
+            common_clusters[common_counter][TAG_REPORTS + "_{}".format(counter)] = cluster[TAG_REPORTS]
+            return
+        self.__change_reports_tag(cluster, counter)
+        if self.clustering_type == CLUSTERING_TYPE_DIFF_CLUSTERS:
+            cluster[TAG_HIDE] = True
+        common_clusters.append(cluster)
 
     def perform_clustering(self, unsafes: dict, unsafe_incompletes: dict, cmp) -> list:
         clusters_by_attrs = dict()
@@ -489,6 +501,7 @@ class JobsComparison:
             new_reports = len(unknowns)
         cmp['{}_lost'.format(verdicts_type)] = lost_verdicts
         diff = abs(old_reports_number - new_reports)
+        # TODO: shit!
         if lost_verdicts >= diff:
             new_verdicts = lost_verdicts - diff
         else:
