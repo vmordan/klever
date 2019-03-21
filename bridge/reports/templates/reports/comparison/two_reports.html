@@ -246,13 +246,13 @@
                             {% for name, compare in data.joint_attrs %}
                                 <tr>
                                     <td width="25%" style="text-align: right;">
-                                        {% include 'reports/comparison/attrs.html' with attrs_vals=data.comparison.0.attrs_vals attrs=data.comparison.0.attrs %}
+                                        {% include 'reports/comparison/attrs.html' with attrs_vals=data.comparison.0.attrs_vals attrs=data.comparison.0.attrs id=0 %}
                                     </td>
                                     <td style="vertical-align: middle; text-align: center; {% if compare == 1 %}font-weight: bold {% endif %}">
                                         {{name}}
                                     </td>
                                     <td width="25%" style="text-align: left">
-                                        {% include 'reports/comparison/attrs.html' with attrs_vals=cmp.attrs_vals attrs=cmp.attrs %}
+                                        {% include 'reports/comparison/attrs.html' with attrs_vals=cmp.attrs_vals attrs=cmp.attrs id=1 %}
                                     </td>
                                 </tr>
                             {% endfor %}
