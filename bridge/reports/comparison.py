@@ -67,7 +67,7 @@ TAG_CET = "cet"
 TAG_COLOR = "color"
 TAG_HIDE = "hide"
 
-CLUSTERING_COLORS = ["#dd7777", "#77dd77"]
+CLUSTERING_COLORS = ["#ebadad", "#adebad"]
 
 
 class InternalLeaf:
@@ -286,7 +286,7 @@ class JobsComparison:
                 if cluster_origin == CLUSTERING_ORIGIN_MARK:
                     if cluster[TAG_MARK] not in common_marks:
                         self.__change_reports_tag(cluster, counter)
-                        #cluster[TAG_COLOR] = CLUSTERING_COLORS[counter]
+                        cluster[TAG_COLOR] = CLUSTERING_COLORS[counter]
                         diff_clusters[counter].append(cluster)
                     else:
                         self.__process_common_cluster(cluster, common_clusters, counter, common_counter)
@@ -297,7 +297,7 @@ class JobsComparison:
                         common_counter += 1
                     else:
                         self.__change_reports_tag(cluster, counter)
-                        #cluster[TAG_COLOR] = CLUSTERING_COLORS[counter]
+                        cluster[TAG_COLOR] = CLUSTERING_COLORS[counter]
                         diff_clusters[counter].append(cluster)
                 else:
                     raise Exception("Unknown cluster origin {}".format(cluster_origin))
