@@ -244,11 +244,11 @@
                         <table class="ui selectable compact table celled striped">
                             <tbody>
                             {% for name, compare in data.joint_attrs %}
-                                <tr>
+                                <tr style="vertical-align: top">
                                     <td width="25%" style="text-align: right;">
                                         {% include 'reports/comparison/attrs.html' with attrs_vals=data.comparison.0.attrs_vals attrs=data.comparison.0.attrs id=0 %}
                                     </td>
-                                    <td style="vertical-align: middle; text-align: center; {% if compare == 1 %}font-weight: bold {% endif %}">
+                                    <td style="text-align: center; {% if compare == 1 %}font-weight: bold {% endif %}">
                                         {{name}}
                                     </td>
                                     <td width="25%" style="text-align: left">
