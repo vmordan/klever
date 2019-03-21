@@ -233,68 +233,87 @@
             {% endfor %}
         </tr>
         <tr style="vertical-align: top">
-            {% for cmp in data.comparison %}
-            <td>
-                <div class="ui accordion" id="acc_row_attrs_{{forloop.counter}}">
+            <td colspan="2">
+            {% for cmp in data.comparison|slice:"1:"  %}
+                <div class="ui accordion">
                     <div class="title center aligned"><div class="black-link"><b>
-                        {{ cmp.launches }} {% trans 'launches' %} ({{cmp.elems_by_attrs}} {% trans 'compared elements by attributes' %})
+                        {% trans 'Number of launches' %}: {{data.comparison.0.launches}} -> {{cmp.launches}} ({% trans 'compared elements by attributes' %} {{data.comparison.0.elems_by_attrs}} ->  {{cmp.elems_by_attrs}})
                     </b></div></div>
                     <div class="content">
-                        <span>{% trans 'Attributes' %}</span>
-                        <div class="ui ordered list">
+                        <h5 class="center aligned header"><i>{% trans 'Attributes' %}</i></h5>
+                        <table class="ui selectable compact table celled striped">
+                            <tbody>
+                            {% for name, compare in data.joint_attrs %}
+                                <tr>
+                                    <td width="25%" style="text-align: right;">
+                                        {% include 'reports/comparison/attrs.html' with attrs_vals=data.comparison.0.attrs_vals %}
+                                    </td>
+                                    <td style="vertical-align: middle; text-align: center; {% if compare == 1 %}font-weight: bold {% endif %}">
+                                        {{name}}
+                                    </td>
+                                    <td width="25%" style="text-align: left">
+                                        {% include 'reports/comparison/attrs.html' with attrs_vals=cmp.attrs_vals %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
 
-                        {% for name, vals in cmp.attrs_vals %}
-                            <div class="item">
-                                <div class="black-link" onclick="toggle_by_id('acc_attrs_{{cmp.job.id}}_{{name}}')"
-                                     style="cursor:pointer; {% if data.common_attrs_as_dict|get:name %} font-weight: bold {% endif %}">
-                                    {{ name }}: {{ vals|length }}
-                                    {% if vals|length == 1 %} {% trans 'element' %} {% else %} {% trans 'elements' %} {% endif %}
-                                </div>
-                                <ul id="acc_attrs_{{cmp.job.id}}_{{name}}" hidden>
-                                    {% for val in vals %}
-                                        <li class="item">
-                                            <span {% if val.1 %}style="background: #77dd77"{% endif %}>{{ val.0 }}</span>
-                                        </li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        {% endfor %}
-                        </div>
-
-                        <div class="ui accordion">
-                            <div class="title"><div class="black-link">{% trans 'Failures before verifier' %}: {{cmp.other_components_unknowns|length}}</div></div>
-                            {% if cmp.other_components_unknowns %}
+                        <div class="accordion">
+                            <div class="center aligned title"><i><b>
+                                {% trans 'Failures before verifier' %}: {{data.comparison.0.other_components_unknowns|length}} -> {{cmp.other_components_unknowns|length}}
+                            </b></i></div>
                             <div class="content">
                                 <table class="ui selectable compact table celled striped">
-                                    <thead>
-                                        <tr>
-                                            <td style="background: #d3d3d3">#</td>
-                                            <td style="background: #d3d3d3">{% trans 'Component' %}</td>
-                                            <td style="background: #d3d3d3">{% trans 'Problem' %}</td>
-                                        </tr>
-                                    </thead>
                                     <tbody>
-                                    {% for unk in cmp.other_components_unknowns %}
                                         <tr>
-                                            <td><a class="black-link" href="{% url 'reports:unknown' unk.id %}">{{forloop.counter}}</a></td>
-                                            <td><a class="black-link" href="{% url 'reports:unknown' unk.id %}">{{unk.component}}</a></td>
-                                            <td><a class="black-link" href="{% url 'reports:unknown' unk.id %}">{{unk.problem}}</a></td>
+                                            <td width="50%" style="text-align: center;">
+                                                <div class="ui list">
+                                                    {% for unk in data.comparison.0.other_components_unknowns %}
+                                                    <div class="item">
+                                                        <a class="black-link" href="{% url 'reports:unknown' unk.id %}">
+                                                            {{unk.component}} {%if unk.problem%}({{unk.problem}}){% endif %}
+                                                        </a>
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </td>
+                                            <td width="50%" style="text-align: center">
+                                                <div class="ui list">
+                                                    {% for unk in cmp.other_components_unknowns %}
+                                                    <div class="item">
+                                                        <a class="black-link" href="{% url 'reports:unknown' unk.id %}">
+                                                            {{unk.component}} {%if unk.problem%}({{unk.problem}}){% endif %}
+                                                        </a>
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </td>
                                         </tr>
-                                    {% endfor %}
                                     </tbody>
                                 </table>
                             </div>
-                            {% endif %}
                         </div>
 
-                        {% include 'reports/comparison/transitions_lost.html' with lost_transitions=cmp.lost|get:'safe' verdict_trans=safes_trans lost_url='reports:safe' %}
-                        {% include 'reports/comparison/transitions_lost.html' with lost_transitions=cmp.lost|get:'unsafe' verdict_trans=unsafes_trans lost_url='reports:unsafe' %}
-                        {% include 'reports/comparison/transitions_lost.html' with lost_transitions=cmp.lost|get:'unknown' verdict_trans=unknowns_trans lost_url='reports:unknown' %}
+                        <h5 class="center aligned header"><i>{% trans 'Missing results due to different attributes' %}</i></h5>
+                        <table class="ui selectable compact table celled striped">
+                            <tbody>
+                                <tr>
+                                    {% include 'reports/comparison/transitions_lost.html' with lost_transitions_1=data.comparison.0.lost|get:'safe' lost_transitions_2=cmp.lost|get:'safe' verdict_trans=safes_trans lost_url='reports:safe' %}
+                                </tr>
+                                <tr>
+                                    {% include 'reports/comparison/transitions_lost.html' with lost_transitions_1=data.comparison.0.lost|get:'unsafe' lost_transitions_2=cmp.lost|get:'unsafe' verdict_trans=unsafes_trans lost_url='reports:unsafe' %}
+                                </tr>
+                                <tr>
+                                    {% include 'reports/comparison/transitions_lost.html' with lost_transitions_1=data.comparison.0.lost|get:'unknown' lost_transitions_2=cmp.lost|get:'unknown' verdict_trans=unknowns_trans lost_url='reports:unknown' %}
+                                </tr>
+                            </tbody>
+                        </table>
 
                     </div>
                 </div>
-            </td>
             {% endfor %}
+            </td>
         </tr>
 
         <tr style="vertical-align: top">

@@ -1,25 +1,49 @@
 {% load i18n %}
 
-{% if lost_transitions %}
-<div class="ui accordion">
-    <div class="title"><div class="black-link">{{verdict_trans}} ({% trans 'no common attributes' %}): {{lost_transitions|length}}</div></div>
-    <div class="content">
-        <table class="ui selectable compact table celled striped">
-            <thead>
-                <tr>
-                    <td style="background: #d3d3d3">#</td>
-                    <td style="background: #d3d3d3">{% trans 'Attributes' %}</td>
-                </tr>
-            </thead>
-            <tbody>
-            {% for lost in lost_transitions %}
-                <tr>
-                    <td><a class="black-link" href="{% url lost_url lost.id %}">{{forloop.counter}}</a></td>
-                    <td><a class="black-link" href="{% url lost_url lost.id %}">{{lost.attrs}}</a></td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+{% if lost_transitions_1 or lost_transitions_2 %}
+
+<td width="25%" style="text-align: right;">
+    {% if lost_transitions_1|length == 1 %}
+        <a class="black-link" href="{% url lost_url lost_transitions_1.0.id %}">{{lost_transitions_1.0.attrs}}</a>
+    {% elif lost_transitions_1|length == 0 %}
+        -
+    {% else %}
+    <div class="accordion">
+        <div class="title"><div class="black-link">{{lost_transitions_1|length}} {% trans 'elements' %}</div></div>
+        <div class="content">
+            <div class="ui list">
+                {% for lost in lost_transitions_1 %}
+                    <div class="item">
+                        <a class="black-link" href="{% url lost_url lost.id %}">{{lost.attrs}}</a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
     </div>
-</div>
+    {% endif %}
+</td>
+<td style="vertical-align: middle; text-align: center;">
+    {{verdict_trans}}
+</td>
+<td width="25%" style="text-align: left">
+    {% if lost_transitions_2|length == 1 %}
+        <a class="black-link" href="{% url lost_url lost_transitions_2.0.id %}">{{lost_transitions_2.0.attrs}}</a>
+    {% elif lost_transitions_2|length == 0 %}
+        -
+    {% else %}
+    <div class="accordion">
+        <div class="title"><div class="black-link">{{lost_transitions_2|length}} {% trans 'elements' %}</div></div>
+        <div class="content">
+            <div class="ui list">
+                {% for lost in lost_transitions_2 %}
+                    <div class="item">
+                        <a class="black-link" href="{% url lost_url lost.id %}">{{lost.attrs}}</a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</td>
+
 {% endif %}

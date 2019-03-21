@@ -115,7 +115,7 @@ class JobsComparison:
         common_attrs_vals = dict()
 
         self.internals = list()
-
+        joint_attrs = dict()
         self.comparison = list()
         for root in root_reports:
             attrs, attrs_vals, attrs_ids, cdata = self.init_internals(root)
@@ -131,10 +131,13 @@ class JobsComparison:
                 cdata['launches_comp'] = self.comparison[0]['launches'] >= cdata['launches']
                 cdata['launches_diff'] = abs(self.comparison[0]['launches'] - cdata['launches'])
 
+            joint_attrs.update(attrs)
+
             self.comparison.append(cdata)
 
         self.common_attrs_as_dict = common_attrs
         self.common_attrs, self.common_attrs_vals = self.sort_attrs(common_attrs, common_attrs_vals)
+        self.joint_attrs = self.sort_attrs(joint_attrs)[0]
 
         # 2nd iteration.
         counter = 0
@@ -169,12 +172,13 @@ class JobsComparison:
 
             for name, vals in cmp['attrs_vals']:
                 marked_vals = list()
+                other_vals = list()
                 for val in vals:
                     if name in common_attrs_vals and val in common_attrs_vals[name]:
                         marked_vals.append((val, True))
                     else:
-                        marked_vals.append((val, False))
-                marked_attrs.append((name, marked_vals))
+                        other_vals.append((val, False))
+                marked_attrs.append((name, marked_vals + other_vals))
             cmp['attrs_vals'] = marked_attrs
             counter += 1
 
@@ -578,7 +582,7 @@ class JobsComparison:
 
         return safes, unsafes, unsafe_incompletes, unknowns, sum(cpu_sum.values())
 
-    def sort_attrs(self, attrs: dict, attrs_vals: dict) -> tuple:
+    def sort_attrs(self, attrs: dict, attrs_vals: dict = {}) -> tuple:
         attrs_selected = list()
         attrs_others = list()
         attrs_vals_selected = list()
@@ -586,10 +590,12 @@ class JobsComparison:
         for name, compare in sorted(attrs.items()):
             if compare:
                 attrs_selected.append((name, True))
-                attrs_vals_selected.append((name, attrs_vals[name]))
+                if attrs_vals:
+                    attrs_vals_selected.append((name, attrs_vals[name]))
             else:
                 attrs_others.append((name, False))
-                attrs_vals_others.append((name, attrs_vals[name]))
+                if attrs_vals:
+                    attrs_vals_others.append((name, attrs_vals[name]))
         sorted_attrs = attrs_selected + attrs_others
         sorted_attrs_vals = attrs_vals_selected + attrs_vals_others
         return sorted_attrs, sorted_attrs_vals
@@ -648,7 +654,7 @@ class JobsComparison:
             if report_id in other_components_problems:
                 problem = ", ".join(sorted(other_components_problems[report_id]))
             else:
-                problem = "-"
+                problem = None
             comparison_data['other_components_unknowns'].append({
                 "id": report_id,
                 "component": component,

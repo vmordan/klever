@@ -3281,3 +3281,6 @@ msgstr "Кластеры трасс ошибок"
 
 msgid "speedup"
 msgstr "ускорение"
+
+msgid "Missing results due to different attributes"
+msgstr "Потерянные результаты из-за несоответствия атрибутов"

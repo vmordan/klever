@@ -1,0 +1,27 @@
+{% load i18n %}
+
+{% for name_compared, vals in attrs_vals %}
+    {% if name_compared == name %}
+        {% if vals|length == 1 %}
+            <span {% if vals.0.1 %}style="background: #77dd77"{% endif %}>{{ vals.0.0 }}</span>
+        {% else %}
+        <div class="accordion">
+            <div class="title">
+                <div class="black-link" style="{% if compare == 1 %};font-weight: bold {% endif %}">
+                    {{vals|length}} {% trans 'elements' %}
+                </div>
+            </div>
+            <div class="content">
+                <div hidden class="ui list">
+                {% for val in vals %}
+                    <div class="item">
+                        <span {% if val.1 %}style="background: #77dd77"{% endif %}>{{ val.0 }}</span>
+                    </div>
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {% endif %}
+{% endfor %}
+{% if name not in data.common_attrs_as_dict %}-{% endif %}
