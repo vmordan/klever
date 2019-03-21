@@ -700,7 +700,7 @@ class GetConvertedTrace(LoggedCallMixin, Bview.JsonDetailPostView):
 
     def get_context_data(self, **kwargs):
         conversion_function = self.request.POST['conversion']
-        args = json.loads(self.request.POST.get('args', {}))
+        args = json.loads(self.request.POST.get('args', '{}'))
         context = {}
         try:
             converted_error_trace = get_or_convert_error_trace(self.object, conversion_function, args)
