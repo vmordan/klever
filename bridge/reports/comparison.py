@@ -688,6 +688,7 @@ class JobsComparison:
             attrs_vals[attr] = sorted(attrs_vals[attr])
 
         comparison_data['attrs_vals'] = self.sort_attrs(attrs, attrs_vals)[1]
+        comparison_data['attrs'] = attrs
 
         return attrs, attrs_vals, attrs_ids, comparison_data
 
