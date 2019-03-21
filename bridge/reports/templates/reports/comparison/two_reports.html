@@ -421,7 +421,7 @@
                                                 {% if cluster.mark %}
                                                    (<a {% if cluster.color %} class="black-link" {% endif %} href="{% url 'marks:mark' 'unsafe' cluster.mark %}">{% trans 'Mark' %} {{cluster.mark}}</a>)
                                                 {% else %}
-                                                    <!--{% trans 'Auto' %} {{cluster.id}}-->
+                                                    <span class="black-link" style="cursor:pointer;" onclick="show_converted_error_trace('{{data.conversion_function}}', '{{cluster.reports}}')">({% trans 'Auto' %})</span>
                                                 {% endif %}
                                             </td>
                                             <td {% if cluster.color %}style="background: {{cluster.color}}"{% endif %}>
@@ -432,7 +432,7 @@
                                                 <div id="acc_et_{{forloop.parentloop.counter}}_{{forloop.counter}}_1" class="ui list" hidden>
                                                     {% for report in cluster.reports_1 %}
                                                         <div class="item">
-                                                            <a  {% if cluster.color %} class="black-link" {% endif %} href="{% url 'reports:unsafe' report %}">{% trans 'trace' %}</a>
+                                                            <a {% if cluster.color %} class="black-link" {% endif %} href="{% url 'reports:unsafe' report %}">{% trans 'trace' %}</a>
                                                         </div>
                                                     {% endfor %}
                                                 </div>
@@ -456,5 +456,21 @@
 
     </tbody>
 </table>
+
+<div id="show_converted_error_trace" class="ui dinamic modal">
+    <div class="ui header">{% trans 'Converted error trace' %}</div>
+    <div class="content">
+        <div class="ui form">
+            <textarea readonly id="converted_error_trace" rows="15" style="font-family: monospace"></textarea>
+        </div>
+    </div>
+    <div class="actions">
+        <div class="ui grid">
+            <div class="eight wide column right aligned">
+                <button id="cancel_show_converted_error_trace" type="button" class="ui blue button small">{% trans 'Cancel' %}</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}

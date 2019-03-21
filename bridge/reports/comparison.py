@@ -306,7 +306,7 @@ class JobsComparison:
 
     def __change_reports_tag(self, cluster: dict, counter: int):
         cluster[TAG_REPORTS + "_{}".format(counter)] = cluster[TAG_REPORTS]
-        del cluster[TAG_REPORTS]
+        cluster[TAG_REPORTS] = cluster[TAG_REPORTS][0]
 
     def __process_common_cluster(self, cluster: dict, common_clusters: list, counter: int, common_counter: int):
         if counter:

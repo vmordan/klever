@@ -59,6 +59,23 @@ function apply_new_settings() {
     window.location.href = get_url_with_get_parameter(window.location.href, 'data', JSON.stringify(data));
 }
 
+function show_converted_error_trace(conversion_function, report_id) {
+    $.post(
+        '/marks/get_converted_trace/' + report_id +'/',
+        {
+            "conversion": conversion_function
+        },
+        function (data) {
+            if (data.error) {
+                err_notify(data.error);
+                return false;
+            }
+            $('#converted_error_trace').val(data['converted_error_trace']);
+            $('#show_converted_error_trace').modal('show');
+        }
+    );
+}
+
 $(document).ready(function () {
     $('div[id^="acc_row_attrs_"]').children('div[class^="title"]').click(function (data) {
         $('div[id^="acc_row_attrs_"]').accordion('toggle', 0);
@@ -82,7 +99,10 @@ $(document).ready(function () {
     $('#cancel_settings').click(function () {
         window.location.replace('/reports/comparison/' + $('#job_id_1').val() + "/" + $('#job_id_2').val());
     });
-     $('#exchange').click(function () {
+    $('#cancel_show_converted_error_trace').click(function () {
+        $('#show_converted_error_trace').modal('hide');
+    });
+    $('#exchange').click(function () {
         var settings = window.location.search;
         window.location.replace('/reports/comparison/' + $('#job_id_2').val() + "/" + $('#job_id_1').val() + settings);
     });
