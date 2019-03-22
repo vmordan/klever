@@ -25,7 +25,11 @@ DEFAULT_COMPARISON_FUNCTION = COMPARISON_FUNCTION_EQUAL
 TAG_CONVERSION_FUNCTION = "conversion_function"
 TAG_COMPARISON_FUNCTION = "comparison_function"
 TAG_EDITED_ERROR_TRACE = "edited_error_trace"
+
+# Conversion fucntions arguments.
 TAG_ADDITIONAL_MODEL_FUNCTIONS = "additional_model_functions"
+TAG_USE_NOTES = "use_notes"
+TAG_USE_WARNS = "use_warns"
 
 # Converted error trace tags.
 CET_OP = "op"
@@ -60,6 +64,12 @@ def convert_error_trace(error_trace: dict, conversion_function: str, args: dict 
     if conversion_function not in functions.keys():
         conversion_function = DEFAULT_CONVERSION_FUNCTION
     result = functions[conversion_function](error_trace, args)
+
+    if args.get(TAG_USE_NOTES, args.get(TAG_USE_WARNS, False)) and \
+            conversion_function not in [CONVERSION_FUNCTION_FULL, CONVERSION_FUNCTION_NOTES]:
+        result += __convert_notes(error_trace, args)
+        result = sorted(result, key=operator.itemgetter(CET_ID))
+
     return result
 
 
@@ -92,7 +102,7 @@ def compare_error_traces(edited_error_trace: list, compared_error_trace: list, c
 
 
 # noinspection PyUnusedLocal
-def __convert_call_tree_filter(error_trace: dict, args: dict = dict) -> list:
+def __convert_call_tree_filter(error_trace: dict, args: dict = {}) -> list:
     converted_error_trace = list()
     counter = 0
     # TODO: check this in core (one node for call and return edges).
@@ -140,10 +150,10 @@ def __convert_call_tree_filter(error_trace: dict, args: dict = dict) -> list:
     return converted_error_trace
 
 
-def __convert_model_functions(error_trace: dict, args: dict = dict) -> list:
+def __convert_model_functions(error_trace: dict, args: dict = {}) -> list:
     additional_model_functions = set(args.get(TAG_ADDITIONAL_MODEL_FUNCTIONS, []))
     model_functions = __get_model_functions(error_trace, additional_model_functions)
-    converted_error_trace = __convert_call_tree_filter(error_trace)
+    converted_error_trace = __convert_call_tree_filter(error_trace, args)
     while True:
         counter = 0
         is_break = False
@@ -175,7 +185,7 @@ def __convert_model_functions(error_trace: dict, args: dict = dict) -> list:
 
 
 # noinspection PyUnusedLocal
-def __convert_conditions(error_trace: dict, args: dict = dict) -> list:
+def __convert_conditions(error_trace: dict, args: dict = {}) -> list:
     converted_error_trace = list()
     counter = 0
     for edge in error_trace['edges']:
@@ -194,7 +204,7 @@ def __convert_conditions(error_trace: dict, args: dict = dict) -> list:
 
 
 # noinspection PyUnusedLocal
-def __convert_assignments(error_trace: dict, args: dict = dict) -> list:
+def __convert_assignments(error_trace: dict, args: dict = {}) -> list:
     converted_error_trace = list()
     counter = 0
     for edge in error_trace['edges']:
@@ -213,39 +223,47 @@ def __convert_assignments(error_trace: dict, args: dict = dict) -> list:
     return converted_error_trace
 
 
-# noinspection PyUnusedLocal
-def __convert_notes(error_trace: dict, args: dict = dict) -> list:
+def __convert_notes(error_trace: dict, args: dict = {}) -> list:
     converted_error_trace = list()
     counter = 0
+    use_notes = args.get(TAG_USE_NOTES, False)
+    use_warns = args.get(TAG_USE_WARNS, False)
+    if not use_notes and not use_warns:
+        # Ignore, since we need at least one flag as True.
+        use_notes = True
+        use_warns = True
+
     for edge in error_trace['edges']:
         if 'note' in edge:
-            converted_error_trace.append({
-                CET_OP: CET_OP_NOTE,
-                CET_THREAD: edge['thread'],
-                CET_SOURCE: edge['source'],
-                CET_LINE: edge['start line'],
-                CET_DISPLAY_NAME: edge['note'],
-                CET_ID: counter
-            })
+            if use_notes:
+                converted_error_trace.append({
+                    CET_OP: CET_OP_NOTE,
+                    CET_THREAD: edge['thread'],
+                    CET_SOURCE: edge['source'],
+                    CET_LINE: edge['start line'],
+                    CET_DISPLAY_NAME: edge['note'],
+                    CET_ID: counter
+                })
         elif 'warn' in edge:
-            converted_error_trace.append({
-                CET_OP: CET_OP_WARN,
-                CET_THREAD: edge['thread'],
-                CET_SOURCE: edge['source'],
-                CET_LINE: edge['start line'],
-                CET_DISPLAY_NAME: edge['warn'],
-                CET_ID: counter
-            })
+            if use_warns:
+                converted_error_trace.append({
+                    CET_OP: CET_OP_WARN,
+                    CET_THREAD: edge['thread'],
+                    CET_SOURCE: edge['source'],
+                    CET_LINE: edge['start line'],
+                    CET_DISPLAY_NAME: edge['warn'],
+                    CET_ID: counter
+                })
         counter += 1
     return converted_error_trace
 
 
 # noinspection PyUnusedLocal
 def __convert_full(error_trace: dict, args: dict = dict) -> list:
-    converted_error_trace = __convert_call_tree_filter(error_trace) + \
-                            __convert_conditions(error_trace) + \
-                            __convert_assignments(error_trace) + \
-                            __convert_notes(error_trace)
+    converted_error_trace = __convert_call_tree_filter(error_trace, args) + \
+                            __convert_conditions(error_trace, args) + \
+                            __convert_assignments(error_trace, args) + \
+                            __convert_notes(error_trace, args)
     converted_error_trace = sorted(converted_error_trace, key=operator.itemgetter(CET_ID))
     return converted_error_trace
 
