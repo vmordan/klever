@@ -28,6 +28,7 @@ TAG_EDITED_ERROR_TRACE = "edited_error_trace"
 
 # Conversion fucntions arguments.
 TAG_ADDITIONAL_MODEL_FUNCTIONS = "additional_model_functions"
+TAG_FILTERED_MODEL_FUNCTIONS = "filtered_model_functions"
 TAG_USE_NOTES = "use_notes"
 TAG_USE_WARNS = "use_warns"
 
@@ -69,6 +70,10 @@ def convert_error_trace(error_trace: dict, conversion_function: str, args: dict 
             conversion_function not in [CONVERSION_FUNCTION_FULL, CONVERSION_FUNCTION_NOTES]:
         result += __convert_notes(error_trace, args)
         result = sorted(result, key=operator.itemgetter(CET_ID))
+
+    filtered_functions = set(args.get(TAG_FILTERED_MODEL_FUNCTIONS, []))
+    if filtered_functions:
+        result = __filter_functions(result, filtered_functions)
 
     return result
 
@@ -182,6 +187,28 @@ def __convert_model_functions(error_trace: dict, args: dict = {}) -> list:
         if not is_break:
             break
     return converted_error_trace
+
+
+def __filter_functions(converted_error_trace: list, filtered_functions: set) -> list:
+    converted_error_trace_with_filter = list()
+    filtered_stack = list()
+    cur_thread = None
+    for item in converted_error_trace:
+        op = item[CET_OP]
+        thread = item[CET_THREAD]
+        name = item[CET_DISPLAY_NAME]
+        if cur_thread and not cur_thread == thread:
+            filtered_stack.clear()
+        if name in filtered_functions:
+            if op == CET_OP_CALL:
+                filtered_stack.append(name)
+                cur_thread = thread
+            elif op == CET_OP_RETURN:
+                filtered_stack.pop()
+        elif not filtered_stack:
+            converted_error_trace_with_filter.append(item)
+
+    return converted_error_trace_with_filter
 
 
 # noinspection PyUnusedLocal
