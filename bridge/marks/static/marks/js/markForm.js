@@ -96,9 +96,10 @@ function get_conversion_function() {
 function get_conversion_function_args() {
     var args = {};
     var conversion_function = get_conversion_function();
-    if (conversion_function == 'model functions') {
-        args['additional_model_functions'] = $('#additional_model_functions').val();
-    }
+    args['additional_model_functions'] = $('#additional_model_functions').val();
+    args['filtered_model_functions'] = $('#filtered_model_functions').val();
+    args['use_notes'] = $('#model_functions_use_notes').is(':checked');
+    args['use_warns'] = $('#model_functions_use_warns').is(':checked');
     return JSON.stringify(args);
 }
 
@@ -123,16 +124,23 @@ function update_converted_error_trace(conversion_function) {
 function conversion_function_change(new_function) {
     obj = JSON.parse(new_function.replace(/\'/g, '"'));
     $('#conversion_function_description').text(obj.desc);
-    if (obj.name != 'model functions') {
+    if (obj.name != 'model functions' && obj.name != 'model functions with notes') {
         $('#additional_model_functions').hide();
     } else {
         $('#additional_model_functions').val(null);
         $('#additional_model_functions').show();
     }
+    if (obj.name != 'model functions' && obj.name != 'model functions with notes' &&  obj.name != 'call tree' &&
+        obj.name != 'full')  {
+        $('#filtered_model_functions').hide();
+    } else {
+        $('#filtered_model_functions').val(null);
+        $('#filtered_model_functions').show();
+    }
     update_converted_error_trace(obj.name);
 }
 
-function additional_model_functions_change(args) {
+function update_converted_error_trace_on_args(args) {
     update_converted_error_trace(get_conversion_function());
 }
 

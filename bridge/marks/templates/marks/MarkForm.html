@@ -177,13 +177,38 @@
                     <div id="conversion_function_arguments" class="ui teal segment">
                         <h5>{% trans 'Conversion function arguments' %}</h5>
                         <div class="ui form">
-                        <input type="text" id="additional_model_functions"
-                               {% if conversion_function != 'model functions' %} hidden {% endif %}
-                               placeholder="{% trans 'Input additional model function names separated by comma and press Enter' %}"
-                               onchange="additional_model_functions_change(this.value)" value="{{ additional_model_functions }}">
+                            <div class="fields">
+                                <div class="field">
+                                    <input type="text" id="additional_model_functions"
+                                       {% if conversion_function != 'model functions' %} hidden {% endif %}
+                                       placeholder="{% trans 'Additional model functions' %}"
+                                       onchange="update_converted_error_trace_on_args(this.value)" value="{{ args.additional_model_functions }}"
+                                    >
+                                </div>
+                                <div class="field">
+                                    <input type="text" id="filtered_model_functions"
+                                       {% if conversion_function != 'model functions' and conversion_function != 'call tree' and conversion_function != 'full' %} hidden {% endif %}
+                                       placeholder="{% trans 'Filtered functions' %}"
+                                       onchange="update_converted_error_trace_on_args(this.value)" value="{{ args.filtered_model_functions }}"
+                                    >
+                                </div>
+                            </div>
+                            <div class="fields">
+                                <div class="field">
+                                    <div class="ui checkbox">
+                                        <input id="model_functions_use_notes" type="checkbox" onchange="update_converted_error_trace_on_args(this.value)" {% if args.use_notes %} checked {% endif %}>
+                                        <label>{% trans 'Add verifier notes' %}</label>
+                                    </div>
+                                </div>
+                                <div class="field" id="model_functions_use_warns_hide">
+                                    <div class="ui checkbox">
+                                        <input id="model_functions_use_warns" type="checkbox" onchange="update_converted_error_trace_on_args(this.value)" {% if args.use_warns %} checked {% endif %}>
+                                        <label>{% trans 'Use verifier warnings' %}</label>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-
                     <h4 class="header ui teal">{% trans 'Error traces comparison function' %}</h4>
                     <select id="comparison_function" class="ui dropdown fluid top attached" onchange="comparison_function_change(this.value)">
                         {% for f in markdata.comparison %}

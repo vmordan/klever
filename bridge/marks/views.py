@@ -38,16 +38,16 @@ from bridge.utils import logger, extract_archive, ArchiveFileContent, BridgeExce
 from bridge.vars import USER_ROLES, MARK_STATUS, MARK_SAFE, MARK_UNSAFE, MARK_TYPE, ASSOCIATION_TYPE, \
     VIEW_TYPES, PROBLEM_DESC_FILE, COMPARISON_FUNCTIONS_DESCRIPTION, CONVERSION_FUNCTIONS_DESCRIPTION
 from marks.Download import UploadMark, MarkArchiveGenerator, AllMarksGen, UploadAllMarks, PresetMarkFile
+from marks.UnsafeUtils import decode_optimizations
 from marks.models import MarkSafe, MarkUnsafe, MarkUnknown, MarkSafeHistory, MarkUnsafeHistory, MarkUnknownHistory, \
     MarkUnsafeCompare, UnsafeTag, SafeTag, SafeTagAccess, UnsafeTagAccess, \
     MarkSafeReport, MarkUnsafeReport, MarkUnknownReport, MarkAssociationsChanges, \
     SafeAssociationLike, UnsafeAssociationLike, UnknownAssociationLike, ReportComponent
 from marks.tables import MarkData, MarkChangesTable, MarkReportsTable, MarksList, AssociationChangesTable
 from marks.tags import GetTagsData, GetParents, SaveTag, TagsInfo, CreateTagsFromFile, TagAccess
-from marks.UnsafeUtils import decode_optimizations
 from reports.mea.wrapper import error_trace_pretty_print, get_or_convert_error_trace, COMPARISON_FUNCTIONS, \
     CONVERSION_FUNCTIONS, DEFAULT_CONVERSION_FUNCTION, DEFAULT_COMPARISON_FUNCTION, obtain_pretty_error_trace, \
-    TAG_ADDITIONAL_MODEL_FUNCTIONS, DEFAULT_SIMILARITY_THRESHOLD
+    DEFAULT_SIMILARITY_THRESHOLD, process_args
 from reports.models import ReportSafe, ReportUnsafe, ReportUnknown
 from tools.profiling import LoggedCallMixin
 from users.models import User
@@ -94,6 +94,7 @@ class MarkPage(LoggedCallMixin, Bview.DataViewMixin, DetailView):
             args = history_set.first().args
             if args:
                 args = json.loads(args)
+                process_args(args, True)
             for func in COMPARISON_FUNCTIONS:
                 if func['name'] == self.object.comparison_function:
                     desc["comparison"] = (COMPARISON_FUNCTIONS_DESCRIPTION[func['id']])
@@ -249,9 +250,8 @@ class MarkFormView(LoggedCallMixin, DetailView):
                 args = context['markdata'].mark_version.args
                 if args:
                     args = json.loads(args)
-                    additional_model_functions = args.get(TAG_ADDITIONAL_MODEL_FUNCTIONS, [])
-                    if additional_model_functions:
-                        context['additional_model_functions'] = ','.join(additional_model_functions)
+                    process_args(args, True)
+                    context['args'] = args
                 edited_error_trace = obtain_pretty_error_trace(context['markdata'].error_trace,
                                                                self.object, self.object.conversion_function, args)
                 context['converted_error_trace'] = edited_error_trace

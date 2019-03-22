@@ -36,6 +36,22 @@ CET_END = "__ERROR__"
 DEBUG_ERROR_TRACE_COMPARISON = False
 
 
+def process_args(args: dict, as_str=False):
+    for tag in [TAG_ADDITIONAL_MODEL_FUNCTIONS, TAG_FILTERED_MODEL_FUNCTIONS, TAG_USE_NOTES, TAG_USE_WARNS]:
+        if tag in args:
+            contents = args.get(tag, "")
+            if contents:
+                if isinstance(contents, str):
+                    contents = contents.split(",")
+                if isinstance(contents, list):
+                    contents.sort()
+                    if as_str:
+                        contents = ",".join(contents)
+                args[tag] = contents
+            else:
+                del args[tag]
+
+
 def get_or_convert_error_trace(unsafe, conversion_function: str, args: dict) -> list:
     """
     Convert error trace for unsafe report and cache results, so the result can be reused later.
@@ -57,13 +73,8 @@ def get_or_convert_error_trace(unsafe, conversion_function: str, args: dict) -> 
         raise BridgeException("There is no unsafe report for this mark")
     if not args:
         args = {}
-    if conversion_function == CONVERSION_FUNCTION_MODEL_FUNCTIONS:
-        additional_model_functions = args.get(TAG_ADDITIONAL_MODEL_FUNCTIONS, "")
-        if additional_model_functions:
-            if isinstance(additional_model_functions, str):
-                additional_model_functions = additional_model_functions.split(",")
-            additional_model_functions.sort()
-            args[TAG_ADDITIONAL_MODEL_FUNCTIONS] = additional_model_functions
+
+    process_args(args)
     args_str = json.dumps(args, sort_keys=True)
 
     try:
@@ -85,13 +96,7 @@ def get_or_convert_error_trace(unsafe, conversion_function: str, args: dict) -> 
 def get_or_convert_error_trace_auto(unsafe_id: int, conversion_function: str, args: dict) -> list:
     if not args:
         args = {}
-    if conversion_function == CONVERSION_FUNCTION_MODEL_FUNCTIONS:
-        additional_model_functions = args.get(TAG_ADDITIONAL_MODEL_FUNCTIONS, "")
-        if additional_model_functions:
-            if isinstance(additional_model_functions, str):
-                additional_model_functions = additional_model_functions.split(",")
-            additional_model_functions.sort()
-            args[TAG_ADDITIONAL_MODEL_FUNCTIONS] = additional_model_functions
+    process_args(args)
     args_str = json.dumps(args, sort_keys=True)
 
     try:

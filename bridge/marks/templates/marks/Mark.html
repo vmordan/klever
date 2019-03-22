@@ -129,7 +129,7 @@
                                     <div class="content">
                                         <table class="table selectable">
                                             <tbody>
-                                                {% for name, val in args.items %}
+                                                {% for name, val in args.items|dictsort:0 %}
                                                     <tr>
                                                         <td>{{ name }}</td>
                                                         <td>{{ val }}</td>
