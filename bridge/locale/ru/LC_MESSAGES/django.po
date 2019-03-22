@@ -3284,3 +3284,15 @@ msgstr "ускорение"
 
 msgid "Missing results due to different attributes"
 msgstr "Потерянные результаты из-за несоответствия атрибутов"
+
+msgid "Additional model functions"
+msgstr "Дополнительные модельные функции"
+
+msgid "Filtered functions"
+msgstr "Функции для фильтрации"
+
+msgid "Add verifier notes"
+msgstr "Добавить описания проверок правила"
+
+msgid "Use verifier warnings"
+msgstr "Добавить описания меток ошибок"
