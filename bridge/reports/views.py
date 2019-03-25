@@ -534,9 +534,11 @@ class ReportsComparisonView(LoggedCallMixin, TemplateView):
             raise BridgeException(code=406)
         if self.request.GET:
             args = json.loads(self.request.GET.get('data', '{}'))
+            other_jobs = json.loads(self.request.GET.get('jobs', '[]'))
         else:
             args = {}
-        return {'data': JobsComparison([root1, root2], args)}
+            other_jobs = []
+        return {'data': JobsComparison([root1, root2], args, other_jobs)}
 
 
 class ReportsComparisonData(LoggedCallMixin, Bview.DetailPostView):

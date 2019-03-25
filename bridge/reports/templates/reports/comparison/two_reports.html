@@ -147,14 +147,14 @@
 
                 <div id="settings_clustering" class="ui basic segment" {% if not data.enable_clustering %} hidden {% endif %}>
                     <h4 class="header ui">{% trans 'Error traces conversion function' %}</h4>
-                    <select id="cs5__conversion_function" class="ui selection dropdown">
+                    <select id="cs5__conversion_function">
                         {% for f in data.conversion_functions %}
                             <option value="{{ f.name }}" {% if f.name == data.conversion_function %} selected{% endif %}>{{ f.name }}</option>
                         {% endfor %}
                     </select>
 
                     <h4 class="header ui">{% trans 'Error traces comparison function' %}</h4>
-                    <select id="cs5__comparison_function" class="ui selection dropdown">
+                    <select id="cs5__comparison_function">
                         {% for f in data.comparison_functions %}
                             <option value="{{ f.name }}" {% if f.name == data.comparison_function %} selected{% endif %}>{{ f.name }}</option>
                         {% endfor %}
@@ -164,7 +164,7 @@
                         {% trans 'Similarity threshold' %} ({% trans 'in percents' %}, 1% &le; threshold &le; 100%)
                         <i class="question icon red" title="{% trans 'Jaccard index of threads sets' %}"></i>
                     </h4>
-                    <div class="ui form">
+                    <div class="form">
                         <input type="number" id="cs5__similarity_threshold" min="1" max="100" value="{{ data.similarity }}">
                     </div>
 
@@ -204,21 +204,37 @@
         <tr bgcolor="#d3d3d3">
             <td colspan="{{data.comparison|length}}">
                 <div class="ui grid">
-                    <div class="one wide column"></div>
+                    <div class="one wide column" style="padding-bottom: 0px;padding-top: 9px">
+                        {% if data.job_ids %}
+                        <select onchange="change_id_1(this.value)" style="width:100%">
+                        {% for job_id, job_name in data.job_ids %}
+                            <option title="{{job_name}}" value="{{job_id}}" {% if data.comparison.0.job.id == job_id %} selected {% endif %}>{{job_name}}</option>
+                        {% endfor %}
+                        </select>
+                        {% endif %}
+                    </div>
                     {% for cmp in data.comparison %}
                     <div class="six wide column center floated center aligned">
                         <input id="job_id_{{forloop.counter}}" value="{{cmp.job.pk}}" hidden>
-                        <div class="ui center aligned" style="text-align: center; vertical-align: middle">
+                        <div class="ui center aligned" style="text-align: center">
                             <b><a class="black-link" href="{% url 'jobs:job' cmp.job.pk %}">{{ cmp.job.name }}</a></b>
                         </div>
                     </div>
                     {% if forloop.counter == 1 %}
                     <div class="two wide column center floated center aligned">
-                        <div id="exchange"><b  style="cursor:pointer" class="center aligned black-link"><i class="exchange icon"></i></b></div>
+                        <div id="exchange"><b style="cursor:pointer" class="center aligned black-link"><i class="exchange icon"></i></b></div>
                     </div>
                     {% endif %}
                     {% endfor %}
-                    <div class="one wide column"></div>
+                    <div class="one wide column right floated right aligned" style="padding-bottom: 0px;padding-top:9px">
+                        {% if data.job_ids %}
+                        <select onchange="change_id_2(this.value)" style="width:100%">
+                        {% for job_id, job_name in data.job_ids %}
+                            <option title="{{job_name}}" value="{{job_id}}" {% if data.comparison.1.job.id == job_id %} selected {% endif %}>{{job_name}}</option>
+                        {% endfor %}
+                        </select>
+                        {% endif %}
+                    </div>
 
                 </div>
 

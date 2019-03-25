@@ -10,6 +10,16 @@ function toggle_by_id(identifier) {
     }
 }
 
+function change_id_1(identifier) {
+    var settings = window.location.search;
+    window.location.href = '/reports/comparison/' + identifier + "/" + $('#job_id_2').val() + settings;
+}
+
+function change_id_2(identifier) {
+    var settings = window.location.search;
+    window.location.href = '/reports/comparison/' + $('#job_id_1').val() + "/" + identifier + settings;
+}
+
 function apply_new_settings() {
     var elems = $('input:checkbox');
     var data = {};
@@ -56,7 +66,7 @@ function apply_new_settings() {
     data['lost_transitions'] = lost_transitions;
     data['mea_config'] = mea_config;
     $('#dimmer_of_page').addClass('active');
-    window.location.href = get_url_with_get_parameter(window.location.href, 'data', JSON.stringify(data));
+    window.location.replace(get_url_with_get_parameter(window.location.href, 'data', JSON.stringify(data)));
 }
 
 function show_converted_error_trace(conversion_function, report_id) {
@@ -97,14 +107,14 @@ $(document).ready(function () {
         apply_new_settings();
     });
     $('#cancel_settings').click(function () {
-        window.location.replace('/reports/comparison/' + $('#job_id_1').val() + "/" + $('#job_id_2').val());
+        window.location.href = '/reports/comparison/' + $('#job_id_1').val() + "/" + $('#job_id_2').val();
     });
     $('#cancel_show_converted_error_trace').click(function () {
         $('#show_converted_error_trace').modal('hide');
     });
     $('#exchange').click(function () {
         var settings = window.location.search;
-        window.location.replace('/reports/comparison/' + $('#job_id_2').val() + "/" + $('#job_id_1').val() + settings);
+        window.location.href = '/reports/comparison/' + $('#job_id_2').val() + "/" + $('#job_id_1').val() + settings;
     });
 
 });

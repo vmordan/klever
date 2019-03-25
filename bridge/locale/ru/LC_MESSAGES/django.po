@@ -1190,9 +1190,8 @@ msgid "Please select jobs you want to delete"
 msgstr "Пожалуйста, отметьте задания, которые Вы хотите удалить"
 
 #: jobs/templates/jobs/tree.html:416
-msgid "Please select exactly two jobs which reports you want to compare"
-msgstr ""
-"Пожалуйста, отметьте ровно два задания, у которых Вы хотите сравнить отчеты"
+msgid "Please select jobs which reports you want to compare"
+msgstr "Пожалуйста, отметьте задания, у которых Вы хотите сравнить отчеты"
 
 #: jobs/templates/jobs/treeTable.html:42
 msgid "All"

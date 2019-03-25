@@ -120,14 +120,21 @@ function compare_reports_old() {
 function compare_reports() {
     var sel_jobs = [];
     $('input[id^="job_checkbox__"]:checked').each(function () {
-        sel_jobs.push($(this).attr('id').replace('job_checkbox__', ''));
+        sel_jobs.push(Number($(this).attr('id').replace('job_checkbox__', '')));
     });
-    if (sel_jobs.length !== 2) {
+    if (!sel_jobs.length) {
         err_notify($('#error__no_jobs_to_compare').text());
         return false;
     }
+    if (sel_jobs.length == 1) {
+        sel_jobs.push(sel_jobs[0]);
+    }
     $('#dimmer_of_page').addClass('active');
-    window.location.href = '/reports/comparison/' + sel_jobs[0] + '/' + sel_jobs[1] + '/';
+    var basic_url = '/reports/comparison/' + sel_jobs[0] + '/' + sel_jobs[1] + '/';
+    if (sel_jobs.length == 2)
+        window.location.replace(basic_url);
+    else
+        window.location.replace(get_url_with_get_parameter(basic_url, 'jobs', JSON.stringify(sel_jobs)));
 }
 
 function compare_files() {
