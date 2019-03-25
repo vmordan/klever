@@ -170,7 +170,8 @@ class JobsComparison:
                                                         cmp)
                     if not self.show_same_transitions[verdicts_type]:
                         cmp['{0}_{0}'.format(verdicts_type)] = []
-                cmp['speedup'] = round(cpu_time_first / cpu_time, 2)
+                if cpu_time:
+                    cmp['speedup'] = round(cpu_time_first / cpu_time, 2)
 
             if self.enable_clustering:
                 clusters.append(self.perform_clustering(unsafes, unsafe_incompletes, cmp))
