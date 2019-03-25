@@ -233,7 +233,7 @@ SAFE_ASS_MARKS_VIEW = {
 }
 
 UNKNOWN_ASS_MARKS_VIEW = {
-    'columns': ['status', 'ass_type', 'ass_author', 'description'],
+    'columns': ['status', 'ass_author', 'problem'],
 
     # FILTERS:
     # status: <list of identifiers from MARK_STATUS>
