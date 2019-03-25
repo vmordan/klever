@@ -232,6 +232,9 @@ class ViewJobData:
 
     def __unknowns_info(self):
         url = reverse('reports:unknowns', args=[self.report.pk])
+        attrs_href = ""
+        if self.__attrs_href:
+            attrs_href = '&attr={}'.format(self.__attrs_href)
         no_mark_hidden = 'hidden' in self.view and 'unknowns_nomark' in self.view['hidden']
         total_hidden = 'hidden' in self.view and 'unknowns_total' in self.view['hidden']
 
@@ -277,8 +280,8 @@ class ViewJobData:
                 if c_name not in unknowns_data:
                     unknowns_data[c_name] = []
                 unknowns_data[c_name].append({'num': number, 'problem': p_name,
-                                              'href': '{0}?component={1}&problem={2}&attr={3}'.
-                                             format(url, c_id, p_id, self.__attrs_href)})
+                                              'href': '{0}?component={1}&problem={2}{3}'.
+                                             format(url, c_id, p_id, attrs_href)})
 
         # Get unmarked unknowns
         for c_name in unmarked:
@@ -286,7 +289,7 @@ class ViewJobData:
                 unknowns_data[c_name] = []
             unknowns_data[c_name].append({
                 'num': unmarked[c_name][0], 'problem': _('Without marks'),
-                'href': '{0}?component={1}&problem=0&attr={2}'.format(url, unmarked[c_name][1], self.__attrs_href)
+                'href': '{0}?component={1}&problem=0&{2}'.format(url, unmarked[c_name][1], attrs_href)
             })
 
         if not total_hidden:
@@ -295,8 +298,8 @@ class ViewJobData:
                 if c_name not in unknowns_data:
                     unknowns_data[c_name] = []
                 unknowns_data[c_name].append({
-                    'num': number, 'problem': 'total', 'href': '{0}?component={1}&attr={2}'.
-                        format(url, c_id, self.__attrs_href)
+                    'num': number, 'problem': 'total', 'href': '{0}?component={1}{2}'.
+                        format(url, c_id, attrs_href)
                 })
         return list({'component': c_name, 'problems': unknowns_data[c_name]} for c_name in sorted(unknowns_data))
 
