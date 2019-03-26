@@ -30,11 +30,13 @@ from bridge.vars import USER_ROLES, JOB_STATUS, UNKNOWN_ERROR
 from jobs.models import Job, JobFile
 from marks.UnsafeUtils import ConnectMarks, RecalculateTags
 from marks.models import MarkUnsafe, MarkUnsafeHistory, UnknownProblem, ConvertedTraces
-from reports.models import Component, Computer
+from reports.models import Component, Computer, JobViewAttrs
 from service.models import Task
 from tools.models import LockTable
 from tools.profiling import unparallel_group, ProfileData, clear_old_logs, ExecLocker
 from tools.utils import objects_without_relations, ClearFiles, Recalculation
+from marks.models import ErrorTraceConvertionCache
+from reports.mea.core import CACHED_CONVERSION_FUNCTIONS
 
 
 @login_required
@@ -218,6 +220,58 @@ def clear_call_logs(request):
         return JsonResponse({'error': 'Unknown error'})
     clear_old_logs()
     return JsonResponse({'message': _('Logs were successfully cleared')})
+
+
+def clear_cet(request):
+    activate(request.user.extended.language)
+    if not request.user.is_authenticated or request.method != 'POST' or request.user.extended.role != USER_ROLES[2][0]:
+        return JsonResponse({'error': 'Unknown error'})
+
+    data = dict()
+
+    for cet_f, cet_args in ErrorTraceConvertionCache.objects.values_list('function', 'args'):
+        key = (cet_f, cet_args)
+        if key not in data:
+            data[key] = 1
+        else:
+            data[key] += 1
+
+    removed_records = 0
+    all_records = ErrorTraceConvertionCache.objects.count()
+    for key, num in data.items():
+        cet_f = key[0]
+        cet_args = key[1]
+        counter = MarkUnsafeHistory.objects.filter(conversion_function=cet_f, args=cet_args).count()
+        if not counter:
+            if not (cet_f in CACHED_CONVERSION_FUNCTIONS and cet_args == "{}"):
+                removed_records += num
+                ErrorTraceConvertionCache.objects.filter(function=cet_f, args=cet_args).delete()
+
+    return JsonResponse({'message': str(removed_records) + _(' unused converted error traces of ') +
+                                    str(all_records) + _(' have been deleted')})
+
+
+def clear_all_cet(request):
+    activate(request.user.extended.language)
+    if not request.user.is_authenticated or request.method != 'POST' or request.user.extended.role != USER_ROLES[2][0]:
+        return JsonResponse({'error': 'Unknown error'})
+
+    all_records = ErrorTraceConvertionCache.objects.count()
+    ErrorTraceConvertionCache.objects.delete()
+
+    return JsonResponse({'message': str(all_records) + _(' converted error traces have been deleted')})
+
+
+def clear_jobs_view(request):
+    activate(request.user.extended.language)
+    if not request.user.is_authenticated or request.method != 'POST' or request.user.extended.role != USER_ROLES[2][0]:
+        return JsonResponse({'error': 'Unknown error'})
+
+    number_of_attrs = JobViewAttrs.objects.count()
+    if not number_of_attrs:
+        return JsonResponse({'message': _('Job attributes view cache is empty')})
+    JobViewAttrs.objects.all().delete()
+    return JsonResponse({'message': str(number_of_attrs) + _(' cached records were successfully deleted')})
 
 
 def clear_tasks(request):

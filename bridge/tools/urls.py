@@ -32,6 +32,9 @@ urlpatterns = [
     path('ajax/call_list/', views.call_list),
     path('ajax/call_stat/', views.call_statistic),
     path('ajax/clear_call_logs/', views.clear_call_logs),
+    path('ajax/clear_cet/', views.clear_cet),
+    path('ajax/clear_all_cet/', views.clear_all_cet),
+    path('ajax/clear_jobs_view/', views.clear_jobs_view),
     path('ajax/clear_tasks/', views.clear_tasks),
     path('manual_unlock/', views.manual_unlock)
 ]

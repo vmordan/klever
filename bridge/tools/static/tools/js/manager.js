@@ -111,6 +111,54 @@ $(document).ready(function () {
             }
         );
     });
+    $('#clear_jobs_view').click(function () {
+        $('#dimmer_of_page').addClass('active');
+        $.post(
+            '/tools/ajax/clear_jobs_view/',
+            {},
+            function (data) {
+                $('#dimmer_of_page').removeClass('active');
+                if (data.error) {
+                    err_notify(data.error);
+                }
+                else {
+                    success_notify(data.message);
+                }
+            }
+        );
+    });
+    $('#clear_cet').click(function () {
+        $('#dimmer_of_page').addClass('active');
+        $.post(
+            '/tools/ajax/clear_cet/',
+            {},
+            function (data) {
+                $('#dimmer_of_page').removeClass('active');
+                if (data.error) {
+                    err_notify(data.error);
+                }
+                else {
+                    success_notify(data.message);
+                }
+            }
+        );
+    });
+    $('#clear_all_cet').click(function () {
+        $('#dimmer_of_page').addClass('active');
+        $.post(
+            '/tools/ajax/clear_all_cet/',
+            {},
+            function (data) {
+                $('#dimmer_of_page').removeClass('active');
+                if (data.error) {
+                    err_notify(data.error);
+                }
+                else {
+                    success_notify(data.message);
+                }
+            }
+        );
+    });
     $('#clear_tasks').click(function () {
         $('#dimmer_of_page').addClass('active');
         $.post(

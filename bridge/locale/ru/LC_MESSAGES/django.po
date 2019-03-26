@@ -3295,3 +3295,39 @@ msgstr "Добавить описания проверок правила"
 
 msgid "Use verifier warnings"
 msgstr "Добавить описания меток ошибок"
+
+msgid "Logs were successfully cleared"
+msgstr "Логи успешно очищены"
+
+msgid "unused converted error traces of"
+msgstr "неиспользуемых преобразованных трасс ошибок из"
+
+msgid "have been deleted"
+msgstr "было удалено"
+
+msgid "converted error traces have been deleted"
+msgstr "преобразованных трасс ошибок было удалено"
+
+msgid "Job attributes view cache is empty"
+msgstr "Кэш отображения атрибутов отчетов пуст"
+
+msgid "cached records were successfully deleted"
+msgstr "записей кэша было удалено"
+
+msgid "Actions with marks"
+msgstr "Действия с оценками"
+
+msgid "Safe DB cleaning"
+msgstr "Безопасная очистка БД"
+
+msgid "Unsafe DB cleaning (do *not* use!)"
+msgstr "Небезопасная очистка БД (*не* использовать!)"
+
+msgid "Remove unused converted error traces"
+msgstr "Удалить неиспользуемые преобразованные трассы ошибок"
+
+msgid "Clear all converted error traces"
+msgstr "Удалить все преобразованные трассы ошибок"
+
+msgid "Clear job attributes views"
+msgstr "Удалить отображения атрибутов оценок"
