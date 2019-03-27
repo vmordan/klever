@@ -25,6 +25,8 @@ from users.models import View
 
 DEF_NUMBER_OF_ELEMENTS = 500
 
+ALL_ATTRS = 'attrs'
+
 JOB_TREE_VIEW = {
     'columns': ['name', 'start_date', 'unsafe:bug', 'unsafe:false_positive',
                 'unsafe:unknown', 'unsafe:unassociated', 'unsafe:total',
@@ -92,7 +94,7 @@ REPORT_CHILDREN_VIEW = {
 UNSAFES_VIEW = {
     'elements': [DEF_NUMBER_OF_ELEMENTS],
     'columns': ['report_verdict', 'tags',
-                'verifiers:cpu', 'verifiers:wall', 'verifiers:memory'],
+                'verifiers:cpu', 'verifiers:wall', 'verifiers:memory', ALL_ATTRS],
     # order: [up|down, attr|parent_cpu|parent_wall|parent_memory, <any text, not empty for attr only>]
     # 'order': ['down', 'attr', 'Requirement'],
     # 'attr': ['LKVOG strategy:Name', 'istartswith', 'Separate']
@@ -106,7 +108,7 @@ UNSAFES_VIEW = {
 }
 
 SAFES_VIEW = {
-    'columns': ['report_verdict', 'tags', 'verifiers:cpu', 'verifiers:wall', 'verifiers:memory'],
+    'columns': ['report_verdict', 'tags', 'verifiers:cpu', 'verifiers:wall', 'verifiers:memory', ALL_ATTRS],
     'elements': [DEF_NUMBER_OF_ELEMENTS],
     # order: [up|down, attr|parent_cpu|parent_wall|parent_memory, <any text, not empty for attr only>]
     # 'order': ['down', 'attr', 'Requirement'],
@@ -121,7 +123,7 @@ SAFES_VIEW = {
 }
 
 UNKNOWNS_VIEW = {
-    'columns': ['component', 'problems', 'verifiers:cpu', 'verifiers:wall', 'verifiers:memory'],
+    'columns': ['component', 'problems', 'verifiers:cpu', 'verifiers:wall', 'verifiers:memory', ALL_ATTRS],
     'elements': [DEF_NUMBER_OF_ELEMENTS],
     # order: [up|down, component|attr|parent_cpu|parent_wall|parent_memory, <any text, not empty for attr only>]
     'order': ['down', 'component', ''],
@@ -246,7 +248,7 @@ UNKNOWN_ASS_MARKS_VIEW = {
 
 UNSAFE_MARK_ASS_REPORTS_VIEW = {
     'elements': [DEF_NUMBER_OF_ELEMENTS],
-    'columns': ['job', 'similarity', 'attrs'],
+    'columns': ['job', 'similarity', ALL_ATTRS],
 
     # FILTERS:
     # similarity: <sublist from ['0', '50', '100']>
@@ -259,7 +261,7 @@ UNSAFE_MARK_ASS_REPORTS_VIEW = {
 
 SAFE_MARK_ASS_REPORTS_VIEW = {
     'elements': [DEF_NUMBER_OF_ELEMENTS],
-    'columns': ['job', 'attrs'],
+    'columns': ['job', ALL_ATTRS],
 
     # FILTERS:
     # ass_type: <list of identifiers from ASSOCIATION_TYPE>
@@ -270,7 +272,7 @@ SAFE_MARK_ASS_REPORTS_VIEW = {
 
 UNKNOWN_MARK_ASS_REPORTS_VIEW = {
     'elements': [DEF_NUMBER_OF_ELEMENTS],
-    'columns': ['job', 'attrs'],
+    'columns': ['job', ALL_ATTRS],
 
     # FILTERS:
     # ass_type: <list of identifiers from ASSOCIATION_TYPE>

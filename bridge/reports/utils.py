@@ -37,7 +37,7 @@ from marks.utils import SAFE_COLOR, UNSAFE_COLOR, SAFE_LINK_CLASS, UNSAFE_LINK_C
 from reports.models import ReportComponent, AttrFile, Attr, AttrName, ReportAttr, ReportUnsafe, ReportSafe, \
     ReportUnknown, ReportRoot
 from reports.querysets import LeavesQuery
-from users.utils import DEF_NUMBER_OF_ELEMENTS
+from users.utils import DEF_NUMBER_OF_ELEMENTS, ALL_ATTRS
 
 REP_MARK_TITLES = {
     'mark_num': _('Mark'),
@@ -213,8 +213,8 @@ class SafesTable:
     def selected_columns(self):
         columns = []
         for col in self.view['columns']:
-            if col not in self.columns_set:
-                return []
+            if col == ALL_ATTRS:
+                continue
             if ':' in col:
                 col_title = get_column_title(col)
             else:
@@ -266,7 +266,10 @@ class SafesTable:
         for r_id, a_name, a_value in ReportAttr.objects.filter(report_id__in=ordered_ids).order_by('id')\
                 .values_list('report_id', 'attr__name__name', 'attr__value'):
             if a_name not in attributes:
-                columns.append(a_name)
+                self.available_columns.append({'value': a_name, 'title': a_name})
+                if ALL_ATTRS in self.view['columns']:
+                    self.selected_columns.append({'value': a_name, 'title': a_name})
+                    columns.append(a_name)
                 attributes[a_name] = {}
             attributes[a_name][r_id] = a_value
 
@@ -375,8 +378,8 @@ class UnsafesTable:
     def __selected(self):
         columns = []
         for col in self.view['columns']:
-            if col not in self.columns_set:
-                return []
+            if col == ALL_ATTRS:
+                continue
             if ':' in col:
                 col_title = get_column_title(col)
             else:
@@ -434,7 +437,10 @@ class UnsafesTable:
         for r_id, a_name, a_value in ReportAttr.objects.filter(report_id__in=ordered_ids).order_by('id')\
                 .values_list('report_id', 'attr__name__name', 'attr__value'):
             if a_name not in attributes:
-                columns.append(a_name)
+                self.available_columns.append({'value': a_name, 'title': a_name})
+                if ALL_ATTRS in self.view['columns']:
+                    self.selected_columns.append({'value': a_name, 'title': a_name})
+                    columns.append(a_name)
                 attributes[a_name] = {}
             attributes[a_name][r_id] = a_value
 
@@ -529,8 +535,8 @@ class UnknownsTable:
     def __selected(self):
         columns = []
         for col in self.view['columns']:
-            if col not in self.columns_set:
-                return []
+            if col == ALL_ATTRS:
+                continue
             if ':' in col:
                 col_title = get_column_title(col)
             else:
@@ -578,7 +584,10 @@ class UnknownsTable:
         for r_id, a_name, a_value in ReportAttr.objects.filter(report_id__in=ordered_ids).order_by('id')\
                 .values_list('report_id', 'attr__name__name', 'attr__value'):
             if a_name not in attributes:
-                columns.append(a_name)
+                self.available_columns.append({'value': a_name, 'title': a_name})
+                if ALL_ATTRS in self.view['columns']:
+                    self.selected_columns.append({'value': a_name, 'title': a_name})
+                    columns.append(a_name)
                 attributes[a_name] = {}
             attributes[a_name][r_id] = a_value
 
