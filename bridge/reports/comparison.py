@@ -624,10 +624,15 @@ class JobsComparison:
             'job': root.job,
             'other_components_unknowns': list(),
         }
-        wall, cpu, mem = ComponentResource.objects.filter(report__root=root, report__parent=None, component__name="Core").\
-            values_list('wall_time', 'cpu_time', 'memory').first()
-        comparison_data['overall_wall'], comparison_data['overall_cpu'], comparison_data['overall_mem'] = \
-            get_resource_data('hum', 2, ComponentResource(wall_time=wall, cpu_time=cpu, memory=mem))
+        overall_resources = ComponentResource.objects.filter(report__root=root, report__parent=None,
+                                                             component__name="Core").\
+            values_list('wall_time', 'cpu_time', 'memory')
+        if overall_resources:
+            wall, cpu, mem = overall_resources.first()
+            comparison_data['overall_wall'], comparison_data['overall_cpu'], comparison_data['overall_mem'] = \
+                get_resource_data('hum', 2, ComponentResource(wall_time=wall, cpu_time=cpu, memory=mem))
+        else:
+            wall, cpu, mem = (0, 0, 0)
 
         internals = dict()
         verifier_components = set()
