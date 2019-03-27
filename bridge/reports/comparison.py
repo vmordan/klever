@@ -632,7 +632,7 @@ class JobsComparison:
             comparison_data['overall_wall'], comparison_data['overall_cpu'], comparison_data['overall_mem'] = \
                 get_resource_data('hum', 2, ComponentResource(wall_time=wall, cpu_time=cpu, memory=mem))
         else:
-            wall, cpu, mem = (0, 0, 0)
+            comparison_data['overall_wall'], comparison_data['overall_cpu'], comparison_data['overall_mem'] = (0, 0, 0)
 
         internals = dict()
         verifier_components = set()
