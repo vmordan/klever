@@ -160,7 +160,7 @@ class MarkUnsafe(Mark):
     verdict = models.CharField(max_length=1, choices=MARK_UNSAFE, default='0')
     comparison_function = models.CharField(max_length=64, default='')
     conversion_function = models.CharField(max_length=64, default='')
-    report = models.ForeignKey(ReportUnsafe, models.CASCADE, null=True)
+    report = models.ForeignKey(ReportUnsafe, models.SET_NULL, null=True)
     optimizations = models.PositiveIntegerField(default=0)
 
     class Meta:
