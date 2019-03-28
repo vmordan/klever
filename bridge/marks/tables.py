@@ -39,7 +39,7 @@ from marks.tags import TagsInfo
 from marks.utils import UNSAFE_COLOR, SAFE_COLOR, STATUS_COLOR, MarkAccess
 from reports.mea.wrapper import COMPARISON_FUNCTIONS, CONVERSION_FUNCTIONS
 from reports.models import ReportSafe, ReportUnsafe, ReportUnknown
-from users.utils import DEF_NUMBER_OF_ELEMENTS
+from users.utils import DEF_NUMBER_OF_ELEMENTS, ALL_ATTRS
 
 MARK_TITLES = {
     'mark_num': _('#'),
@@ -589,10 +589,10 @@ class MarkReportsTable:
         self.header = Header(self.columns, MARK_TITLES).struct
 
     def __selected(self):
-        columns = []
+        columns = list()
         for col in self.view['columns']:
-            if col not in self.__supported_columns():
-                return []
+            if col == ALL_ATTRS:
+                continue
             col_title = col
             if col_title in MARK_TITLES:
                 col_title = MARK_TITLES[col_title]
@@ -610,18 +610,15 @@ class MarkReportsTable:
 
     def __supported_columns(self):
         if self.type == 'unsafe':
-            return ['job', 'similarity', 'ass_type', 'ass_author', 'attrs']
-        return ['job', 'ass_type', 'ass_author', 'attrs']
+            return ['job', 'similarity', 'ass_type', 'ass_author']
+        return ['job', 'ass_type', 'ass_author']
 
     def __get_columns(self):
         columns = ['report']
-        columns.extend(self.view['columns'])
-        if 'attrs' in columns:
-            columns.remove('attrs')
+        for col in self.view['columns']:
+            if col in self.__supported_columns():
+                columns.append(col)
         return columns
-
-    def __is_attrs(self):
-        return 'attrs' in self.view['columns']
 
     def __get_values(self):
 
@@ -672,22 +669,30 @@ class MarkReportsTable:
                         val = mark_report.author.get_full_name()
                         href = reverse('users:show_profile', args=[mark_report.author_id])
                 values_str.append({'value': val, 'href': href, 'color': color})
-            if self.__is_attrs():
-                attr_val = {}
-                for name, val in list(report.attrs.order_by('id').values_list('attr__name__name', 'attr__value')):
-                    attr_val[name] = val
-                    if name not in attrs:
+
+            attr_val = {}
+            for name, val in list(report.attrs.order_by('id').values_list('attr__name__name', 'attr__value')):
+                attr_val[name] = val
+                if name not in attrs:
+                    res = {'value': name, 'title': name}
+                    if res not in self.available_columns:
+                        self.available_columns.append(res)
+                    if ALL_ATTRS in self.view['columns']:
+                        self.selected_columns.append({'value': name, 'title': name})
                         attrs.append(name)
-                attr_vals.append(attr_val)
+                    else:
+                        if name in self.view['columns']:
+                            attrs.append(name)
+            attr_vals.append(attr_val)
             values.append(values_str)
-        if self.__is_attrs():
-            cnt = 0
+
+        cnt = 0
+        for name in attrs:
+            self.columns.append(name)
+        for value in values:
             for name in attrs:
-                self.columns.append(name)
-            for value in values:
-                for name in attrs:
-                    value.append({'value': attr_vals[cnt].get(name, '-')})
-                cnt += 1
+                value.append({'value': attr_vals[cnt].get(name, '-')})
+            cnt += 1
         return values
 
     def __get_page(self, page, values):
