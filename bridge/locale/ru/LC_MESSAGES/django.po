@@ -3331,3 +3331,6 @@ msgstr "Удалить все преобразованные трассы оши
 
 msgid "Clear job attributes views"
 msgstr "Удалить отображения атрибутов оценок"
+
+msgid "Adjust description"
+msgstr "Изменить описание"

@@ -147,16 +147,15 @@
             <button id="view_show_form_btn_{{ MarkTable.view.type }}" class="ui tiny violet right labeled icon button">{{ MarkTable.view.viewtitle }}<i class="right chevron icon"></i></button>
             {% endif %}
         </div>
-        <div class="ten wide column">
-            {% if MarkTable.can_mark %}
-                <div id="inline_mark_form" style="display: none"></div>
-            {% endif %}
-        </div>
+    </div>
 
-        <div class="six wide column">
-            <div id="view_form_segment_{{ MarkTable.view.type }}" class="ui form yellow segment" style="margin-top: 0;display:none;">
-                {% include MarkTable.view.template with view=MarkTable.view verdicts=MarkTable.verdicts statuses=MarkTable.statuses ass_types=MarkTable.ass_types selected_columns=MarkTable.selected_columns available_columns=MarkTable.available_columns %}
-            </div>
+    {% if MarkTable.can_mark %}
+        <div id="inline_mark_form" style="display: none" ></div>
+    {% endif %}
+
+    <div class="six wide column">
+        <div id="view_form_segment_{{ MarkTable.view.type }}" class="ui form yellow segment" style="margin-top: 0;display:none;">
+            {% include MarkTable.view.template with view=MarkTable.view verdicts=MarkTable.verdicts statuses=MarkTable.statuses ass_types=MarkTable.ass_types selected_columns=MarkTable.selected_columns available_columns=MarkTable.available_columns %}
         </div>
     </div>
 

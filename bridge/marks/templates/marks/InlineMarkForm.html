@@ -20,9 +20,9 @@
 <span id="tags_type" hidden>{{ markdata.type }}</span>
 
 <div class="ui pink segment" style="margin-bottom: 45px;">
-    <div class="ui two column grid">
+    <div class="ui grid">
         {% if markdata.type != 'unknown' %}
-            <div class="column">
+            <div class="three wide column">
                 <h4 class="ui pink header">{% trans 'Verdict' %}</h4>
                 <div>
                     {% for v in markdata.verdicts %}
@@ -35,7 +35,7 @@
                 </div>
             </div>
         {% endif %}
-        <div class="column">
+        <div class="three wide column">
             <h4 class="ui pink header">{% trans 'Status' %}</h4>
             <div>
                 {% for s in markdata.statuses %}
@@ -45,6 +45,13 @@
                     </div>
                     <br>
                 {% endfor %}
+            </div>
+        </div>
+        <div class="{% if markdata.type == 'unknown' %}thirteen{% else %}ten{% endif %} wide column">
+            <h4 class="ui pink header">{% trans 'Description' %}</h4>
+            <div class="ui form">
+                <label for="mark_description"></label>
+                <textarea id="mark_description" rows="3" style="resize:none">{{ markdata.description }}</textarea>
             </div>
         </div>
     </div>
@@ -74,12 +81,7 @@
         <h4 class="header ui pink">{% trans 'Tags' %}</h4>
         {% include 'marks/MarkTags.html' with tags=tags.table available=tags.available selected=tags.selected %}
     {% endif %}
-    <h4 class="ui pink header">{% trans 'Description' %}</h4>
-    <div class="ui form">
-        <label for="mark_description"></label>
-        <textarea id="mark_description" rows="5" style="resize:none">{{ markdata.description }}</textarea>
-    </div>
-    <br>
+    <br><br>
     <div class="ui action input fluid">
         <input id="inline_mark_comment" type="text" placeholder="{% trans 'Comment' %}">
         <button id="save_inline_mark_btn" class="ui green button">{% trans 'Save' %}</button>

@@ -35,6 +35,11 @@
                         <td>
                             {% if v.column == 'description' %}
                                 {{ v.value|safe }}
+                            {% elif v.column == 'buttons' %}
+                                <div class="ui vertical fluid buttons">
+                                    <button id="inline_edit_mark_{{ v.value }}" class="ui mini icon button basic">{% trans 'Adjust description' %}</button>
+                                    <a class="ui mini icon button basic" href="{{ v.href }}">{% trans 'Edit' %}</a>
+                                </div>
                             {% elif v.column == 'ass_type' %}
                                 <div class="ui dropdown">
                                     <div style="white-space: nowrap;">

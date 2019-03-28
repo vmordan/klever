@@ -314,7 +314,7 @@ class ReportMarkTable:
                 elif col == 'description' and len(mark_rep.mark.description) > 0:
                     val = mark_rep.mark.description
                 elif col == 'buttons':
-                    val = _('Edit')
+                    val = mark_rep.mark_id
                     href = '%sedit?report_to_redirect=%s' % (
                         reverse('marks:mark', args=[self.type, mark_rep.mark_id]), self.report.pk
                     )
