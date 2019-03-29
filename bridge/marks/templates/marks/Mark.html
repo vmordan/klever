@@ -174,7 +174,9 @@
 
                     {% endif %}
                     {% if markdata.description|length > 0 %}
-                        <tr><td class="right aligned">{% trans 'Description' %}</td><td>{{ markdata.description|safe }}</td></tr>
+                        <tr><td class="right aligned">{% trans 'Description' %}</td><td>
+                            <span style="white-space: pre-wrap;">{{ markdata.description|safe }}</span>
+                        </td></tr>
                     {% endif %}
                 </tbody>
             </table>

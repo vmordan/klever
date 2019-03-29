@@ -34,7 +34,7 @@
                     {% for v in row_data %}
                         <td>
                             {% if v.column == 'description' %}
-                                {{ v.value|safe }}
+                                <span style="white-space: pre-wrap;">{{ v.value|safe }}</span>
                             {% elif v.column == 'buttons' %}
                                 <div class="ui vertical fluid buttons">
                                     <button id="inline_edit_mark_{{ v.value }}" class="ui mini icon button basic">{% trans 'Adjust description' %}</button>
