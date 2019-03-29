@@ -48,6 +48,7 @@ function collect_markdata() {
         mark_data['comparison_function'] = $('#comparison_function').val();
         mark_data['similarity_threshold'] = $('#similarity_threshold').val();
     }
+    mark_data['report_to_redirect'] = $('#report_pk').val();
     return JSON.stringify(mark_data);
 }
 
@@ -75,7 +76,8 @@ function save_inline_mark() {
             }
             else if ('cache_id' in data) {
                 var overall_time = (performance.now() - time_start) / 1000;
-                window.location.href = '/marks/' + $('#obj_type').val() + '/association_changes/' + data['cache_id'] + '/?time=' + overall_time;
+                window.location.href = '/marks/' + $('#obj_type').val() + '/association_changes/' + data['cache_id']
+                    + '/?time=' + overall_time + "&report_to_redirect=" + data['report_to_redirect'];
             }
         }
     );

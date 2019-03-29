@@ -48,7 +48,7 @@ from marks.tags import GetTagsData, GetParents, SaveTag, TagsInfo, CreateTagsFro
 from reports.mea.wrapper import error_trace_pretty_print, get_or_convert_error_trace, COMPARISON_FUNCTIONS, \
     CONVERSION_FUNCTIONS, DEFAULT_CONVERSION_FUNCTION, DEFAULT_COMPARISON_FUNCTION, obtain_pretty_error_trace, \
     DEFAULT_SIMILARITY_THRESHOLD, process_args
-from reports.models import ReportSafe, ReportUnsafe, ReportUnknown
+from reports.models import ReportSafe, ReportUnsafe, ReportUnknown, Report
 from tools.profiling import LoggedCallMixin
 from users.models import User
 
@@ -129,29 +129,37 @@ class AssociationChangesView(LoggedCallMixin, Bview.DataViewMixin, DetailView):
     slug_url_kwarg = 'association_id'
 
     def get_context_data(self, **kwargs):
-        trace_id = None
+        report_id = None
         root_report_id = None
         job_id = None
-        wall_time = self.request.GET.get('time', None)
         applied_reports = None
+        wall_time = self.request.GET.get('time', None)
+        try:
+            report_to_redirect = int(self.request.GET.get('report_to_redirect', None))
+            report_id = report_to_redirect
+            leaf_report = Report.objects.get(id=report_to_redirect)
+            job_id = leaf_report.root.job.id
+            root_report_id = ReportComponent.objects.get(root__job__id=job_id, parent=None).id
 
-        if self.kwargs['type'] == "unsafe":
             table = json.loads(self.object.table_data)
             href = table['href']
             m = re.search('/(\d+)/', href)
             if m:
                 mark_id = m.group(1)
-                applied_reports = MarkUnsafeReport.objects.filter(mark_id=mark_id).count()
-                mark = MarkUnsafe.objects.get(id=mark_id)
-                if mark.report:
-                    component_report = ReportComponent.objects.get(parent=None, root=mark.report.root)
-                    trace_id = mark.report.trace_id
-                    job_id = mark.report.root.job.id
-                    root_report_id = component_report.id
+                if self.kwargs['type'] == "unsafe":
+                    applied_reports = MarkUnsafeReport.objects.filter(mark_id=mark_id).count()
+                elif self.kwargs['type'] == "safe":
+                    applied_reports = MarkSafeReport.objects.filter(mark_id=mark_id).count()
+                else:
+                    applied_reports = MarkUnknownReport.objects.filter(mark_id=mark_id).count()
+        except:
+            # Just ignore broken links instead of losing all results.
+            pass
+
         view_type_map = {'safe': VIEW_TYPES[16], 'unsafe': VIEW_TYPES[17], 'unknown': VIEW_TYPES[18]}
         return {'TableData': AssociationChangesTable(self.object, self.get_view(view_type_map[self.kwargs['type']])),
-                'job_id': job_id, 'trace_id': trace_id, 'root_report_id': root_report_id, 'wall_time': wall_time,
-                'applied_reports': applied_reports}
+                'job_id': job_id, 'report_id': report_id, 'root_report_id': root_report_id, 'wall_time': wall_time,
+                'applied_reports': applied_reports, 'type': self.kwargs['type']}
 
 
 @method_decorator(login_required, name='dispatch')
@@ -197,7 +205,9 @@ class MarkFormView(LoggedCallMixin, DetailView):
             raise BridgeException(_("You don't have an access to edit this mark"), response_type='json')
 
         try:
-            res = mutils.NewMark(self.request.user, self.object, json.loads(self.request.POST['data']))
+            request_data = json.loads(self.request.POST['data'])
+            res = mutils.NewMark(self.request.user, self.object, request_data)
+            report_to_redirect = request_data.get('report_to_redirect')
             if self.kwargs['action'] == 'edit':
                 res.change_mark()
             else:
@@ -215,7 +225,7 @@ class MarkFormView(LoggedCallMixin, DetailView):
             logger.exception(e)
             raise BridgeException(response_type='json')
 
-        return JsonResponse({'cache_id': cache_id})
+        return JsonResponse({'cache_id': cache_id, 'report_to_redirect': report_to_redirect})
 
     def get_queryset(self):
         return self.model_map[self.kwargs['action']][self.kwargs['type']].objects.all()
@@ -269,6 +279,7 @@ class MarkFormView(LoggedCallMixin, DetailView):
                         mark_report[report.id]['selected'] = True
                 if len(mark_report) > 1:
                     context['mark_report'] = mark_report
+            context['report_to_redirect'] = self.request.GET.get('report_to_redirect')
         else:
             if self.kwargs['type'] == 'unknown':
                 try:
@@ -299,6 +310,7 @@ class MarkFormView(LoggedCallMixin, DetailView):
                     context['report_id'] = self.object.id
                 except Exception as e:
                     logger.exception(e, stack_info=True)
+            context['report_to_redirect'] = self.object.id
         context['access'] = access
         return context
 

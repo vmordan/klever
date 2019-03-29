@@ -74,6 +74,7 @@ function collect_markdata() {
         mark_data['apply_for_current'] = $('#apply_for_current').is(':checked');
         mark_data['do_not_recalc'] = $('#do_not_recalc').is(':checked');
     }
+    mark_data['report_to_redirect'] = $('#report_to_redirect').val();
     return JSON.stringify(mark_data);
 }
 
@@ -217,7 +218,8 @@ function save_mark() {
         }
         else if ('cache_id' in data) {
             var overall_time = (performance.now() - time_start) / 1000;
-            window.location.replace('/marks/' + $('#obj_type').val() + '/association_changes/' + data['cache_id'] + '/?time=' + overall_time);
+            window.location.replace('/marks/' + $('#obj_type').val() + '/association_changes/' + data['cache_id']
+                + '/?time=' + overall_time + "&report_to_redirect=" + data['report_to_redirect']);
         }
     });
 }

@@ -35,13 +35,25 @@
         {% endif %}
         {% if root_report_id %}
             <i class="right arrow icon divider"></i>
+            {% if type == 'unsafe' %}
             <a href="{% url 'reports:unsafes' root_report_id %}">{% trans 'List of all error traces' %}</a>
             <i class="right arrow icon divider"></i>
             <a href="{% url 'reports:unsafes' root_report_id %}?verdict=5">{% trans 'List of unmarked error traces' %}</a>
+            {% elif type == 'safe' %}
+            <a href="{% url 'reports:safes' root_report_id %}">{% trans 'List of all safes' %}</a>
+            {% else %}
+            <a href="{% url 'reports:unknowns' root_report_id %}">{% trans 'List of all unknowns' %}</a>
+            {% endif %}
         {% endif %}
-        {% if trace_id %}
+        {% if report_id %}
             <i class="right arrow icon divider"></i>
-            <a href="{% url 'reports:unsafe' trace_id %}">{% trans 'Error trace' %}</a>
+            {% if type == 'unsafe' %}
+            <a href="{% url 'reports:unsafe' report_id %}">{% trans 'Error trace' %}</a>
+            {% elif type == 'safe' %}
+            <a href="{% url 'reports:safe' report_id %}">{% trans 'Safe' %}</a>
+            {% else %}
+            <a href="{% url 'reports:unknown' report_id %}">{% trans 'Problem' %}</a>
+            {% endif %}
         {% endif %}
     </div>
     <br>

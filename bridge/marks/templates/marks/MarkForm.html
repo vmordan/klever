@@ -35,7 +35,8 @@
 {% endblock %}
 
 {% block body_block %}
-<span id="tags_type" hidden>{{ markdata.type }}</span>
+    <input id="report_to_redirect" value="{{ report_to_redirect }}" hidden>
+    <span id="tags_type" hidden>{{ markdata.type }}</span>
     <div class="ui grid">
         <div class="eight wide column">
             {% if markdata.type == 'unknown' %}
