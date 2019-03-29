@@ -40,6 +40,8 @@ OPTIMIZATION_APPLY_FOR_CURRENT = 'apply_for_current'
 OPTIMIZATION_DO_NOT_RECALC = 'do_not_recalc'
 OPTIMIZATIONS = [OPTIMIZATION_APPLY_FOR_CURRENT, OPTIMIZATION_DO_NOT_RECALC]
 
+CONVERSION_FUNCTION_DO_NOT_USE = "*DO NOT CHANGE*"
+
 
 def decode_optimizations(encoded) -> set:
     counter = 0
@@ -62,7 +64,7 @@ class NewMark:
         self.comparison_function = args.get(TAG_COMPARISON_FUNCTION, DEFAULT_COMPARISON_FUNCTION)
         self.similarity_threshold = round(int(args.get('similarity_threshold', 0)))
         self.initial_error_trace = args.get('initial_error_trace')
-        self.conversion_function_args = self.__get_conversion_function_args()
+        self.conversion_function_args = self.__get_conversion_function_args(mark_unsafe)
 
         # Optimizations.
         self.optimizations = set()
@@ -77,11 +79,18 @@ class NewMark:
         self._comparison = None
         self.__check_args()
 
-    def __get_conversion_function_args(self) -> dict:
+    def __get_conversion_function_args(self, mark_unsafe) -> dict:
         result = {}
-        for arg, value in json.loads(self._args.get('conversion_function_args', "{}")).items():
-            if value:
-                result[arg] = value
+        cfa = self._args.get('conversion_function_args')
+        if isinstance(cfa, str):
+            if cfa == CONVERSION_FUNCTION_DO_NOT_USE:
+                if mark_unsafe:
+                    last_v = MarkUnsafeHistory.objects.get(mark=mark_unsafe, version=F('mark__version'))
+                    result = json.loads(last_v.args)
+        elif isinstance(cfa, dict):
+            for arg, value in json.loads(cfa).items():
+                if value:
+                    result[arg] = value
         return result
 
     def __check_mark_applicability(self, mark_unsafe):

@@ -353,6 +353,8 @@ class InlineMarkForm(LoggedCallMixin, Bview.JSONResponseMixin, DetailView):
                 args = context['markdata'].mark_version.args
                 if args:
                     args = json.loads(args)
+                    process_args(args, True)
+                    context['args'] = args
                 edited_error_trace = obtain_pretty_error_trace(context['markdata'].error_trace,
                                                                self.object, self.object.conversion_function, args)
                 context['converted_error_trace'] = edited_error_trace

@@ -47,6 +47,7 @@ function collect_markdata() {
         mark_data['conversion_function'] = $('#conversion_function').val();
         mark_data['comparison_function'] = $('#comparison_function').val();
         mark_data['similarity_threshold'] = $('#similarity_threshold').val();
+        mark_data['conversion_function_args'] = "*DO NOT CHANGE*";
     }
     mark_data['report_to_redirect'] = $('#report_pk').val();
     return JSON.stringify(mark_data);
