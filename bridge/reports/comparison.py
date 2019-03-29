@@ -357,8 +357,9 @@ class JobsComparison:
             for report_id in report_ids:
                 report_attrs = clusters_by_attrs_reverse[report_id]
                 if attrs:
-                    attrs = SequenceMatcher(None, attrs, report_attrs).\
+                    match = SequenceMatcher(None, attrs, report_attrs).\
                         find_longest_match(0, len(attrs), 0, len(report_attrs))
+                    attrs = attrs[match.a: match.a + match.size]
                 else:
                     attrs = report_attrs
             clusters.append({
