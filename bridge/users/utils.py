@@ -138,7 +138,7 @@ UNKNOWNS_VIEW = {
 
 UNSAFE_MARKS_VIEW = {
     'elements': [DEF_NUMBER_OF_ELEMENTS],
-    'columns': ['verdict', 'tags', 'status', 'author'],
+    'columns': ['verdict', 'tags', 'status', 'change_date', 'author', 'num_of_links'],
     # order: [up|down, change_date|num_of_links|attr|total_similarity, <any text, empty if not attr>]
     'order': ['up', 'change_date', ''],
 
@@ -161,7 +161,7 @@ UNSAFE_MARKS_VIEW = {
 
 SAFE_MARKS_VIEW = {
     'elements': [DEF_NUMBER_OF_ELEMENTS],
-    'columns': ['verdict', 'tags', 'status', 'author'],
+    'columns': ['verdict', 'tags', 'status', 'change_date', 'author', 'num_of_links'],
     # order: [up|down, change_date|num_of_links|attr, <any text, empty if not attr>]
     'order': ['up', 'change_date', ''],
 
@@ -184,7 +184,7 @@ SAFE_MARKS_VIEW = {
 
 UNKNOWN_MARKS_VIEW = {
     'elements': [DEF_NUMBER_OF_ELEMENTS],
-    'columns': ['status', 'component', 'author', 'pattern'],
+    'columns': ['status', 'component', 'change_date', 'author', 'pattern', 'num_of_links'],
     # order: [up|down, change_date|num_of_links|attr|component, <any text, empty if not attr>]
     'order': ['up', 'change_date'],
 
