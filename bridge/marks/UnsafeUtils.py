@@ -84,7 +84,7 @@ class NewMark:
         cfa = self._args.get('conversion_function_args')
         if isinstance(cfa, str):
             if cfa == CONVERSION_FUNCTION_DO_NOT_USE:
-                if mark_unsafe:
+                if isinstance(mark_unsafe, MarkUnsafe):
                     last_v = MarkUnsafeHistory.objects.get(mark=mark_unsafe, version=F('mark__version'))
                     result = json.loads(last_v.args)
         elif isinstance(cfa, dict):
