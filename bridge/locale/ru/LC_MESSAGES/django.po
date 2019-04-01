@@ -3343,3 +3343,9 @@ msgstr "Общие атрибуты"
 
 msgid "Show different attributes"
 msgstr "Показать различающиеся атрибуты"
+
+msgid "overall speedup"
+msgstr "общее ускорение"
+
+msgid "average speedup"
+msgstr "среднее ускорение"

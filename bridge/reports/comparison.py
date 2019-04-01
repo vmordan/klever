@@ -155,7 +155,8 @@ class JobsComparison:
         # 2nd iteration.
         counter = 0
         clusters = list()
-        cpu_time_first = 0
+        self.cpu_time_first_sum = 0
+        self.cpu_time_first = dict()
         unused_attrs_all = list()
         for cmp in self.comparison:
             marked_attrs = list()
@@ -164,7 +165,7 @@ class JobsComparison:
                 self.sort_internals_by_attrs(counter, common_attrs_ids)
             if self.find_unused_attrs:
                 unused_attrs_all.append(unused_attrs)
-            cmp['compared_cpu'] = get_resource_data('hum', 2, ComponentResource(report=None, cpu_time=cpu_time))[1]
+            self.__process_cpu_time(cpu_time, counter)
 
             cmp['{}_len'.format(VERDICTS_SAFE)] = len(safes)
             cmp['{}_len'.format(VERDICTS_UNSAFE)] = len(unsafes)
@@ -175,15 +176,12 @@ class JobsComparison:
                 cmp[VERDICTS_UNSAFE_INCOMPLETE] = unsafe_incompletes
                 cmp[VERDICTS_UNKNOWN] = unknowns
                 cmp[VERDICTS_SAFE] = safes
-                cpu_time_first = cpu_time
             else:
                 for verdicts_type in VERDICTS_ALL:
                     self.__process_verdicts_transitions(verdicts_type, safes, unsafes, unsafe_incompletes, unknowns,
                                                         cmp)
                     if not self.show_same_transitions[verdicts_type]:
                         cmp['{0}_{0}'.format(verdicts_type)] = []
-                if cpu_time:
-                    cmp['speedup'] = round(cpu_time_first / cpu_time, 2)
 
             if self.enable_clustering:
                 clusters.append(self.perform_clustering(unsafes, unsafe_incompletes, cmp))
@@ -280,6 +278,30 @@ class JobsComparison:
 
         if unused_attrs_all:
             self.__sort_unused_attrs(unused_attrs_all)
+
+    def __process_cpu_time(self, cpu_time_data: tuple, counter: int):
+        cpu_sum = 0
+        cpu_time_dict = dict()
+        for cpu_time, key in cpu_time_data:
+            cpu_sum += cpu_time
+            cpu_time_dict[key] = cpu_time
+        self.comparison[counter]['compared_cpu'] = get_resource_data('hum', 2, ComponentResource(report=None,
+                                                                                                 cpu_time=cpu_sum))[1]
+        if counter == 0:
+            self.cpu_time_first_sum = cpu_sum
+            self.cpu_time_first = cpu_time_dict
+        else:
+            self.comparison[counter]['average_speedup'] = '-'
+            self.comparison[counter]['overall_speedup'] = '-'
+            if cpu_sum:
+                average_speedup = list()
+                for key, cpu_time_1 in self.cpu_time_first.items():
+                    cpu_time_2 = cpu_time_dict.get(key, 0)
+                    if cpu_time_2:
+                        average_speedup.append(cpu_time_1 / cpu_time_2)
+                if average_speedup:
+                    self.comparison[counter]['average_speedup'] = round(sum(average_speedup) / len(average_speedup), 2)
+                self.comparison[counter]['overall_speedup'] = round(self.cpu_time_first_sum / cpu_sum, 2)
 
     def __sort_unused_attrs(self, unused_attrs_all: list):
         unused_attrs_1 = unused_attrs_all[0]
@@ -594,7 +616,7 @@ class JobsComparison:
             if key not in verdicts_by_attrs:
                 verdicts_by_attrs[key] = verdict
                 ids_by_attrs[key] = {report_id: verdict}
-                cpu_sum[internal.parent_report_id] = internal.cpu_time
+                cpu_sum[internal.parent_report_id] = (internal.cpu_time, key_core)
             else:
                 ids_by_attrs[key][report_id] = verdict
                 old_verdict = verdicts_by_attrs[key]
@@ -637,7 +659,7 @@ class JobsComparison:
                 })
             self.comparison[number]['lost'] = lost_prepared
 
-        return safes, unsafes, unsafe_incompletes, unknowns, sum(cpu_sum.values()), diff_attrs
+        return safes, unsafes, unsafe_incompletes, unknowns, cpu_sum.values(), diff_attrs
 
     def sort_attrs(self, attrs: dict, attrs_vals: dict = {}) -> tuple:
         attrs_selected = list()

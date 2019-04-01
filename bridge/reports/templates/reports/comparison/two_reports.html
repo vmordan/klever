@@ -388,8 +388,10 @@
             {% for cmp in data.comparison|slice:"1:" %}
                 <div class="ui accordion" id="acc_row_res_{{cmp.job.id}}">
                     <div class="title center aligned"><div class="black-link"><b>
-                        {% trans 'CPU time' %}: {{data.comparison.0.compared_cpu}} -> {{cmp.compared_cpu}} ({% trans 'speedup' %}:
-                        <span style="{% if cmp.speedup >= 1 %} color:green {% else %} color:red {% endif %}">{{cmp.speedup}}</span>)
+                        {% trans 'CPU time' %}: {{data.comparison.0.compared_cpu}} -> {{cmp.compared_cpu}} ({% trans 'overall speedup' %}:
+                        <span style="{% if cmp.overall_speedup >= 1 %} color:green {% else %} color:red {% endif %}">{{cmp.overall_speedup}}</span>,
+                        {% trans 'average speedup' %}:
+                        <span style="{% if cmp.average_speedup >= 1 %} color:green {% else %} color:red {% endif %}">{{cmp.average_speedup}}</span>)
                     </b></div></div>
                     <div class="content">
                         <div class="ui list">
