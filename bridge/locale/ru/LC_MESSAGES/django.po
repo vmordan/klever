@@ -3334,3 +3334,12 @@ msgstr "Удалить отображения атрибутов оценок"
 
 msgid "Adjust description"
 msgstr "Изменить описание"
+
+msgid "Different attributes"
+msgstr "Различающиеся атрибуты"
+
+msgid "Common attributes"
+msgstr "Общие атрибуты"
+
+msgid "Show different attributes"
+msgstr "Показать различающиеся атрибуты"

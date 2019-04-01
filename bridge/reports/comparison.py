@@ -78,6 +78,7 @@ class InternalLeaf:
             self.cpu_time = 0
         self.parent_report_id = parent_report_id
         self.attrs_vals = dict()
+        self.unused_attrs_vals = dict()
         self.attrs_ids = set()
 
     def add_attrs(self, name: str, val: str, attr_id: int):
@@ -85,6 +86,11 @@ class InternalLeaf:
             self.attrs_vals[name] = set()
         self.attrs_vals[name].add(val)
         self.attrs_ids.add(attr_id)
+
+    def add_unused_attrs(self, name: str, val: str):
+        if name not in self.unused_attrs_vals:
+            self.unused_attrs_vals[name] = set()
+        self.unused_attrs_vals[name].add(val)
 
     def serialize_attrs(self, core_attrs: set = set()) -> tuple:
         tmp_res = list()
@@ -118,6 +124,8 @@ class JobsComparison:
         common_attrs = dict()
         common_attrs_ids = set()
         common_attrs_vals = dict()
+        self.uncore_attrs = set()
+        self.unused_attrs = list()
 
         self.internals = list()
         joint_attrs = dict()
@@ -148,10 +156,14 @@ class JobsComparison:
         counter = 0
         clusters = list()
         cpu_time_first = 0
+        unused_attrs_all = list()
         for cmp in self.comparison:
             marked_attrs = list()
 
-            safes, unsafes, unsafe_incompletes, unknowns, cpu_time = self.sort_internals_by_attrs(counter, common_attrs_ids)
+            safes, unsafes, unsafe_incompletes, unknowns, cpu_time, unused_attrs = \
+                self.sort_internals_by_attrs(counter, common_attrs_ids)
+            if self.find_unused_attrs:
+                unused_attrs_all.append(unused_attrs)
             cmp['compared_cpu'] = get_resource_data('hum', 2, ComponentResource(report=None, cpu_time=cpu_time))[1]
 
             cmp['{}_len'.format(VERDICTS_SAFE)] = len(safes)
@@ -187,6 +199,7 @@ class JobsComparison:
                 marked_attrs.append((name, marked_vals + other_vals))
             cmp['attrs_vals'] = marked_attrs
             counter += 1
+        self.uncore_attrs = sorted(self.uncore_attrs)
 
         if clusters:
             # TODO: support for more than 2 reports comparison
@@ -264,6 +277,27 @@ class JobsComparison:
                     self.comparison[counter]['clusters_ama_lost'] = ama_lost
 
                 counter += 1
+
+        if unused_attrs_all:
+            self.__sort_unused_attrs(unused_attrs_all)
+
+    def __sort_unused_attrs(self, unused_attrs_all: list):
+        unused_attrs_1 = unused_attrs_all[0]
+        unused_attrs_2 = unused_attrs_all[1]
+        for key, unused_attrs in sorted(unused_attrs_1.items()):
+            attrs_1 = list()
+            attrs_2 = list()
+            is_add = False
+            for name in self.unused_attrs_names:
+                val_1 = ",".join(unused_attrs.get(name, '-'))
+                val_2 = ",".join(unused_attrs_2.get(key, {}).get(name, '-'))
+                is_equal = val_1 == val_2
+                attrs_1.append((val_1, is_equal))
+                attrs_2.append((val_2, is_equal))
+                if not is_add and not is_equal:
+                    is_add = True
+            if is_add:
+                self.unused_attrs.append((attrs_1, key, attrs_2))
 
     def __pre_process_cluster(self, clusters: list) -> dict:
         res = dict()
@@ -422,6 +456,8 @@ class JobsComparison:
         self.core_attrs = set()
         self.core_keys = dict()
         self.core_keys_inverse = dict()
+        self.find_unused_attrs = False
+        self.unused_attrs_names = dict()
 
         # MEA.
         self.enable_clustering = False
@@ -442,6 +478,10 @@ class JobsComparison:
                 lost_transitions = args.get('lost_transitions', [])
                 for verdicts in self.show_lost_transitions:
                     self.show_lost_transitions[verdicts] = verdicts in lost_transitions
+            if 'diff_attrs' in args:
+                self.unused_attrs_names = args.get('diff_attrs', [])
+                if self.unused_attrs_names:
+                    self.find_unused_attrs = True
             self.comparison_attrs = set(args.get('comparison_attrs', set()))
             for arg in args.get('filtered_values', {}):
                 name, value = str(arg).split("<::>")
@@ -522,6 +562,8 @@ class JobsComparison:
         unsafe_incompletes = dict()
         unknowns = dict()
         cpu_sum = dict()
+        diff_attrs = dict()
+        attrs = dict()
 
         verdicts_by_attrs = dict()
         ids_by_attrs = dict()
@@ -542,6 +584,13 @@ class JobsComparison:
                 if self.show_lost_transitions[verdict]:
                     lost.add(report_id)
                 continue
+            if key in attrs:
+                for name, vals in internal.unused_attrs_vals.items():
+                    if name not in attrs[key]:
+                        attrs[key][name] = set()
+                    attrs[key][name].update(vals)
+            else:
+                attrs[key] = internal.unused_attrs_vals.copy()
             if key not in verdicts_by_attrs:
                 verdicts_by_attrs[key] = verdict
                 ids_by_attrs[key] = {report_id: verdict}
@@ -562,6 +611,7 @@ class JobsComparison:
 
         for key, verdict in verdicts_by_attrs.items():
             result = ids_by_attrs[key]
+            diff_attrs[key] = attrs[key]
             if verdict == VERDICT_SAFE:
                 safes[key] = sorted(result.keys())
             elif verdict == VERDICT_UNSAFE:
@@ -587,7 +637,7 @@ class JobsComparison:
                 })
             self.comparison[number]['lost'] = lost_prepared
 
-        return safes, unsafes, unsafe_incompletes, unknowns, sum(cpu_sum.values())
+        return safes, unsafes, unsafe_incompletes, unknowns, sum(cpu_sum.values()), diff_attrs
 
     def sort_attrs(self, attrs: dict, attrs_vals: dict = {}) -> tuple:
         attrs_selected = list()
@@ -678,15 +728,16 @@ class JobsComparison:
         attrs_ids = set()
         for report_id, attr_id, name, val, compare in ReportAttr.objects.filter(report__in=internals.keys()). \
                 values_list('report__id', 'attr_id', 'attr__name__name', 'attr__value', 'associate'):
-            if name in FILTERED_ATTRS:
-                continue
-
             if compare:
                 self.core_attrs.add(name)
-
             if self.comparison_attrs:
                 compare = name in self.comparison_attrs
-
+            if not compare:
+                internals[report_id].add_unused_attrs(name, val)
+                if name not in self.uncore_attrs:
+                    self.uncore_attrs.add(name)
+            if name in FILTERED_ATTRS:
+                continue
             if name not in attrs:
                 attrs[name] = compare
             if name not in attrs_vals:

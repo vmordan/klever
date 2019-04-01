@@ -134,6 +134,19 @@
                         </div>
                     </div>
                 </div>
+
+                <div align="center">{% trans 'Show different attributes' %}</div>
+                <div class="ui ordered list">
+                    {% for attr in data.uncore_attrs %}
+                    <div class="item">
+                        <div class="ui checkbox">
+                            <input type="checkbox" id="cs6__{{attr}}" {% if attr in data.unused_attrs_names %} checked {% endif %}>
+                            <label>{{attr}}</label>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
             </div>
             <div class="ui segment purple">
                 <div align="center">{% trans 'Error trace clustering' %}</div>
@@ -325,6 +338,44 @@
                                 </tr>
                             </tbody>
                         </table>
+
+                        {% if data.find_unused_attrs %}
+                            <div class="accordion">
+                                <div class="title center aligned">
+                                    <div class="black-link"><b>
+                                        {% trans 'Different attributes' %}
+                                    </b></div>
+                                </div>
+                                <div class="content">
+                                    <table class="ui selectable compact table celled striped">
+                                        <thead>
+                                            <tr>
+                                                <td style="background: #d3d3d3; text-align: right" width="25%">
+                                                    {% for name in data.unused_attrs_names %}{% if not forloop.counter == 1 %}/{% endif %}{{name}}{% endfor %}
+                                                </td>
+                                                <td style="background: #d3d3d3; text-align: center">{% trans 'Common attributes' %}</td>
+                                                <td style="background: #d3d3d3; text-align: left" width="25%">
+                                                    {% for name in data.unused_attrs_names %}{% if not forloop.counter == 1 %}/{% endif %}{{name}}{% endfor %}
+                                                </td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for row in data.unused_attrs %}
+                                            <tr>
+                                                <td style="text-align: right">
+                                                    {% for val, comp in row.0 %}{% if not forloop.counter == 1 %}/{% endif %}<span {% if not comp %}style="background: #ebadad"{% endif %}>{{val}}</span>{% endfor %}
+                                                </td>
+                                                <td style="text-align: center">{{row.1}}</td>
+                                                <td style="text-align: left">
+                                                    {% for val, comp in row.2 %}{% if not forloop.counter == 1 %}/{% endif %}<span {% if not comp %}style="background: #ebadad"{% endif %}>{{val}}</span>{% endfor %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        {% endif %}
 
                     </div>
                 </div>

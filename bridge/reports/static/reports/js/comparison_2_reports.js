@@ -27,6 +27,7 @@ function apply_new_settings() {
     var filtered_values = [];
     var same_transitions = [];
     var lost_transitions = [];
+    var diff_attrs = [];
     var mea_config = {};
     for (var elem in elems) {
         var id = elems[elem].id;
@@ -44,6 +45,9 @@ function apply_new_settings() {
         }
         if (id && elems[elem].checked && id.startsWith('cs5__')) {
             mea_config['enable'] = true;
+        }
+        if (id && elems[elem].checked && id.startsWith('cs6__')) {
+            diff_attrs.push(id.replace(/^cs6__/,""));
         }
     }
     elems = $('input:radio');
@@ -64,6 +68,7 @@ function apply_new_settings() {
     data['filtered_values'] = filtered_values;
     data['same_transitions'] = same_transitions;
     data['lost_transitions'] = lost_transitions;
+    data['diff_attrs'] = diff_attrs;
     data['mea_config'] = mea_config;
     $('#dimmer_of_page').addClass('active');
     window.location.replace(get_url_with_get_parameter(window.location.href, 'data', JSON.stringify(data)));
