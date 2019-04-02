@@ -252,43 +252,6 @@ function init_tags() {
             }
         });
     });
-
-    $('#upload_tags_modal').modal('setting', 'transition', 'vertical flip').modal('attach events', '#upload_tags', 'show');
-    $('#upload_tags_start').click(function () {
-        var files = $('#upload_tags_file_input')[0].files, data = new FormData();
-        if (files.length <= 0) {
-            err_notify($('#error__no_file_chosen').text());
-            return false;
-        }
-        data.append('file', files[0]);
-        $('#upload_tags_modal').modal('hide');
-        $('#dimmer_of_page').addClass('active');
-        $.ajax({
-            url: '/marks/tags/' + $('#tags_type').text() + '/upload/',
-            type: 'POST',
-            data: data,
-            dataType: 'json',
-            contentType: false,
-            processData: false,
-            mimeType: 'multipart/form-data',
-            xhr: function() { return $.ajaxSettings.xhr() },
-            success: function (data) {
-                $('#dimmer_of_page').removeClass('active');
-                data.error ? err_notify(data.error) : window.location.replace('');
-            }
-        });
-    });
-    $('#upload_tags_cancel').click(function () {
-        $('#upload_tags_modal').modal('hide');
-    });
-    $('#upload_tags_file_input').on('fileselect', function () {
-        var files = $(this)[0].files,
-            filename_list = $('<ul>');
-        for (var i = 0; i < files.length; i++) {
-            filename_list.append($('<li>', {text: files[i].name}));
-        }
-        $('#upload_tags_filename').html(filename_list);
-    });
 }
 
 $(document).ready(function () {

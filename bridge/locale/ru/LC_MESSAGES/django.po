@@ -3349,3 +3349,36 @@ msgstr "общее ускорение"
 
 msgid "average speedup"
 msgstr "среднее ускорение"
+
+msgid "Actions with tags"
+msgstr "Действия с тэгами"
+
+msgid "Show unsafe marks"
+msgstr "Показать оценки предупреждений об ошибках"
+
+msgid "Show safe marks"
+msgstr "Показать оценки доказательств корректности"
+
+msgid "Show unknown marks"
+msgstr "Показать оценки проблем в компонентах"
+
+msgid "Show unsafe tags tree"
+msgstr "Показать дерево тегов предупреждений об ошибке"
+
+msgid "Show safe tags tree"
+msgstr "Показать дерево тегов доказательств корректности"
+
+msgid "Download unsafe tags"
+msgstr "Сохранить теги предупреждений об ошибке"
+
+msgid "Download safe tags"
+msgstr "Сохранить теги доказательств корректности"
+
+msgid "Upload unsafe tags"
+msgstr "Загрузить теги предупреждений об ошибке"
+
+msgid "Upload safe tags"
+msgstr "Загрузить теги доказательств корректности"
+
+msgid "Recalculate caches"
+msgstr "Пересчитать кэши"

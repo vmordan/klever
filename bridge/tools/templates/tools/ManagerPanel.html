@@ -26,59 +26,62 @@
 {% endblock %}
 
 {% block body_block %}
-    {% if user.extended.role != '2' %}
-        <h1>{% trans 'No access' %}</h1>
-    {% else %}
-        <div class="ui grid">
-            <div class="five wide column">
-                <div class="ui violet segment">
-                    <h3 class="header">{% trans 'Components' %}</h3>
-                    {% if components|length > 0 %}
-                        <div style="max-height: 35vh; overflow-y: auto">
-                            {% for component in components %}
-                                <div id="component__{{ component.pk }}">
-                                    <div class="ui action input fluid">
-                                        <input id="component_name_input__{{ component.pk }}" type="text" placeholder="{% trans 'Component name' %}" value="{{ component.name }}">
-                                        <button id="rename_component_btn__{{ component.pk }}" class="ui teal button">{% trans 'Rename' %}</button>
-                                    </div>
-                                    <br>
-                                </div>
-                            {% endfor %}
-                        </div>
-                        <br>
-                        <button id="clear_all_components" class="ui red button">{% trans 'Delete all unused components' %}</button>
-                    {% else %}
-                        <h4>{% trans 'There are no components yet' %}</h4>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="five wide column">
-                <div class="ui violet segment">
-                    <h3 class="header">{% trans 'Problems' %}</h3>
-                    {% if problems|length > 0 %}
-                        <div style="max-height: 35vh; overflow-y: auto">
-                            <ul>
-                                {% for problem in problems %}
-                                    <li>{{ problem.name }}</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        <br>
-                        <button id="clear_all_problems" class="ui red button">{% trans 'Delete all unused problems' %}</button>
-                    {% else %}
-                        <h4>{% trans 'There are no problems yet' %}</h4>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="six wide column">
-                <!--<a class="ui violet button fluid" href="{% url 'service:test' %}">Test service requests</a>
-                <div class="ui divider"></div>-->
+{% if user.extended.role != '2' %}
+    <h1>{% trans 'No access' %}</h1>
+{% else %}
+    <div class="ui equal width grid">
+        <div class="column">
+            <div class="ui teal segment">
+                <h4 class="ui horizontal divider header">{% trans 'Actions with marks' %}</h4>
                 <div class="ui vertical fluid buttons">
-                    <h4 class="ui horizontal divider header">{% trans 'Actions with marks' %}</h4>
-                    <a href="{% url 'marks:download_all' %}" class="ui teal button">{% trans 'Download all marks' %}</a>
-                    <button id="resolve_marks" class="ui teal button">{% trans 'Resolve optimizations for all marks' %}</button>
-                    <button id="upload_all_marks" class="ui teal button">{% trans 'Upload all marks' %}</button>
+                    <a class="ui teal button" href="{% url 'marks:list' 'unsafe' %}">
+                        <i class="ui eye icon"></i>{% trans 'Show unsafe marks' %}
+                    </a>
+                    <a class="ui teal button" href="{% url 'marks:list' 'safe' %}">
+                        <i class="ui eye icon"></i>{% trans 'Show safe marks' %}
+                    </a>
+                    <a class="ui teal button" href="{% url 'marks:list' 'unknown' %}">
+                        <i class="ui eye icon"></i>{% trans 'Show unknown marks' %}
+                    </a>
+                    <a href="{% url 'marks:download_all' %}" class="ui teal button">
+                        <i class="ui download icon"></i>{% trans 'Download all marks' %}
+                    </a>
+                    <button id="resolve_marks" class="ui teal button">
+                        <i class="ui x icon icon"></i>{% trans 'Resolve optimizations for all marks' %}
+                    </button>
+                    <button id="upload_all_marks" class="ui teal button">
+                        <i class="ui download icon"></i>{% trans 'Upload all marks' %}
+                    </button>
                 </div>
+            </div>
+        </div>
+        <div class="column">
+            <div class="ui violet segment">
+                <h4 class="ui horizontal divider header">{% trans 'Actions with tags' %}</h4>
+                <div class="ui vertical fluid buttons">
+                    <a class="ui violet button" href="{% url 'marks:tags' 'unsafe' %}">
+                        <i class="ui eye icon"></i>{% trans 'Show unsafe tags tree' %}
+                    </a>
+                    <a class="ui violet button" href="{% url 'marks:tags' 'safe' %}">
+                        <i class="ui eye icon"></i>{% trans 'Show safe tags tree' %}
+                    </a>
+                    <a class="ui violet button" href="{% url 'marks:download_tags' 'unsafe' %}">
+                        <i class="ui download icon"></i>{% trans 'Download unsafe tags' %}
+                    </a>
+                    <a class="ui violet button" href="{% url 'marks:download_tags' 'safe' %}">
+                        <i class="ui download icon"></i>{% trans 'Download safe tags' %}
+                    </a>
+                    <button id="upload_unsafe_tags" class="ui violet button">
+                        <i class="ui upload icon"></i>{% trans 'Upload unsafe tags' %}
+                    </button>
+                    <button id="upload_safe_tags" class="ui violet button">
+                        <i class="ui upload icon"></i>{% trans 'Upload safe tags' %}
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="column">
+            <div class="ui purple segment">
                 <h4 class="ui horizontal divider header">{% trans 'Safe DB cleaning' %}</h4>
                 <div class="ui vertical fluid buttons">
                     <button id="clear_call_logs" class="ui yellow button">{% trans 'Remove call log that is older than 30 days' %}</button>
@@ -96,11 +99,14 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="ui segment orange">
+        <h3 class="ui horizontal divider header">{% trans 'Recalculate caches' %}</h3>
         <div class="ui grid">
             <div class="ten wide column">
-                <h3>{% trans 'Jobs' %}</h3>
                 <div style="max-height: 25vh;overflow: auto;">
-                    <table class="ui compact violet table celled">
+                    <table class="ui compact table celled striped">
                         <thead>
                             <tr>
                                 <th>{% trans 'Name' %}</th>
@@ -124,13 +130,7 @@
                 </div>
             </div>
             <div class="six wide column">
-                <h3>{% trans 'Recalculate' %}:</h3>
-                <div id="recalc_for_all_jobs_checkbox" class="ui checkbox">
-                    <input id="recalc_for_all_jobs" type="checkbox">
-                    <label for="recalc_for_all_jobs">{% trans 'All jobs' %}</label>
-                </div>
-                <br><br>
-                <div class="ui vertical orange buttons">
+                <div class="ui vertical fluid orange buttons">
                     <button id="recalc_leaves" class="ui button">{% trans 'Leaf reports cache' %}</button>
                     <button id="recalc_safe" class="ui button">{% trans 'Safe marks cache' %}</button>
                     <button id="recalc_unsafe" class="ui button">{% trans 'Unsafe marks cache' %}</button>
@@ -141,41 +141,108 @@
                 </div>
                 <br><br>
                 <button id="recalc_all" class="ui red button">{% trans 'All caches' %}</button>
-            </div>
-        </div>
-        <div id="upload_all_marks_popup" class="ui modal">
-            <div class="header">{% trans 'Upload marks' %}</div>
-            <div class="content">
-                <div class="ui checkbox">
-                    <input id="delete_marks_before_upload" type="checkbox">
-                    <label for="delete_marks_before_upload">{% trans 'Delete all marks before upload' %}</label>
-                </div>
-                <br><br>
-                <div class="ui grid">
-                    <div class="four wide column right aligned">
-                        <span class="ui violet button btn-file">{% trans 'Browse' %}<input id="upload_all_marks_file_input" type="file"></span>
-                    </div>
-                    <div class="twelve wide column">
-                        <span id="upload_all_marks_filename" class="italic"></span>
-                    </div>
+                <div id="recalc_for_all_jobs_checkbox" class="ui checkbox">
+                    <input id="recalc_for_all_jobs" type="checkbox">
+                    <label for="recalc_for_all_jobs">{% trans 'All jobs' %}</label>
                 </div>
             </div>
-            <div class="actions">
-                <button id="upload_all_marks_start" type="button" class="ui positive left button">{% trans 'Upload' %}</button>
-                <button id="upload_all_marks_cancel" type="button" class="ui blue button">{% trans 'Cancel' %}</button>
+        </div>
+    </div>
+
+    <div class="ui grid">
+        <div class="eight wide column">
+            <div class="ui blue segment">
+                <h3 class="ui horizontal divider header">{% trans 'Components' %}</h3>
+                {% if components|length > 0 %}
+                    <div style="max-height: 35vh; overflow-y: auto">
+                        {% for component in components %}
+                            <div id="component__{{ component.pk }}">
+                                <div class="ui action input fluid">
+                                    <input id="component_name_input__{{ component.pk }}" type="text" placeholder="{% trans 'Component name' %}" value="{{ component.name }}">
+                                    <button id="rename_component_btn__{{ component.pk }}" class="ui teal button">{% trans 'Rename' %}</button>
+                                </div>
+                                <br>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <br>
+                    <button id="clear_all_components" class="ui red button">{% trans 'Delete all unused components' %}</button>
+                {% else %}
+                    <h4>{% trans 'There are no components yet' %}</h4>
+                {% endif %}
             </div>
         </div>
-        <div id="uploaded_marks_modal" class="ui modal">
-            <div class="header">{% trans 'Uploaded marks' %}</div>
-            <div class="content">
-                <h5 class="ui orange header">{% trans 'Unsafe' %}: <span id="num_uploaded_unsafe_marks"></span></h5>
-                <h5 class="ui green header">{% trans 'Safe' %}: <span id="num_uploaded_safe_marks"></span></h5>
-                <h5 class="ui red header">{% trans 'Unknown' %}: <span id="num_uploaded_unknown_marks"></span></h5>
-                <h5 class="ui purple header">{% trans 'Failed' %}: <span id="num_uploaded_fail_marks"></span></h5>
-            </div>
-            <div class="actions">
-                <button id="uploaded_marks_close" type="button" class="ui blue button">{% trans 'OK' %}</button>
+        <div class="eight wide column">
+            <div class="ui blue segment">
+                <h3 class="ui horizontal divider header">{% trans 'Problems' %}</h3>
+                {% if problems|length > 0 %}
+                    <div style="max-height: 35vh; overflow-y: auto">
+                        <ul>
+                            {% for problem in problems %}
+                                <li>{{ problem.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <br>
+                    <button id="clear_all_problems" class="ui red button">{% trans 'Delete all unused problems' %}</button>
+                {% else %}
+                    <h4>{% trans 'There are no problems yet' %}</h4>
+                {% endif %}
             </div>
         </div>
-    {% endif %}
+    </div>
+
+    <div id="upload_all_marks_popup" class="ui modal">
+        <div class="header">{% trans 'Upload marks' %}</div>
+        <div class="content">
+            <div class="ui checkbox">
+                <input id="delete_marks_before_upload" type="checkbox">
+                <label for="delete_marks_before_upload">{% trans 'Delete all marks before upload' %}</label>
+            </div>
+            <br><br>
+            <div class="ui grid">
+                <div class="four wide column right aligned">
+                    <span class="ui violet button btn-file">{% trans 'Browse' %}<input id="upload_all_marks_file_input" type="file"></span>
+                </div>
+                <div class="twelve wide column">
+                    <span id="upload_all_marks_filename" class="italic"></span>
+                </div>
+            </div>
+        </div>
+        <div class="actions">
+            <button id="upload_all_marks_start" type="button" class="ui positive left button">{% trans 'Upload' %}</button>
+            <button id="upload_all_marks_cancel" type="button" class="ui blue button">{% trans 'Cancel' %}</button>
+        </div>
+    </div>
+    <div id="uploaded_marks_modal" class="ui modal">
+        <div class="header">{% trans 'Uploaded marks' %}</div>
+        <div class="content">
+            <h5 class="ui orange header">{% trans 'Unsafe' %}: <span id="num_uploaded_unsafe_marks"></span></h5>
+            <h5 class="ui green header">{% trans 'Safe' %}: <span id="num_uploaded_safe_marks"></span></h5>
+            <h5 class="ui red header">{% trans 'Unknown' %}: <span id="num_uploaded_unknown_marks"></span></h5>
+            <h5 class="ui purple header">{% trans 'Failed' %}: <span id="num_uploaded_fail_marks"></span></h5>
+        </div>
+        <div class="actions">
+            <button id="uploaded_marks_close" type="button" class="ui blue button">{% trans 'OK' %}</button>
+        </div>
+    </div>
+    <div id="upload_tags_modal" class="ui modal">
+        <div class="header">{% trans 'Upload Tags' %}</div>
+        <div class="content">
+            <div class="ui grid">
+                <div class="four wide column right aligned">
+                    <span class="ui violet button btn-file">{% trans 'Browse' %}<input id="upload_tags_file_input" type="file"></span>
+                </div>
+                <div class="twelve wide column">
+                    <span id="upload_tags_filename"></span>
+                </div>
+            </div>
+        </div>
+        <div class="actions">
+            <button id="upload_tags_start" type="button" class="ui positive left button">{% trans 'Upload' %}</button>
+            <button id="upload_tags_cancel" type="button" class="ui blue button">{% trans 'Cancel' %}</button>
+        </div>
+    </div>
+    <input id="tags_type" hidden>
+{% endif %}
 {% endblock %}
