@@ -87,10 +87,10 @@ class NewMark:
                 if isinstance(mark_unsafe, MarkUnsafe):
                     last_v = MarkUnsafeHistory.objects.get(mark=mark_unsafe, version=F('mark__version'))
                     result = json.loads(last_v.args)
-        elif isinstance(cfa, dict):
-            for arg, value in json.loads(cfa).items():
-                if value:
-                    result[arg] = value
+            else:
+                for arg, value in json.loads(cfa).items():
+                    if value:
+                        result[arg] = value
         return result
 
     def __check_mark_applicability(self, mark_unsafe):
