@@ -473,6 +473,41 @@ $(document).ready(function () {
             $(this).popup();
         }
     });
+    $('.sort-table').each(function () {
+        var t = $(this).DataTable({
+            paging: true,
+            lengthMenu: [ [10, 50, 100, 500, -1], [10, 50, 100, 500, $('#trans__sort_all').text()] ],
+            pageLength: 50,
+            orderMulti: true,
+            columnDefs: [{
+                orderable: false,
+                searchable: false,
+                targets: 0
+            }],
+            order: [],
+            language: {
+                "lengthMenu": $('#trans__sort_length_menu').text(),
+                "info":       $('#trans__sort_info').text(),
+                "infoEmpty":      $('#trans__sort_info_empty').text(),
+                "infoFiltered":   $('#trans__sort_info_filtered').text(),
+                "search":         $('#trans__sort_search').text(),
+                "zeroRecords":    $('#trans__sort_info_empty').text(),
+                "paginate": {
+                    "next":       $('#trans__sort_next').text(),
+                    "previous":   $('#trans__sort_previous').text()
+                },
+            },
+            scrollCollapse: true,
+            "scrollX": true,
+            "scrollY": "75vh"
+        });
+        $(this).addClass("display");
+        t.on( 'order.dt search.dt', function () {
+            t.column(0, {search:'applied', order:'applied'}).nodes().each( function (cell, i) {
+                cell.innerHTML = i+1;
+            } );
+        } ).draw();
+    });
 
     $('.page-link-icon').click(function () {
         window.location.replace(get_url_with_get_parameter(window.location.href, 'page', $(this).data('page-number')));
