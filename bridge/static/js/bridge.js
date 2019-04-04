@@ -30,6 +30,55 @@ function getCookie(name) {
     return cookieValue;
 }
 
+function change_view(view_type) {
+    $.ajax({
+        method: 'post',
+        url: '/users/ajax/get_view/',
+        dataType: 'json',
+        data: {
+            view_id: $('#view_list__' + view_type).children('option:selected').val(),
+            view_type: view_type
+        },
+        success: function(data) {
+            if (data.error) {
+                err_notify(data.error);
+            } else {
+                var selected_column = $('#view_' + view_type + '__columns').children();
+                var available_column = $('#view_available_columns_' + view_type).children();
+                var all_columns = {};
+                for (var i = 0; i < selected_column.length; i++) {
+                    all_columns[selected_column[i].value] = selected_column[i].text;
+                }
+                selected_column.remove();
+                for (var i = 0; i < available_column.length; i++) {
+                    all_columns[available_column[i].value] = available_column[i].text;
+                }
+                available_column.remove();
+                for (var i = 0; i < data.columns.length; i++) {
+                    var column = data.columns[i];
+                    var column_text = column;
+                    if (column in all_columns) {
+                        column_text = all_columns[column];
+                        delete all_columns[column];
+                    }
+                    $('<option>', {
+                        value: column,
+                        text: column_text,
+                        title: column_text
+                    }).appendTo('#view_' + view_type + '__columns');
+                }
+                for (var key in all_columns){
+                    $('<option>', {
+                        value: key,
+                        text: all_columns[key],
+                        title: all_columns[key]
+                    }).appendTo('#view_available_columns_' + view_type);
+                }
+            }
+        }
+    });
+}
+
 function csrfSafeMethod(method) {
     return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method))
 }
@@ -369,16 +418,27 @@ window.set_actions_for_views = function(view_type) {
 
     $('#view_add_column_btn_' + view_type).click(function () {
         var selected_column = $('#view_available_columns_' + view_type).children('option:selected');
-        $('<option>', {
-            value: selected_column.val(),
-            text: selected_column.text(),
-            title: selected_column.text()
-        }).appendTo('#view_' + view_type + '__columns');
+        for (var i = 0; i < selected_column.length; i++) {
+            $('<option>', {
+                value: selected_column[i].value,
+                text: selected_column[i].text,
+                title: selected_column[i].text
+            }).appendTo('#view_' + view_type + '__columns');
+        }
+        selected_column.remove();
         return false;
     });
 
     $('#view_remove_column_btn_' + view_type).click(function () {
-        $('#view_' + view_type + '__columns').children('option:selected').remove();
+        var selected_column = $('#view_' + view_type + '__columns').children('option:selected');
+        for (var i = 0; i < selected_column.length; i++) {
+            $('<option>', {
+                value: selected_column[i].value,
+                text: selected_column[i].text,
+                title: selected_column[i].text
+            }).appendTo('#view_available_columns_' + view_type);
+        }
+        selected_column.remove();
         return false;
     });
 

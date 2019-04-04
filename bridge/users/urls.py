@@ -30,6 +30,7 @@ urlpatterns = [
     path('ajax/save_notifications/', views.save_notifications),
 
     # View actions
+    path('ajax/get_view/', views.get_view),
     path('ajax/save_view/', views.save_view),
     path('ajax/remove_view/', views.remove_view),
     path('ajax/share_view/', views.share_view),

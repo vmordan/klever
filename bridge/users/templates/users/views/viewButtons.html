@@ -17,9 +17,9 @@
 
 {% load i18n %}
 
-<div class="ui action input">
+<div class="ui action input fluid">
     <label for="view_list__{{ view.type }}"></label>
-    <select id="view_list__{{ view.type }}" class="ui dropdown">
+    <select id="view_list__{{ view.type }}" class="ui dropdown" onchange="change_view('{{view.type}}');">
         <option value="default">{% trans 'Default' %}</option>
         {% for v in view.views %}
             <option title="{{ v.name }}" value="{{ v.id }}"{% if view.view_id == v.id %} selected{% endif %}>{{ v.name }}
@@ -28,11 +28,9 @@
         {% endfor %}
     </select>
     <br><br>
-    <button id="view_show_btn__{{ view.type }}" type="button" class="ui teal icon button note-popup" data-content="{% trans 'Show' %}"><i class="unhide icon"></i></button>
-    <button id="view_prefer_btn__{{ view.type }}" type="button" class="ui green icon button note-popup" data-content="{% trans 'Make preferred' %}"><i class="thumbs up icon"></i></button>
-    <button id="view_update_btn__{{ view.type }}" type="button" class="ui pink icon button note-popup" data-content="{% trans 'Update' %}"><i class="refresh icon"></i></button>
-    <button id="view_share_btn__{{ view.type }}" type="button" class="ui yellow icon button note-popup" data-content="{% trans 'Share' %}/{% trans 'Hide' %}"><i class="unhide icon"></i></button>
-    <button id="view_remove_btn__{{ view.type }}" type="button" class="ui red icon button note-popup" data-content="{% trans 'Delete' %}"><i class="remove icon"></i></button>
-    <button id="view_show_default_btn__{{ view.type }}" type="button" class="ui green icon button note-popup" data-content="{% trans 'Show preferred view' %}"><i class="reply icon"></i></button>
+    <button id="view_prefer_btn__{{ view.type }}" type="button" class="ui teal button">{% trans 'Make preferred' %}</button>
+    <button id="view_update_btn__{{ view.type }}" type="button" class="ui teal button">{% trans 'Update' %}</button>
+    <button id="view_share_btn__{{ view.type }}" type="button" class="ui teal button">{% trans 'Share' %}/{% trans 'Hide' %}</button>
+    <button id="view_remove_btn__{{ view.type }}" type="button" class="ui teal button">{% trans 'Delete' %}</button>
 </div>
 <input class="view-type-buttons" type="hidden" value="{{ view.type }}">

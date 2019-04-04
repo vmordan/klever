@@ -23,7 +23,7 @@ from django.utils.translation import ugettext_lazy as _
 from users.models import View
 
 
-DEF_NUMBER_OF_ELEMENTS = 500
+DEF_NUMBER_OF_ELEMENTS = -1
 
 ALL_ATTRS = 'attrs'
 

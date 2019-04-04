@@ -38,6 +38,7 @@ from jobs.models import Job
 
 from users.forms import UserExtendedForm, UserForm, EditUserForm
 from users.models import Notifications, Extended, User, View, PreferableView
+from users.utils import DEFAULT_VIEW
 
 
 @unparallel_group(['User'])
@@ -361,6 +362,31 @@ def preferable_view(request):
     request.user.preferableview_set.filter(view__type=view_type).delete()
     PreferableView.objects.create(user=request.user, view=user_view)
     return JsonResponse({'message': _("The preferred view was successfully changed")})
+
+
+@unparallel_group([PreferableView, 'View'])
+def get_view(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': _('You are not signing in')})
+    activate(request.user.extended.language)
+
+    if request.method != 'POST':
+        return JsonResponse({'error': str(UNKNOWN_ERROR)})
+
+    view_id = request.POST.get('view_id', None)
+    view_type = request.POST.get('view_type', None)
+    if view_id is None or view_type is None or view_type not in set(x[0] for x in VIEW_TYPES):
+        return JsonResponse({'error': str(UNKNOWN_ERROR)})
+
+    if view_id == 'default':
+        columns = DEFAULT_VIEW[view_type].get('columns')
+    else:
+        try:
+            user_view = View.objects.get(Q(id=view_id, type=view_type) & (Q(author=request.user) | Q(shared=True)))
+            columns = json.loads(user_view.view).get('columns')
+        except ObjectDoesNotExist:
+            return JsonResponse({'error': _("The view was not found")})
+    return JsonResponse({'columns': columns})
 
 
 @unparallel_group(['View'])
