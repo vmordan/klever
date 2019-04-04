@@ -226,3 +226,5 @@ COMPARISON_FUNCTIONS_DESCRIPTION = [
     _('All elements of the edited error trace are included into compared trace'),
     _('Skip traces comparison (compare by attributes only)')
 ]
+
+DEFAULT_ATTRIBUTES = ["Rule specification", "Subsystem", "Verification object"]

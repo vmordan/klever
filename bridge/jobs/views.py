@@ -32,7 +32,7 @@ from django.views.generic.detail import SingleObjectMixin, DetailView
 
 import bridge.CustomViews as Bview
 from tools.profiling import LoggedCallMixin
-from bridge.vars import VIEW_TYPES, JOB_STATUS, PRIORITY, JOB_WEIGHT, USER_ROLES
+from bridge.vars import VIEW_TYPES, JOB_STATUS, PRIORITY, JOB_WEIGHT, USER_ROLES, DEFAULT_ATTRIBUTES
 from bridge.utils import logger, file_get_or_create, extract_archive, BridgeException
 
 from users.models import User
@@ -88,8 +88,7 @@ class JobPage(LoggedCallMixin, Bview.DataViewMixin, DetailView):
                 if name not in attrs:
                     attrs[name] = set()
                 attrs[name].add(val)
-        for attr in ReportAttr.objects.filter(report__root__job=self.object,
-                                              attr__name__name__in=["Rule specification", "Subsystem"]).\
+        for attr in ReportAttr.objects.filter(report__root__job=self.object, attr__name__name__in=DEFAULT_ATTRIBUTES).\
                 values_list('attr__name__name', 'attr__value'):
             name = attr[0]
             val = attr[1]
