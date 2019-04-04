@@ -154,14 +154,6 @@
     </div>
 </div>
 
-{% if user.extended.role == '2' %}
-<div class="ui grid">
-    <div class="column wide">
-        {% include reportdata.view.template with view=reportdata.view %}
-    </div>
-</div>
-{% endif %}
-
 {# Data for javascript #}
 <input type="hidden" id="job_id" value="{{ job.id }}">
 <input type="hidden" id="job_version" value="{{ job.version }}">
