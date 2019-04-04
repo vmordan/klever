@@ -244,6 +244,8 @@ class SafesTable:
     def __safes_data(self):
         columns = ['number']
         columns.extend(self.view['columns'])
+        if ALL_ATTRS in columns:
+            columns.remove(ALL_ATTRS)
 
         query = LeavesQuery(ReportSafe, self.view, **self._kwargs)
         objects, cnt = self.__paginate_objects(query.get_objects())
@@ -407,6 +409,8 @@ class UnsafesTable:
     def __unsafes_data(self):
         columns = ['number']
         columns.extend(self.view['columns'])
+        if ALL_ATTRS in columns:
+            columns.remove(ALL_ATTRS)
 
         query = LeavesQuery(ReportUnsafe, self.view, **self._kwargs)
         objects, cnt = self.__paginate_objects(query.get_objects())
@@ -564,6 +568,8 @@ class UnknownsTable:
     def __unknowns_data(self):
         columns = ['number']
         columns.extend(self.view['columns'])
+        if ALL_ATTRS in columns:
+            columns.remove(ALL_ATTRS)
 
         query = LeavesQuery(ReportUnknown, self.view, **self._kwargs)
         objects, cnt = self.__paginate_objects(query.get_objects())
