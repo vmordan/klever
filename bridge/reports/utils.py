@@ -320,6 +320,7 @@ class SafesTable:
             values_data.append(values_row)
             cnt += 1
 
+        self.available_columns = [item for item in self.available_columns if item.get('value') not in columns]
         return columns, values_data
 
     def __is_not_used(self):
@@ -489,6 +490,7 @@ class UnsafesTable:
             values_data.append(values_row)
             cnt += 1
 
+        self.available_columns = [item for item in self.available_columns if item.get('value') not in columns]
         return columns, values_data
 
     def __is_not_used(self):
@@ -637,6 +639,7 @@ class UnknownsTable:
             values_data.append(values_row)
             cnt += 1
 
+        self.available_columns = [item for item in self.available_columns if item.get('value') not in columns]
         return columns, values_data
 
     def __get_problems(self, problems):
