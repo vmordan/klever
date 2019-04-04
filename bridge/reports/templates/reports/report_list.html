@@ -85,7 +85,7 @@
                 {% endif %}
             </div>-->
         {% endif %}
-            <table class="ui compact celled selectable table sort-table {% if TableData.view.type == '6' %}red{% elif TableData.view.type == '5' %}green{% elif TableData.view.type == '4' %}orange{% endif %}" width="100%">
+            <table class="ui compact celled selectable table sort-table {% if TableData.view.type == '6' %}orange{% elif TableData.view.type == '5' %}green{% elif TableData.view.type == '4' %}red{% endif %}" width="100%">
                 <thead>
                     {% for column_row in TableData.table_data.header %}
                         <tr class="info" style="text-align: center">
