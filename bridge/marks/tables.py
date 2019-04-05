@@ -724,6 +724,7 @@ class AssociationChangesTable:
 
         self.selected_columns = self.__selected()
         self.available_columns = self.__available()
+        self.available_columns = [item for item in self.available_columns if item not in self.selected_columns]
 
         self.columns = self.__get_columns()
         self.header = Header(self.columns, MARK_TITLES).struct
@@ -733,7 +734,7 @@ class AssociationChangesTable:
         columns = []
         for col in self.view['columns']:
             if col not in self.__supported_columns():
-                return []
+                continue
             col_title = col
             if col_title in MARK_TITLES:
                 col_title = MARK_TITLES[col_title]
@@ -750,7 +751,7 @@ class AssociationChangesTable:
         return columns
 
     def __supported_columns(self):
-        supported_columns = ['change_kind', 'job', 'format', 'problems']
+        supported_columns = ['change_kind', 'job', 'problems']
         if self.view['type'] in {VIEW_TYPES[16][0], VIEW_TYPES[17][0]}:
             supported_columns.append('sum_verdict')
             supported_columns.append('tags')
