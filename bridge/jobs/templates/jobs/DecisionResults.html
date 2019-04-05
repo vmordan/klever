@@ -17,8 +17,7 @@
 
 {% load i18n %}
 
-{% if reportdata.totals.unsafes.number > 0 or reportdata.totals.safes.number > 0 or reportdata.totals.unknowns.number > 0 or reportdata.data.resources|length or children %}
-<div class="ten wide column">
+{% if reportdata.totals.unsafes.number > 0 or reportdata.totals.safes.number > 0 or reportdata.totals.unknowns.number > 0 or reportdata.data.resources|length %}
     {% if reportdata.totals.unsafes.number > 0 or reportdata.totals.safes.number > 0 or reportdata.totals.unknowns.number > 0 %}
     <div class="ui equal width grid">
         <div class="column">
@@ -211,43 +210,6 @@
         {% endif %}
     </div>
     {% endif %}
-
-    {% if children %}
-    <div class="ui grid">
-        <div class="column">
-            <h3>{% trans 'Children' %}</h3>
-            <table class="ui celled selectable compact purple table striped">
-                <thead>
-                <tr bgcolor="#d3d3d3">
-                    <td>{% trans 'Name' %}</td>
-                    <td class="center aligned">{% trans 'Unsafes' %}</td>
-                    <td class="center aligned">{% trans 'Safes' %}</td>
-                    <td class="center aligned">{% trans 'Unknowns' %}</td>
-                    <td class="center aligned">{% trans 'Wall time' %}</td>
-                    <td class="center aligned">{% trans 'CPU time' %}</td>
-                    <td class="center aligned">{% trans 'Memory' %}</td>
-                </tr>
-                </thead>
-                <tbody>
-                    {% for child in children %}
-                        {% if child.pk %}
-                            <tr class="center aligned">
-                                <td><a class="black-link" href="{% url 'jobs:job' child.pk %}">{{ child.name }}</a></td>
-                                <td><a class="black-link" href="{% url 'jobs:job' child.pk %}">{{ child.unsafes }}</a></td>
-                                <td><a class="black-link" href="{% url 'jobs:job' child.pk %}">{{ child.safes }}</a></td>
-                                <td><a class="black-link" href="{% url 'jobs:job' child.pk %}">{{ child.unknowns }}</a></td>
-                                <td><a class="black-link" href="{% url 'jobs:job' child.pk %}">{{ child.wall }}</a></td>
-                                <td><a class="black-link" href="{% url 'jobs:job' child.pk %}">{{ child.cpu }}</a></td>
-                                <td><a class="black-link" href="{% url 'jobs:job' child.pk %}">{{ child.mem }}</a></td>
-                            </tr>
-                        {% endif %}
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    {% endif %}
-
-
-</div>
+{% else %}
+<h1 class="ui divider horizontal header">{% trans 'Report is empty' %}</h1>
 {% endif %}

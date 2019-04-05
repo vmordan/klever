@@ -534,10 +534,19 @@ $(document).ready(function () {
         }
     });
     $('.sort-table').each(function () {
+        var classes = $(this).attr("class");
+        var length = 50;
+        var scroll_y = "75vh";
+        if (classes.includes('show-all')) {
+            length = -1;
+        } else if (classes.includes('show-min')) {
+            length = 10;
+            scroll_y = "45vh";
+        }
         var t = $(this).DataTable({
             paging: true,
             lengthMenu: [ [10, 50, 100, 500, -1], [10, 50, 100, 500, $('#trans__sort_all').text()] ],
-            pageLength: 50,
+            pageLength: length,
             orderMulti: true,
             columnDefs: [{
                 orderable: false,
@@ -559,14 +568,16 @@ $(document).ready(function () {
             },
             scrollCollapse: true,
             "scrollX": true,
-            "scrollY": "75vh"
+            "scrollY": scroll_y
         });
         $(this).addClass("display");
-        t.on( 'order.dt search.dt', function () {
-            t.column(0, {search:'applied', order:'applied'}).nodes().each( function (cell, i) {
-                cell.innerHTML = i+1;
-            } );
-        } ).draw();
+        if (!classes.includes('no-index')) {
+            t.on( 'order.dt search.dt', function () {
+                t.column(0, {search:'applied', order:'applied'}).nodes().each( function (cell, i) {
+                    cell.innerHTML = i+1;
+                } );
+            } ).draw();
+        }
     });
 
     $('.page-link-icon').click(function () {

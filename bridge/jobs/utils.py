@@ -158,20 +158,21 @@ def get_job_parents(user, job):
 
 def get_job_children(user, job):
     children = []
-    for child in job.children.order_by('change_date'):
+    for child in job.children.order_by('-id'):
         if JobAccess(user, child).can_view():
             report = ReportComponent.objects.filter(root__job=child, parent=None).first()
             if report:
                 res = ComponentResource.objects.filter(report__root=report.root, report__parent=None, component__name="Core") \
                     .annotate(root_id=F('report__root_id')).first()
+                start_date = report.start_date
                 (wall, cpu, mem) = get_resource_data('hum', 2, res)
                 unsafes = ReportUnsafe.objects.filter(root=report.root).count()
                 safes = ReportSafe.objects.filter(root=report.root).count()
                 unknowns = ReportUnknown.objects.filter(root=report.root).count()
             else:
-                (wall, cpu, mem, unsafes, safes, unknowns) = ('-', '-', '-', '-', '-', '-')
+                (wall, cpu, mem, unsafes, safes, unknowns, start_date) = ('-', '-', '-', '-', '-', '-', '-')
             children.append({'pk': child.pk, 'name': child.name, 'wall': wall, 'cpu': cpu, 'mem': mem,
-                             'safes': safes, 'unsafes': unsafes, 'unknowns': unknowns})
+                             'safes': safes, 'unsafes': unsafes, 'unknowns': unknowns, 'start_date': start_date})
     return children
 
 

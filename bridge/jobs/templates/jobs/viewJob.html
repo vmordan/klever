@@ -28,6 +28,7 @@
     <script src="{% static 'jobs/js/jobFilesView.js' %}"></script>
     <script src="{% static 'jobs/js/versions.js' %}"></script>
     <script src="{% static 'jobs/js/jobPage.js' %}"></script>
+    <script src="{% static 'jobs/js/jobtree.js' %}"></script>
 {% endblock %}
 
 {% block title %}{% trans 'Job' %} ({{ job.get_status_display }}){% endblock %}
@@ -53,7 +54,9 @@
 
 <div class="ui grid">
     {% if job %}
+        <div class="ten wide column">
         {% include 'jobs/DecisionResults.html' %}
+        </div>
     {% endif %}
 
     <div class="six wide column right floated right aligned">
@@ -153,6 +156,84 @@
         <input id="job_status_value" type="hidden" value="{{ job.status }}">
     </div>
 </div>
+
+{% if children %}
+    <h3 class="ui horizontal divider header">{% trans 'Children' %}</h3>
+    <table class="ui celled selectable compact teal table sort-table show-min no-index" width="100%">
+        <thead>
+        <tr class="center aligned">
+            <th style="background-color: #cafdff;">{% trans '#' %}</th>
+            <th style="background-color: #cafdff;">{% trans 'Name' %}</th>
+            <th style="background-color: #cafdff;">{% trans 'Start date' %}</th>
+            <th style="background-color: #cafdff;">{% trans 'Unsafes' %}</th>
+            <th style="background-color: #cafdff;">{% trans 'Safes' %}</th>
+            <th style="background-color: #cafdff;">{% trans 'Unknowns' %}</th>
+            <th style="background-color: #cafdff;">{% trans 'Wall time' %}</th>
+            <th style="background-color: #cafdff;">{% trans 'CPU time' %}</th>
+            <th style="background-color: #cafdff;">{% trans 'Memory' %}</th>
+        </tr>
+        </thead>
+        <tbody>
+            {% for child in children %}
+                {% if child.pk %}
+                    <tr class="center aligned">
+                        <td id="value__{{ child.pk }}" width="1%">
+                            <div class="ui fitted checkbox">
+                                <input type="checkbox" id="job_checkbox__{{ child.pk }}">
+                                <label for="job_checkbox__{{ child.pk }}"></label>
+                            </div>
+                        </td>
+                        <td><a class="black-link" href="{% url 'jobs:job' child.pk %}">{{ child.name }}</a></td>
+                        <td><a class="black-link" href="{% url 'jobs:job' child.pk %}">{{ child.start_date }}</a></td>
+                        <td><a class="black-link" href="{% url 'jobs:job' child.pk %}">{{ child.unsafes }}</a></td>
+                        <td><a class="black-link" href="{% url 'jobs:job' child.pk %}">{{ child.safes }}</a></td>
+                        <td><a class="black-link" href="{% url 'jobs:job' child.pk %}">{{ child.unknowns }}</a></td>
+                        <td><a class="black-link" href="{% url 'jobs:job' child.pk %}">{{ child.wall }}</a></td>
+                        <td><a class="black-link" href="{% url 'jobs:job' child.pk %}">{{ child.cpu }}</a></td>
+                        <td><a class="black-link" href="{% url 'jobs:job' child.pk %}">{{ child.mem }}</a></td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="ui text small menu">
+        <div class="ui dropdown item">
+            <i class="ui check square outline icon"></i>{% trans 'Actions with selected jobs' %}
+            <i class="dropdown icon"></i>
+            <div class="menu">
+                <div id="compare_reports_btn" class="item"><i class="ui columns icon"></i>{% trans 'Compare reports' %}</div>
+                <div id="download_selected_jobs" class="item {% if user.extended.role != '2' %} disabled{% endif %}"><i class="ui download icon"></i>{% trans 'Download' %}</div>
+                {# Only managers can upload trees (USER_ROLES[2][0]) #}
+                <div id="download_selected_trees" class="item {% if user.extended.role != '2' %} disabled{% endif %}"><i class="ui sitemap icon"></i>{% trans 'Download with children' %}</div>
+                <div id="show_remove_jobs_popup" class="item {% if user.extended.role != '2' %} disabled{% endif %}"><i class="ui remove icon"></i>{% trans 'Delete' %}</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="remove_jobs_popup" class="ui basic modal">
+        <div class="ui icon header">
+            <i class="warning sign icon"></i>
+            {% trans 'Are you sure' %}?
+        </div>
+        <div class="content">
+            <div class="ui center aligned grid">
+                <p>{% trans 'All versions and all data of the selected jobs will be deleted' %}! {% trans 'If any job has children they will also be deleted' %}!</p>
+            </div>
+        </div>
+        <div class="actions">
+            <div class="ui center aligned grid">
+                <button id="cancel_remove_jobs" type="button" class="ui blue basic inverted button">{% trans 'Cancel' %}</button>
+                <button id="delete_jobs_btn" type="button" class="ui red basic inverted button">{% trans 'Delete' %}</button>
+            </div>
+        </div>
+    </div>
+    <span id="error__no_jobs_to_download" hidden>{% trans 'Please select jobs you want to download' %}</span>
+    <span id="error__no_jobs_to_delete" hidden>{% trans 'Please select jobs you want to delete' %}</span>
+    <span id="error__no_jobs_to_compare" hidden>{% trans 'Please select jobs which reports you want to compare' %}</span>
+
+
+{% endif %}
 
 {# Data for javascript #}
 <input type="hidden" id="job_id" value="{{ job.id }}">
