@@ -252,7 +252,7 @@ class JobAccess:
         for ch in self.job.children.all():
             if not JobAccess(self.user, ch).can_delete():
                 return False
-        if self._is_manager and self.job.status == JOB_STATUS[3]:
+        if self._is_manager:
             return True
         if self.job.status in [JOB_STATUS[1][0], JOB_STATUS[2][0]]:
             return False
