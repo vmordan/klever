@@ -47,22 +47,12 @@
     </div>
 
     {% if tabledata.values|length %}
-        <div>
-            {% if tabledata.page.has_previous %}
-                <i class="ui arrow left blue link icon page-link-icon" data-page-number="{{ tabledata.page.previous_page_number }}"></i>
-            {% endif %}
-            <span>{% blocktrans with n1=tabledata.page.number n2=tabledata.page.paginator.num_pages %}Page {{ n1 }} of {{ n2 }}{% endblocktrans %}</span>
-            {% if tabledata.page.has_next %}
-                <i class="ui arrow right blue link icon page-link-icon" data-page-number="{{ tabledata.page.next_page_number }}"></i>
-            {% endif %}
-        </div>
-        <div style="overflow-x:auto;max-height: 75vh;overflow-y:auto;">
-            <table class="ui compact celled selectable table alternate-color {% if tabledata.view.type == '7' %}orange{% elif tabledata.view.type == '8' %}green{% elif tabledata.view.type == '9' %}red{% endif %}">
+            <table class="ui compact celled selectable table {% if tabledata.view.type == '7' %}red{% elif tabledata.view.type == '8' %}green{% elif tabledata.view.type == '9' %}orange{% endif %} sort-table no-index" width="100%">
                 <thead>
                     {% for column_row in tabledata.header %}
                         <tr>
                         {% for coldata in column_row %}
-                            <th style="background: {% if tabledata.view.type == '7' %}#fff1df{% elif tabledata.view.type == '8' %}#dcffed{% elif tabledata.view.type == '9' %}#ffd3d5{% endif %}" colspan="{{ coldata.columns }}" rowspan="{{ coldata.rows }}">{{ coldata.title }}</th>
+                            <th style="background-color: {% if tabledata.view.type == '7' %}#fff1df{% elif tabledata.view.type == '8' %}#dcffed{% elif tabledata.view.type == '9' %}#ffd3d5{% endif %}" colspan="{{ coldata.columns }}" rowspan="{{ coldata.rows }}">{{ coldata.title }}</th>
                         {% endfor %}
                         </tr>
                     {% endfor %}
@@ -88,7 +78,6 @@
                     {%  endfor %}
                 </tbody>
             </table>
-        </div>
         <br>
     {% else %}
         <h2 class="header" style="text-align:center;">{% trans 'List of marks of the given type is empty, please create them or change the view' %}</h2>

@@ -360,6 +360,7 @@ class MarksList:
             if col_title in MARK_TITLES:
                 col_title = MARK_TITLES[col_title]
             columns.append({'value': col, 'title': col_title})
+        columns = [item for item in columns if item not in self.selected_columns]
         return columns
 
     @cached_property
@@ -369,9 +370,7 @@ class MarksList:
             columns.update({'component', 'pattern'})
         else:
             columns.update({'verdict', 'tags'})
-        if self.type == 'unsafe':
-            columns.add('total_similarity')
-        columns.update({'status', 'author', 'change_date', 'format', 'source', 'identifier'})
+        columns.update({'status', 'author', 'change_date', 'source'})
         return columns
 
     def __paginate_objects(self, objects):
