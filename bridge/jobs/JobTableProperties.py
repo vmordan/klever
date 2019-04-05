@@ -129,9 +129,7 @@ class TableTree:
     all_columns = ['role', 'author', 'date', 'status', 'unsafe'] + \
         list("unsafe:{0}".format(u) for u in UNSAFES) + \
         ['safe'] + list("safe:{0}".format(s) for s in SAFES) + \
-        TASKS_COLUMNS + SUBJOBS_COLUMNS + \
-        ['problem', 'problem:total', 'resource', 'tag', 'tag:safe', 'tag:unsafe', 'identifier', 'format',
-         'version', 'parent_id', 'priority', 'start_date', 'finish_date', 'solution_wall_time', 'operator']
+        ['problem', 'problem:total', 'resource', 'tag', 'tag:safe', 'tag:unsafe', 'identifier', 'parent_id', 'start_date', 'operator']
 
     def __init__(self, user, view):
         self._user = user
@@ -140,6 +138,7 @@ class TableTree:
         # Columns for view
         self.selected_columns = self.__selected()
         self.available_columns = self.__available()
+        self.available_columns = [item for item in self.available_columns if item not in self.selected_columns]
 
         # Get jobs tree to visualise (just structure) and set of accessed jobs
         self._tree, self._job_ids, self._roots = self.__get_jobs_tree()

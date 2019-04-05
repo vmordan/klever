@@ -71,7 +71,7 @@
             {%  endfor %}
         </tbody>
     {% if TableData.footer|length %}
-        <thead>
+        <tfoot>
         <!--<tr style="background: #cafdff;">
             <th class="right aligned" colspan="{{ TableData.footer_title_length }}" style="background: #cafdff;">{% trans 'All' %}</th>
             {% for fc in TableData.footer %}
@@ -84,7 +84,7 @@
                 <td id="checked__{{ fc }}" style="text-align: center;">-</td>
             {% endfor %}
         </tr>
-        </thead>
+        </tfoot>
     {% endif %}
     </table>
 {% else %}
