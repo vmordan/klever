@@ -68,7 +68,8 @@ MARK_TITLES = {
     'description': _('Description'),
     'total_similarity': _('Total similarity'),
     'identifier': _('Identifier'),
-    'attrs': _('Attributes')
+    'attrs': _('Attributes'),
+    'source': _('Source')
 }
 
 CHANGE_DATA = {
@@ -196,6 +197,7 @@ class ReportMarkTable:
 
         self.selected_columns = self.__selected()
         self.available_columns = self.__available()
+        self.available_columns = [item for item in self.available_columns if item not in self.selected_columns]
 
         self.columns = self.__get_columns()
         self.header = Header(self.columns, MARK_TITLES).struct
@@ -204,8 +206,6 @@ class ReportMarkTable:
     def __selected(self):
         columns = []
         for col in self.view['columns']:
-            if col not in self.__supported_columns():
-                return []
             col_title = col
             if col_title in MARK_TITLES:
                 col_title = MARK_TITLES[col_title]
@@ -223,12 +223,11 @@ class ReportMarkTable:
 
     def __supported_columns(self):
         if self.type == 'safe':
-            return ['verdict', 'status', 'source', 'tags', 'ass_type',
-                    'ass_author', 'description', 'change_date', 'author']
+            return ['verdict', 'status', 'source', 'tags', 'ass_type', 'description', 'change_date', 'author']
         elif self.type == 'unsafe':
-            return ['verdict', 'similarity', 'status', 'source', 'tags', 'ass_type',
-                    'ass_author', 'description', 'change_date', 'author']
-        return ['problem', 'status', 'source', 'ass_type', 'ass_author', 'description', 'change_date', 'author']
+            return ['verdict', 'similarity', 'status', 'source', 'tags', 'ass_type', 'description', 'change_date',
+                    'author']
+        return ['problem', 'status', 'source', 'description', 'change_date', 'author']
 
     def __get_columns(self):
         columns = ['mark_num']

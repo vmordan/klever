@@ -17,14 +17,15 @@
 
 {% load i18n %}
 
-{% include 'users/views/viewButtons.html' %}
+{% include 'users/views/Basic.html' %}
+
+<div hidden>
 <div class="ui divider"></div>
 
 <div class="ui grid">
     <div class="ten wide column">
         <h3>{% trans 'Columns' %}</h3>
         <div class="ui divider"></div>
-        {% include 'users/views/viewColumns.html' %}
     </div>
     <div class="six wide column">
         <h3>{% trans 'Filters' %}</h3>
@@ -111,4 +112,4 @@
 </div>
 
 <div class="ui divider"></div>
-{% include 'users/views/viewCreateForm.html' %}
+</div>

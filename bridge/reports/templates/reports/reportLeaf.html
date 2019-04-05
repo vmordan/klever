@@ -39,7 +39,7 @@
 {% endblock %}
 
 {% block body_block %}
-<input id="tags_type" type="hidden" value="{{ report_type }}">
+    <input id="tags_type" type="hidden" value="{{ report_type }}">
     <div class="ui grid">
         <div class="nine wide column">
             <div class="ui breadcrumb">
@@ -135,28 +135,22 @@
     {% include 'reports/AssociatedMarksTable.html' with MarkTable=MarkTable %}
     {% endif %}
 
-    <div class="ui grid">
-        <div class="eleven wide column left aligned">
+    <div class="ui horizontal buttons">
         {% if MarkTable.can_mark %}
             <a id="create_light_mark_btn" class="ui red button inverted right aligned"><i class="star icon"></i> {% trans 'Create default mark' %}</a>
             <a href="{% url 'marks:mark_form' report_type report.pk 'create' %}" class="ui red button"><i class="empty star icon"></i> {% trans 'Create extended mark' %}</a>
         {% endif %}
-        </div>
-        <div class="five wide column right aligned">
-            {% if MarkTable.values|length %}
-            <button id="view_show_form_btn_{{ MarkTable.view.type }}" class="ui tiny violet right labeled icon button">{{ MarkTable.view.viewtitle }}<i class="right chevron icon"></i></button>
-            {% endif %}
-        </div>
     </div>
-
-    {% if MarkTable.can_mark %}
-        <div id="inline_mark_form" style="display: none" ></div>
+    {% if MarkTable.values|length %}
+        <button style="margin-top: 3px;" id="view_show_form_btn_{{ MarkTable.view.type }}" class="ui tiny violet right labeled icon button right floated">{{ MarkTable.view.viewtitle }}<i class="right chevron icon"></i></button>
     {% endif %}
 
-    <div class="six wide column">
-        <div id="view_form_segment_{{ MarkTable.view.type }}" class="ui form yellow segment" style="margin-top: 0;display:none;">
-            {% include MarkTable.view.template with view=MarkTable.view verdicts=MarkTable.verdicts statuses=MarkTable.statuses ass_types=MarkTable.ass_types selected_columns=MarkTable.selected_columns available_columns=MarkTable.available_columns %}
-        </div>
+    {% if MarkTable.can_mark %}
+        <div id="inline_mark_form" style="display: none"></div>
+    {% endif %}
+
+    <div id="view_form_segment_{{ MarkTable.view.type }}" class="ui form yellow segment" style="display:none;">
+        {% include MarkTable.view.template with view=MarkTable.view verdicts=MarkTable.verdicts statuses=MarkTable.statuses ass_types=MarkTable.ass_types selected_columns=MarkTable.selected_columns available_columns=MarkTable.available_columns %}
     </div>
 
     <div id="file_content_modal" class="ui dinamic large modal">
@@ -172,18 +166,37 @@
             <div class="filecontent ui olive segment" id="file_content" style="height:75vh;"></div>
         </div>
     </div>
-    <div class="ui grid">
-        <div class="five wide column left aligned">
-            <div class="ui breadcrumb">
-                {% trans 'Components' %}:
-                <a class="section parent-popup" href="{{ parents.0.href }}" data-variation="very wide">{{ parents.0.title }}</a>
+    <div class="ui segment basic">
+        <div class="ui breadcrumb">
+            {% trans 'Components' %}:
+            <a class="section parent-popup" href="{{ parents.0.href }}" data-variation="very wide">{{ parents.0.title }}</a>
+            <div class="ui special popup">
+                <div class="header">{{ parents.0.title }}</div>
+                <div class="content">
+                    {% if parents.0.attrs %}
+                    <table class="ui celled compact purple table">
+                        <tbody>
+                            {% for attr in parents.0.attrs %}
+                                <tr>
+                                    <td><span class="purple-subtitle">{{ attr.0 }} </span></td>
+                                    <td>{{ attr.1|safe }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% endif %}
+                </div>
+            </div>
+            {% for parent in parents|slice:"1:" %}
+                <i class="right arrow icon divider"></i>
+                <a class="section parent-popup" href="{{ parent.href }}" data-variation="very wide">{{ parent.title }}</a>
                 <div class="ui special popup">
-                    <div class="header">{{ parents.0.title }}</div>
+                    <div class="header">{{ parent.title }}</div>
                     <div class="content">
-                        {% if parents.0.attrs %}
+                        {% if parent.attrs %}
                         <table class="ui celled compact purple table">
                             <tbody>
-                                {% for attr in parents.0.attrs %}
+                                {% for attr in parent.attrs %}
                                     <tr>
                                         <td><span class="purple-subtitle">{{ attr.0 }} </span></td>
                                         <td>{{ attr.1|safe }}</td>
@@ -194,28 +207,7 @@
                         {% endif %}
                     </div>
                 </div>
-                {% for parent in parents|slice:"1:" %}
-                    <i class="right arrow icon divider"></i>
-                    <a class="section parent-popup" href="{{ parent.href }}" data-variation="very wide">{{ parent.title }}</a>
-                    <div class="ui special popup">
-                        <div class="header">{{ parent.title }}</div>
-                        <div class="content">
-                            {% if parent.attrs %}
-                            <table class="ui celled compact purple table">
-                                <tbody>
-                                    {% for attr in parent.attrs %}
-                                        <tr>
-                                            <td><span class="purple-subtitle">{{ attr.0 }} </span></td>
-                                            <td>{{ attr.1|safe }}</td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                            {% endif %}
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
+            {% endfor %}
         </div>
     </div>
 {% endblock %}
