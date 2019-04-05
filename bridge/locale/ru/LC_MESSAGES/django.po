@@ -3382,3 +3382,48 @@ msgstr "Загрузить теги доказательств корректн�
 
 msgid "Recalculate caches"
 msgstr "Пересчитать кэши"
+
+msgid "Number of launches"
+msgstr "Число запусков"
+
+msgid "Share"
+msgstr "Поделиться"
+
+msgid "Hide"
+msgstr "Скрыть"
+
+msgid "Show default"
+msgstr "Отменить"
+
+msgid "Verifiers"
+msgstr "Верификатор"
+
+msgid "Show _MENU_ rows"
+msgstr "Показывать _MENU_ строк"
+
+msgid "Display from _START_ to _END_ of _TOTAL_ rows"
+msgstr "Показано от _START_ до _END_ из _TOTAL_ строк"
+
+msgid "Nothing is found"
+msgstr "Ничего не найдено"
+
+msgid "filtered of _MAX_ rows"
+msgstr "отфильровано из _MAX_ строк"
+
+msgid "Next"
+msgstr "Следующая"
+
+msgid "Previous"
+msgstr "Предыдущая"
+
+msgid "all"
+msgstr "все"
+
+msgid "shared"
+msgstr "общий"
+
+msgid "One of the selected jobs wasn't found or wasn't decided"
+msgstr "Один из заданных отчетов пуст"
+
+msgid "Association change kind"
+msgstr "Результат применения"
