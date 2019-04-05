@@ -19,8 +19,16 @@
 
 <div id="job_filters_accordion" class="ui styled accordion fluid">
     <div class="title"><i class="setting icon"></i>{{ view.viewtitle }}</div>
+    <div class="content">
+        <div id="view_form_segment_{{ MarkTable.view.type }}" class="ui form yellow segment">
+            {% include 'users/views/Basic.html' %}
+        </div>
+    </div>
+</div>
+
+<div id="job_filters_accordion_old" class="ui styled accordion fluid" hidden>
+    <div class="title"><i class="setting icon"></i>{{ view.viewtitle }}</div>
     <div class="content ui small form">
-        {% include 'users/views/viewButtons.html' %}
         <div class="ui divider"></div>
         <div class="ui grid">
             <div class="ten wide column">
@@ -32,7 +40,6 @@
 
                 <h3>{% trans 'Columns' %}</h3>
                 <div class="ui divider"></div>
-                {% include 'users/views/viewColumns.html' %}
             </div>
             <div class="six wide column">
                 <h3>{% trans 'Filters' %}</h3>
@@ -83,6 +90,5 @@
         </div>
         <div class="ui divider"></div>
 
-        {% include 'users/views/viewCreateForm.html' %}
     </div>
 </div>

@@ -692,6 +692,8 @@ class MarkReportsTable:
             for name in attrs:
                 value.append({'value': attr_vals[cnt].get(name, '-')})
             cnt += 1
+        self.available_columns = [item for item in self.available_columns if item not in self.selected_columns]
+
         return values
 
     def __get_page(self, page, values):

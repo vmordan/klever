@@ -215,23 +215,12 @@
 
     <h4 class="header ui teal">{% trans 'Associated leaf reports' %}</h4>
     {# View for associated reports #}
-    {% if user.extended.role == '2' %}
     {% include reports.view.template with view=reports.view selected_columns=reports.selected_columns available_columns=reports.available_columns %}
-    {% endif %}
     {# Associated reports table #}
     {% if reports.values|length %}
         <br>
-        <div>
-            {% if reports.values.has_previous %}
-                <i class="ui arrow left blue link icon page-link-icon" data-page-number="{{ reports.values.previous_page_number }}"></i>
-            {% endif %}
-            <span>{% blocktrans with n1=reports.values.number n2=reports.values.paginator.num_pages %}Page {{ n1 }} of {{ n2 }}{% endblocktrans %}</span>
-            {% if reports.values.has_next %}
-                <i class="ui arrow right blue link icon page-link-icon" data-page-number="{{ reports.values.next_page_number }}"></i>
-            {% endif %}
-        </div>
         <div style="overflow-x: auto;">
-            <table class="ui compact teal celled selectable table alternate-color">
+            <table class="ui compact teal celled selectable table sort-table show-min" width="100%">
                 <thead>
                     {% for column_row in reports.header %}
                         <tr>
@@ -247,9 +236,15 @@
                             {% for v in row_data %}
                                 <td class="collapsing">
                                     {% if v.href %}
-                                        <a href="{{ v.href }}">{{ v.value }}</a>
+                                        <a class="black-link" href="{{ v.href }}">{{ v.value }}</a>
                                     {% else %}
-                                        <span{% if v.color %} style="color:{{ v.color }}"{% endif %}>{{ v.value }}</span>
+                                        <span {% if v.color %} style="color:{{ v.color }}"{% endif %}>
+                                            {% if v.color %}
+                                                {{ v.value }}
+                                            {% else %}
+                                                <a class="black-link" href="{{ row_data.0.href }}">{{ v.value }}</a>
+                                            {% endif %}
+                                        </span>
                                     {% endif %}
                                 </td>
                             {% endfor %}
