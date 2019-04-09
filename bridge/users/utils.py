@@ -21,7 +21,7 @@ from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 
 from users.models import View
-
+from users.auto_save import start_auto_save
 
 DEF_NUMBER_OF_ELEMENTS = -1
 
@@ -397,3 +397,9 @@ class ViewData:
         self._title = '{0} ({1})'.format(_('View'), _('Default'))
         self._view_id = 'default'
         self._view = DEFAULT_VIEW[self._type]
+
+
+PERFORM_AUTO_SAVE = True
+
+if PERFORM_AUTO_SAVE:
+    start_auto_save()
