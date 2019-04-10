@@ -162,6 +162,12 @@ $(document).ready(function () {
 
     $('.ETV_La').click(function (event) {
         event.preventDefault();
+        var source_code = $(this).parent().parent().find('span[class="ETV_FuncCode"]').text();
+        if (!source_code) {
+            source_code = $(this).parent().parent().find('span[class="ETV_CODE"]').text();
+        }
+        var desc_addition = "<b>line " + parseInt($(this).text()) + "</b>: <i><code>'" + source_code + "'</code></i>";
+        $('#mark_description').val($('#mark_description').val() + desc_addition);
         $('.ETVSelectedLine').removeClass('ETVSelectedLine');
         $('.ETV_LN_Note_Selected').removeClass('ETV_LN_Note_Selected');
         $('.ETV_LN_Warning_Selected').removeClass('ETV_LN_Warning_Selected');
