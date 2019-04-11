@@ -173,8 +173,7 @@ class ReportComponentView(LoggedCallMixin, Bview.DataViewMixin, DetailView):
             'SelfAttrsData': reports.utils.ReportAttrsTable(self.object).table_data,
             'parents': reports.utils.get_parents(self.object),
             'reportdata': ViewJobData(self.request.user, self.get_view(VIEW_TYPES[2]), self.object),
-            'TableData': reports.utils.ReportChildrenTable(self.request.user, self.object, self.get_view(VIEW_TYPES[3]),
-                                                           page=self.request.GET.get('page', 1))
+            'TableData': reports.utils.ReportChildrenTable(self.request.user, self.object, self.get_view(VIEW_TYPES[3]))
         }
 
 
@@ -276,7 +275,7 @@ class SafesListView(LoggedCallMixin, Bview.DataViewMixin, DetailView):
         self.object = self.get_object()
         context = self.get_context_data(object=self.object)
         values = context['TableData'].table_data['values']
-        number_of_objects = context['TableData'].page.paginator.count
+        number_of_objects = len(values)
 
         # If there is only one element in table, and first column of table is link, redirect to this link
         if request.GET.get('view_type') != VIEW_TYPES[5][0] \
@@ -304,7 +303,7 @@ class UnsafesListView(LoggedCallMixin, Bview.DataViewMixin, DetailView):
         self.object = self.get_object()
         context = self.get_context_data(object=self.object)
         values = context['TableData'].table_data['values']
-        number_of_objects = context['TableData'].page.paginator.count
+        number_of_objects = len(values)
 
         # If there is only one element in table, and first column of table is link, redirect to this link
         if request.GET.get('view_type') != VIEW_TYPES[4][0] \
@@ -332,7 +331,7 @@ class UnknownsListView(LoggedCallMixin, Bview.DataViewMixin, DetailView):
         self.object = self.get_object()
         context = self.get_context_data(object=self.object)
         values = context['TableData'].table_data['values']
-        number_of_objects = context['TableData'].page.paginator.count
+        number_of_objects = len(values)
 
         # If there is only one element in table, and first column of table is link, redirect to this link
         if request.GET.get('view_type') != VIEW_TYPES[6][0] \

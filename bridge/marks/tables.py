@@ -16,9 +16,9 @@
 #
 
 import json
+import math
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import F
 from django.template import loader
 from django.urls import reverse
@@ -374,10 +374,6 @@ class MarksList:
         return columns
 
     def __paginate_objects(self, objects):
-        if 'elements' in self.view:
-            paginator = Paginator(objects, int(self.view['elements'][0]))
-            self.page = paginator.page(self._page_num)
-            return self.page.object_list, self.page.start_index()
         return objects, 1
 
     def __marks_data(self):
@@ -583,7 +579,8 @@ class MarkReportsTable:
         self.available_columns = self.__available()
 
         self.columns = self.__get_columns()
-        self.values = self.__get_page(page, self.__get_values())
+        self.page = self.__get_page(page)
+        self.values = self.__get_values()
         self.header = Header(self.columns, MARK_TITLES).struct
 
     def __selected(self):
@@ -624,7 +621,9 @@ class MarkReportsTable:
         attr_vals = []
         attrs = []
         cnt = 0
-        for mark_report in self.mark.markreport_set.select_related('report', 'report__root__job').order_by('id'):
+        objects = self.mark.markreport_set.select_related('report', 'report__root__job').order_by('id')
+        self.pages = math.ceil(objects.count() / DEF_NUMBER_OF_ELEMENTS)
+        for mark_report in objects[(self.page - 1) * DEF_NUMBER_OF_ELEMENTS: self.page * DEF_NUMBER_OF_ELEMENTS]:
             if 'similarity' in self.view:
                 if '0' not in self.view['similarity'] and mark_report.result == 0:
                     continue
@@ -695,18 +694,14 @@ class MarkReportsTable:
 
         return values
 
-    def __get_page(self, page, values):
-        num_per_page = DEF_NUMBER_OF_ELEMENTS
-        if 'elements' in self.view:
-            num_per_page = int(self.view['elements'][0])
-        self.paginator = Paginator(values, num_per_page)
+    def __get_page(self, page) -> int:
         try:
-            values = self.paginator.page(page)
-        except PageNotAnInteger:
-            values = self.paginator.page(1)
-        except EmptyPage:
-            values = self.paginator.page(self.paginator.num_pages)
-        return values
+            page = int(page)
+            if page > 0:
+                return page
+        except ValueError:
+            return 1
+        return 1
 
 
 class AssociationChangesTable:

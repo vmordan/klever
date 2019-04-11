@@ -219,6 +219,18 @@
     {# Associated reports table #}
     {% if reports.values|length %}
         <br>
+        {% if reports.pages > 1 %}
+        <div>
+            {% if reports.page > 1 %}
+                <i class="ui arrow left blue link icon page-link-icon" data-page-number="{{ reports.page|add:-1 }}"></i>
+            {% endif %}
+            <span>{% trans 'Page' %} {{reports.page}} {% trans 'of' %} {{reports.pages}}</span>
+            {% if reports.page < reports.pages %}
+                <i class="ui arrow right blue link icon page-link-icon" data-page-number="{{ reports.page|add:1 }}"></i>
+            {% endif %}
+        </div>
+        {% endif %}
+
         <div style="overflow-x: auto;">
             <table class="ui compact teal celled selectable table sort-table show-min" width="100%">
                 <thead>

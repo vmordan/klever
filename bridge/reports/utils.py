@@ -21,7 +21,6 @@ from collections import Counter
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.files import File
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Count
 from django.urls import reverse
 from django.utils.functional import cached_property
@@ -37,7 +36,7 @@ from marks.utils import SAFE_COLOR, UNSAFE_COLOR, SAFE_LINK_CLASS, UNSAFE_LINK_C
 from reports.models import ReportComponent, AttrFile, Attr, AttrName, ReportAttr, ReportUnsafe, ReportSafe, \
     ReportUnknown, ReportRoot
 from reports.querysets import LeavesQuery
-from users.utils import DEF_NUMBER_OF_ELEMENTS, ALL_ATTRS
+from users.utils import ALL_ATTRS
 
 REP_MARK_TITLES = {
     'mark_num': _('Mark'),
@@ -235,10 +234,6 @@ class SafesTable:
         return columns
 
     def __paginate_objects(self, objects):
-        if 'elements' in self.view:
-            paginator = Paginator(objects, int(self.view['elements'][0]))
-            self.page = paginator.page(self._kwargs['page'])
-            return self.page.object_list, self.page.start_index()
         return objects, 1
 
     def __safes_data(self):
@@ -328,7 +323,7 @@ class SafesTable:
 
 
 class UnsafesTable:
-    columns_list = ['marks_number', 'report_verdict', 'total_similarity',
+    columns_list = ['marks_number', 'report_verdict',
                     'tags', 'verifiers:cpu', 'verifiers:wall', 'verifiers:memory']
     columns_set = set(columns_list)
 
@@ -401,10 +396,6 @@ class UnsafesTable:
         return columns
 
     def __paginate_objects(self, objects):
-        if 'elements' in self.view:
-            paginator = Paginator(objects, int(self.view['elements'][0]))
-            self.page = paginator.page(self._kwargs['page'])
-            return self.page.object_list, self.page.start_index()
         return objects, 1
 
     def __unsafes_data(self):
@@ -561,10 +552,6 @@ class UnknownsTable:
         return columns
 
     def __paginate_objects(self, objects):
-        if 'elements' in self.view:
-            paginator = Paginator(objects, int(self.view['elements'][0]))
-            self.page = paginator.page(self._kwargs['page'])
-            return self.page.object_list, self.page.start_index()
         return objects, 1
 
     def __unknowns_data(self):
@@ -651,7 +638,7 @@ class UnknownsTable:
 
 
 class ReportChildrenTable:
-    def __init__(self, user, report, view, page=1):
+    def __init__(self, user, report, view):
         self.user = user
         self.report = report
         self.view = view
@@ -659,7 +646,7 @@ class ReportChildrenTable:
         self.columns = []
         columns, values = self.__component_data()
         self.paginator = None
-        self.table_data = {'header': Header(columns, REP_MARK_TITLES).struct, 'values': self.__get_page(page, values)}
+        self.table_data = {'header': Header(columns, REP_MARK_TITLES).struct, 'values': values}
 
     def __component_data(self):
         data = {}
@@ -733,19 +720,6 @@ class ReportChildrenTable:
                 elif ftype == 'istartswith' and not value.lower().startswith(attr_val.lower()):
                     return False
         return True
-
-    def __get_page(self, page, values):
-        num_per_page = DEF_NUMBER_OF_ELEMENTS
-        if 'elements' in self.view:
-            num_per_page = int(self.view['elements'][0])
-        self.paginator = Paginator(values, num_per_page)
-        try:
-            values = self.paginator.page(page)
-        except PageNotAnInteger:
-            values = self.paginator.page(1)
-        except EmptyPage:
-            values = self.paginator.page(self.paginator.num_pages)
-        return values
 
 
 class AttrData:
