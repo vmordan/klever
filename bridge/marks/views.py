@@ -269,6 +269,14 @@ class MarkFormView(LoggedCallMixin, DetailView):
                 context['comparison_function'] = self.object.comparison_function or DEFAULT_COMPARISON_FUNCTION
                 if self.object.report:
                     context['report_id'] = self.object.report.id
+                else:
+                    # Original report was lost, therefore we take random from marks application and make it original.
+                    random_report_id = MarkUnsafeReport.objects.filter(mark__id=self.object.id).values_list('report')
+                    if random_report_id:
+                        report_unsafe = ReportUnsafe.objects.get(id=random_report_id[0][0])
+                        self.object.report = report_unsafe
+                        self.object.save()
+                        context['report_id'] = self.object.report.id
                 mark_report = {}
                 for mur in MarkUnsafeReport.objects.filter(mark__id=self.object.id):
                     report = mur.report
