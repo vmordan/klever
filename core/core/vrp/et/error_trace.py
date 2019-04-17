@@ -197,11 +197,15 @@ class ErrorTrace:
                 current = begin
                 yield current
             if current is end:
-                raise StopIteration
+                # This exception does not allow to show some error traces.
+                # raise StopIteration
+                break
             else:
                 current = getter(current)
                 if not current:
-                    raise StopIteration
+                    # This exception does not allow to show some error traces.
+                    # raise StopIteration
+                    break
                 else:
                     yield current
 
