@@ -3427,3 +3427,15 @@ msgstr "Один из заданных отчетов пуст"
 
 msgid "Association change kind"
 msgstr "Результат применения"
+
+msgid "Error trace edit"
+msgstr "Редактирование трассы ошибки"
+
+msgid "Modify error trace element"
+msgstr "Модификация элемента трассы"
+
+msgid "Verifier note"
+msgstr "Описание проверки правила"
+
+msgid "Verifier warning"
+msgstr "Описание метки ошибки"

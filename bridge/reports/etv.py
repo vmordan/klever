@@ -199,7 +199,8 @@ class ParseErrorTrace:
             'file': self.curr_file,
             'code': code,
             'offset': self.scope.offset(),
-            'type': 'normal'
+            'type': 'normal',
+            'id': edge.get('source node', 0)
         }
 
         line_data.update(self.__add_assumptions(edge.get('assumption')))

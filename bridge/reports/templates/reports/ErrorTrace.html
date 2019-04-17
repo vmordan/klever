@@ -28,19 +28,19 @@
         {% else %}
             {% if l.note %}
                 <span class="{{ l.scope }}"{% if l.note_hidden %} style="display: none"{% endif %} data-thread="{{ l.thread_id }}" data-type="comment">
-                    <span class="ETV_LN ETV_LN_Note"><span class="ETV_THREAD">{{ l.thread|safe }}</span>{{ l.line_offset }}{% if l.line %}{{ l.line }}{% endif %}</span>
-                    <span class="ETV_LC">{{ l.offset }}<a class="ETV_ShowCommentCode ETV_NoteText">{{ l.note }}</a></span><br>
+                    <span class="ETV_LN ETV_LN_Note"><span class="ETV_ID" hidden>{{l.id}}</span><span class="ETV_THREAD">{{ l.thread|safe }}</span>{{ l.line_offset }}{% if l.line %}{{ l.line }}{% endif %}</span>
+                    <span class="ETV_LC">{{ l.offset }}<a class="ETV_ShowCommentCode ETV_NoteText">{{ l.note }}</a></span>{% if edit %}<i id="etv_note_{{l.id}}" class="ui icon trash alternate outline" style="cursor:pointer;"></i>{% endif %}<br>
                 </span>
             {% endif %}
             {% if l.warning %}
                 <span class="{{ l.scope }}" data-thread="{{ l.thread_id }}" data-type="comment">
-                    <span class="ETV_LN ETV_LN_Warning"><span class="ETV_THREAD">{{ l.thread|safe }}</span>{{ l.line_offset }}{% if l.line %}{{ l.line }}{% endif %}</span>
-                    <span class="ETV_LC">{{ l.offset }}<a class="ETV_ShowCommentCode ETV_WarnText">{{ l.warning }}</a></span><br>
+                    <span class="ETV_LN ETV_LN_Warning"><span class="ETV_ID" hidden>{{l.id}}</span><span class="ETV_THREAD">{{ l.thread|safe }}</span>{{ l.line_offset }}{% if l.line %}{{ l.line }}{% endif %}</span>
+                    <span class="ETV_LC">{{ l.offset }}<a class="ETV_ShowCommentCode ETV_WarnText">{{ l.warning }}</a></span>{% if edit %}<i id="etv_warn_{{l.id}}" class="ui icon trash alternate outline" style="cursor:pointer;"></i>{% endif %}<br>
                 </span>
             {% endif %}
             <span class="{{ l.scope }}{% if l.commented %} commented{% endif %}{% if l.collapsed %} func_collapsed{% endif %}"{% if l.hidden %} style="display:none"{% endif %} data-thread="{{ l.thread_id }}" data-type="{{ l.type }}"{% if l.type == 'hidden-return' %} hidden{% endif %}>
-                <span class="ETV_LN"><span class="ETV_THREAD">{{ l.thread|safe }}</span>{{ l.line_offset }}{% if l.line %}<a class="ETV_La">{{ l.line }}</a><span class="ETV_File" hidden>{{ l.file }}</span>{% endif %}</span>
-                <span class="ETV_LC">{{ l.offset }}{% include 'reports/ETV_HideLink.html' %}{% if l.comment %}<span class="ETV_FuncName {{ l.comment_class }}">{{ l.comment }}</span><span class="ETV_FuncCode" style="display: none">{{ l.code|safe }}</span>{% else %}<span class="ETV_CODE">{{ l.code|safe }}</span>{% endif %}</span>
+                <span class="ETV_LN"><span class="ETV_THREAD">{{ l.thread|safe }}</span>{{ l.line_offset }}{% if l.line %}<a class="ETV_La">{{ l.line }}</a><span class="ETV_File" hidden>{{ l.file }}</span>{% endif %}{% if edit %}<span class="ETV_ID" hidden>{{l.id}}</span><span class="ETV_ID_HIDE" hidden>{{ l.hide_id }}</span>{% endif %}</span>
+                <span class="ETV_LC">{{ l.offset }}{% include 'reports/ETV_HideLink.html' %}{% if edit %}<a class="ETV_ShowCommentCode ETV_WarnText"></a><a class="ETV_ShowCommentCode ETV_NoteText"></a>{% endif %}{% if l.comment %}<span class="ETV_FuncName {{ l.comment_class }}">{{ l.comment }}</span><span class="ETV_FuncCode" style="display: none">{{ l.code|safe }}</span>{% else %}<span class="ETV_CODE">{{ l.code|safe }}</span>{% endif %}</span>
                 {% if l.assumptions %}
                     <span class="ETV_Assumptions" hidden>{{ l.assumptions }}</span>
                 {% endif %}
@@ -54,4 +54,26 @@
     {% for assumption in etv.assumes %}
         <span id="{{ assumption.0 }}" hidden>{{ assumption.1 }}</span>
     {% endfor %}
+</div>
+<div id="change_et_form" class="ui modal">
+    <h3 class="ui header center aligned">{% trans 'Modify error trace element' %}</h3>
+    <div class="content">
+        <div class="ui form">
+            <div class="fields">
+                <div class="eight wide field">
+                    <label for="form_modify_note">{% trans 'Verifier note' %}</label>
+                    <input id="form_modify_note" type="text">
+                </div>
+                <div class="eight wide field">
+                    <label for="form_modify_warn">{% trans 'Verifier warning' %}</label>
+                    <input id="form_modify_warn" type="text">
+                </div>
+                <input id="form_id" type="hidden" disabled>
+            </div>
+        </div>
+    </div>
+    <div class="actions">
+        <button id="change_et_ok" type="button" class="ui positive left button">{% trans 'OK' %}</button>
+        <button id="change_et_cancel" type="button" class="ui blue button">{% trans 'Cancel' %}</button>
+    </div>
 </div>

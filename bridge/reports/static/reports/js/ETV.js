@@ -205,6 +205,105 @@ $(document).ready(function () {
             });
         }
     });
+    var warn;
+    var note;
+    var note_changes = {}, warn_changes = {};
+
+    var last_lc;
+    $('.ETV_LN').contextmenu(function(event) {
+        if (!$('#edit_et').val()) {
+            return true;
+        }
+        last_lc = $(this).parent().filter('span[class="ETV_LC"]');
+        $('#change_et_form').show();
+        warn = $(this).parent().find('a[class="ETV_ShowCommentCode ETV_WarnText"]');
+        $('#form_modify_warn').val(warn.text());
+        note = $(this).parent().find('a[class="ETV_ShowCommentCode ETV_NoteText"]');
+        $('#form_modify_note').val(note.text());
+        var id = $(this).find('span[class="ETV_ID"]').text();
+        $('#form_id').val(id);
+        return false;
+    });
+    $('#change_et_ok').click(function(event) {
+        var id = $('#form_id').val();
+
+        var warn_val = $('#form_modify_warn').val();
+        var note_val = $('#form_modify_note').val();
+
+        warn.text(warn_val);
+        note.text(note_val);
+        note_changes[id] = note_val;
+        warn_changes[id] = warn_val;
+        if (note_val) {
+            note.parent().find('.ETV_CODE').hide();
+            note.parent().find('.ETV_FuncCode').hide();
+            note.parent().find('.ETV_FuncName').hide();
+        }
+        if (warn_val) {
+            warn.parent().find('.ETV_CODE').hide();
+            warn.parent().find('.ETV_FuncCode').hide();
+            warn.parent().find('.ETV_FuncName').hide();
+        }
+        if (!note_val && !warn_val) {
+            warn.parent().find('.ETV_CODE').hide();
+            warn.parent().find('.ETV_FuncName').hide();
+            note.parent().find('.ETV_CODE').show();
+            note.parent().find('.ETV_FuncName').show();
+        }
+
+        $('#change_et_form').hide();
+        return false;
+    });
+    $('#change_et_cancel').click(function(event) {
+        $('#change_et_form').hide();
+        return false;
+    });
+    $('i[id^="etv_warn_"]').click(function(event) {
+        warn_changes[$(this).parent().find('.ETV_ID').text()] = "";
+        $(this).parent().remove();
+        return false;
+    });
+    $('i[id^="etv_note_"]').click(function(event) {
+        note_changes[$(this).parent().find('.ETV_ID').text()] = "";
+        $(this).parent().remove();
+        return false;
+    });
+    $('#apply_changes').click(function(event) {
+        $(this).addClass('disabled');
+        $.post(
+            '/reports/unsafe/' + $('#report_pk').val() +'/apply/',
+            {
+                "notes": JSON.stringify(note_changes),
+                "warns": JSON.stringify(warn_changes)
+            },
+            function (data) {
+                if (data.error) {
+                    err_notify(data.error);
+                    $('#apply_changes').removeClass('disabled');
+                    return false;
+                }
+                window.location.href = window.location.href.replace('/edit/', '/');
+            }
+        );
+    });
+    $('#cancel_changes').click(function(event) {
+        $(this).addClass('disabled');
+        $.post(
+            '/reports/unsafe/' + $('#report_pk').val() +'/cancel/',
+            {
+                "notes": JSON.stringify(note_changes),
+                "warns": JSON.stringify(warn_changes)
+            },
+            function (data) {
+                if (data.error) {
+                    err_notify(data.error);
+                    $('#cancel_changes').removeClass('disabled');
+                    return false;
+                }
+                window.location.href = window.location.href.replace('/edit/', '/');
+            }
+        );
+    });
     $('.ETV_ShowCommentCode').click(function () {
         var next_code = $(this).parent().parent().next('span');
         if (next_code.length > 0) {

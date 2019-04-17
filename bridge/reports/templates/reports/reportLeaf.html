@@ -107,7 +107,10 @@
                 {% endif %}
             {% endwith %}
             {% if report_type == 'unsafe' %}
-                <a class="ui tiny white button" href="{% url 'reports:unsafe_fullscreen' report.trace_id %}">{% trans 'Full screen mode' %}</a>
+                {% if user.extended.role == '2' %}
+                    <a class="ui tiny button purple" href="{% url 'reports:unsafe_edit' report.trace_id %}">{% trans 'Edit' %}</a>
+                {% endif %}
+                <a class="ui tiny button purple" href="{% url 'reports:unsafe_fullscreen' report.trace_id %}">{% trans 'Full screen mode' %}</a>
             {% endif %}
         </div>
     </div>

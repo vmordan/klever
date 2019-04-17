@@ -33,7 +33,7 @@ from django.views.generic.detail import SingleObjectMixin, DetailView
 import bridge.CustomViews as Bview
 import reports.utils
 from bridge.utils import logger, ArchiveFileContent, BridgeException, BridgeErrorResponse
-from bridge.vars import JOB_STATUS, VIEW_TYPES, LOG_FILE, ERROR_TRACE_FILE, PROOF_FILE, PROBLEM_DESC_FILE
+from bridge.vars import JOB_STATUS, VIEW_TYPES, LOG_FILE, PROOF_FILE, PROBLEM_DESC_FILE
 from jobs.ViewJobData import ViewJobData
 from jobs.models import Job
 from jobs.utils import JobAccess
@@ -44,6 +44,7 @@ from reports.coverage import GetCoverage, GetCoverageSrcHTML
 from reports.etv import GetSource, GetETV
 from reports.models import ReportRoot, Report, ReportComponent, ReportSafe, ReportUnknown, ReportUnsafe, \
     AttrName, ReportAttr, CompareJobsInfo, CoverageArchive
+from reports.utils import get_edited_error_trace, get_error_trace_content, modify_error_trace
 from service.models import Task
 from tools.profiling import LoggedCallMixin
 
@@ -401,8 +402,7 @@ class ReportUnsafeViewById(LoggedCallMixin, Bview.DataViewMixin, DetailView):
         if not JobAccess(self.request.user, self.object.root.job).can_view():
             raise BridgeException(code=400)
         try:
-            etv = GetETV(ArchiveFileContent(self.object, 'error_trace', ERROR_TRACE_FILE).content.decode('utf8'),
-                         self.request.user)
+            etv = GetETV(get_error_trace_content(self.object), self.request.user)
         except Exception as e:
             logger.exception(e, stack_info=True)
             etv = None
@@ -426,8 +426,7 @@ class ReportUnsafeView(LoggedCallMixin, Bview.DataViewMixin, DetailView):
         if not JobAccess(self.request.user, self.object.root.job).can_view():
             raise BridgeException(code=400)
         try:
-            etv = GetETV(ArchiveFileContent(self.object, 'error_trace', ERROR_TRACE_FILE).content.decode('utf8'),
-                         self.request.user)
+            etv = GetETV(get_error_trace_content(self.object), self.request.user)
         except Exception as e:
             logger.exception(e, stack_info=True)
             etv = None
@@ -453,11 +452,51 @@ class FullscreenReportUnsafe(LoggedCallMixin, DetailView):
         return {
             'report': self.object,
             'include_assumptions': self.request.user.extended.assumptions,
-            'etv': GetETV(
-                ArchiveFileContent(self.object, 'error_trace', ERROR_TRACE_FILE).content.decode('utf8'),
-                self.request.user
-            )
+            'etv': GetETV(get_error_trace_content(self.object), self.request.user)
         }
+
+
+@method_decorator(login_required, name='dispatch')
+class EditReportUnsafe(LoggedCallMixin, DetailView):
+    template_name = 'reports/etv_edit.html'
+    model = ReportUnsafe
+    slug_url_kwarg = 'trace_id'
+    slug_field = 'trace_id'
+
+    def get_context_data(self, **kwargs):
+        if not JobAccess(self.request.user, self.object.root.job).can_view():
+            raise BridgeException(code=400)
+        return {
+            'report': self.object,
+            'include_assumptions': self.request.user.extended.assumptions,
+            'etv': GetETV(get_error_trace_content(self.object), self.request.user)
+        }
+
+
+class UnsafeApplyView(LoggedCallMixin, Bview.JsonDetailPostView):
+    model = ReportUnsafe
+
+    def get_context_data(self, **kwargs):
+        notes = json.loads(self.request.POST['notes'], "{}")
+        warns = json.loads(self.request.POST['warns'], "{}")
+        for common_key in set(notes.keys()).intersection(set(warns.keys())):
+            if notes[common_key] and not warns[common_key]:
+                del warns[common_key]
+            if not notes[common_key] and warns[common_key]:
+                del notes[common_key]
+        if notes or warns:
+            modify_error_trace(self.object, notes, warns)
+        return {}
+
+
+class UnsafeCancelView(LoggedCallMixin, Bview.JsonDetailPostView):
+    model = ReportUnsafe
+
+    def get_context_data(self, **kwargs):
+        edited_error_trace = get_edited_error_trace(self.object)
+        if os.path.exists(edited_error_trace):
+            os.remove(edited_error_trace)
+        return {}
 
 
 class SourceCodeView(LoggedCallMixin, Bview.JsonDetailPostView):
@@ -479,7 +518,7 @@ class DownloadErrorTrace(LoggedCallMixin, SingleObjectMixin, Bview.StreamingResp
 
     def get_generator(self):
         self.object = self.get_object()
-        content = ArchiveFileContent(self.object, 'error_trace', ERROR_TRACE_FILE).content
+        content = get_error_trace_content(self.object).encode('utf8')
         self.file_size = len(content)
         return FileWrapper(BytesIO(content), 8192)
 

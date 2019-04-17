@@ -19,6 +19,7 @@ import json
 import os
 from collections import Counter
 
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.files import File
 from django.db.models import Count
@@ -28,8 +29,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from bridge.ZipGenerator import ZipStream
 from bridge.tableHead import Header
-from bridge.utils import logger, extract_archive, BridgeException
-from bridge.vars import UNSAFE_VERDICTS, SAFE_VERDICTS
+from bridge.utils import ArchiveFileContent, logger, extract_archive, BridgeException
+from bridge.vars import ERROR_TRACE_FILE, UNSAFE_VERDICTS, SAFE_VERDICTS
 from jobs.utils import get_resource_data, get_user_time, get_user_memory
 from marks.models import UnknownProblem, SafeTag, UnsafeTag
 from marks.utils import SAFE_COLOR, UNSAFE_COLOR, SAFE_LINK_CLASS, UNSAFE_LINK_CLASS
@@ -57,6 +58,8 @@ REP_MARK_TITLES = {
 }
 
 MARK_COLUMNS = ['mark_verdict', 'mark_result', 'mark_status']
+
+EDITED_ERROR_TRACE_SUFFIX = "_edited.json"
 
 
 def computer_description(computer):
@@ -143,6 +146,61 @@ def get_attr_vals(ids: str) -> dict:
         except ValueError:
             logger.exception("Cannot parse integer {}".format(attr_id), stack_info=True)
     return result
+
+
+def get_edited_error_trace(unsafe_report: ReportUnsafe) -> str:
+    original_error_trace_arch = os.path.join(settings.MEDIA_ROOT, unsafe_report.error_trace.name)
+    edited_error_trace = original_error_trace_arch[:-4] + EDITED_ERROR_TRACE_SUFFIX
+    return edited_error_trace
+
+
+def get_error_trace_content(unsafe_report: ReportUnsafe) -> str:
+    edited_error_trace = get_edited_error_trace(unsafe_report)
+    if os.path.exists(edited_error_trace):
+        with open(edited_error_trace) as fd:
+            error_trace = fd.read()
+    else:
+        error_trace = ArchiveFileContent(unsafe_report, 'error_trace', ERROR_TRACE_FILE).content.decode('utf8')
+    return error_trace
+
+
+def __apply_comments_changes(edges: list, comments: dict, comment_type: str):
+    # Sort comments, so they can be applied in correct order.
+    sorted_comments = dict()
+    for identifier, new_comment in comments.items():
+        sorted_comments[int(identifier)] = new_comment
+    for identifier in sorted(sorted_comments):
+        edge = edges[identifier]
+        new_comment = sorted_comments[identifier]
+        if new_comment:
+            edge[comment_type] = new_comment
+        elif comment_type in edge:
+            del edge[comment_type]
+            # Remove comments recursively.
+            recursive_comments = set()
+            is_remove_comments = False
+            if 'enter' in edge:
+                enter_function_id = edge['enter']
+                for i in range(identifier + 1, len(edges)):
+                    cur_edge = edges[i]
+                    if comment_type in cur_edge:
+                        recursive_comments.add(i)
+                    if cur_edge.get('return') == enter_function_id:
+                        is_remove_comments = True
+                        break
+            if is_remove_comments:
+                for edge_id in recursive_comments:
+                    del edges[edge_id][comment_type]
+
+
+def modify_error_trace(unsafe_report: ReportUnsafe, notes: dict, warns: dict):
+    error_trace = json.loads(get_error_trace_content(unsafe_report))
+    edges = error_trace['edges']
+    __apply_comments_changes(edges, notes, 'note')
+    __apply_comments_changes(edges, warns, 'warn')
+    edited_error_trace = get_edited_error_trace(unsafe_report)
+    with open(edited_error_trace, "w") as fd:
+        json.dump(error_trace, fd, ensure_ascii=False, sort_keys=True, indent=4)
 
 
 class ReportAttrsTable:

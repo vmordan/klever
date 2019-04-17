@@ -39,6 +39,7 @@ urlpatterns = [
     path('unsafe/<int:pk>/', views.ReportUnsafeViewById.as_view(), name='unsafe'),
     path('unsafe/<slug:trace_id>/', views.ReportUnsafeView.as_view(), name='unsafe'),
     path('unsafe/<slug:trace_id>/fullscreen/', views.FullscreenReportUnsafe.as_view(), name='unsafe_fullscreen'),
+    path('unsafe/<slug:trace_id>/edit/', views.EditReportUnsafe.as_view(), name='unsafe_edit'),
     path('get_source/<int:unsafe_id>/', views.SourceCodeView.as_view()),
     path('download-error-trace/<int:unsafe_id>/', views.DownloadErrorTrace.as_view(), name='download_error_trace'),
 
@@ -56,5 +57,7 @@ urlpatterns = [
 
     # Utils
     path('upload/', views.UploadReportView.as_view()),
-    path('clear_verification_files/<int:job_id>/', views.ClearVerificationFiles.as_view())
+    path('clear_verification_files/<int:job_id>/', views.ClearVerificationFiles.as_view()),
+    path('unsafe/<int:pk>/apply/', views.UnsafeApplyView.as_view()),
+    path('unsafe/<int:pk>/cancel/', views.UnsafeCancelView.as_view())
 ]
