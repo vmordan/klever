@@ -29,13 +29,15 @@
 
 {% block body_block %}
     <div class="ui grid">
-        <div class="seventeen wide column right aligned">
-            <button class="ui tiny button blue" id="apply_changes">
-                {% trans 'Apply' %}
-            </button>
-            <button class="ui tiny button red" id="cancel_changes">
-                {% trans 'Cancel' %}
-            </button>
+        <div class="sixteen wide column">
+            <div class="ui buttons tiny right floated">
+                <button class="ui button blue" id="apply_changes">
+                    {% trans 'Apply' %}
+                </button>
+                <button class="ui button red" id="cancel_changes">
+                    {% trans 'Cancel' %}
+                </button>
+            </div>
         </div>
     </div>
     {% include 'reports/UnsafeContent.html' with fullscreen=True edit=True %}
