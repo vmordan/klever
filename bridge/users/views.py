@@ -170,6 +170,11 @@ def edit_profile(request):
 def show_profile(request, user_id):
     activate(request.user.extended.language)
     target = get_object_or_404(User, pk=user_id)
+    user_role = Extended.objects.get(user=request.user).role
+    if not user_role == '2' and not target == request.user:
+        return render(request, 'users/showProfile.html', {
+            'error': _("The view was not found or you don't have an access to it")})
+
     from jobs.models import JobHistory
     from jobs.utils import JobAccess
     from marks.models import MarkSafeHistory, MarkUnsafeHistory, MarkUnknownHistory
