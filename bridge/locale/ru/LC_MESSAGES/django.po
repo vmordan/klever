@@ -3439,3 +3439,15 @@ msgstr "Описание проверки правила"
 
 msgid "Verifier warning"
 msgstr "Описание метки ошибки"
+
+msgid "Toggle functions from call stack"
+msgstr "Отобразить/скрыть функции из стека на метке ошибки"
+
+msgid "Toggle all functions"
+msgstr "Отобразить/скрыть все функции"
+
+msgid "Toggle notes code"
+msgstr "Отобразить/скрыть код проверок"
+
+msgid "Toggle hidden notes"
+msgstr "Отобразить/скрыть проверки, находящиеся вне стека функций на метке ошибки"

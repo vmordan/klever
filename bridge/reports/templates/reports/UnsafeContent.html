@@ -19,11 +19,15 @@
 
 <div id="etv" class="ui orange segment {% if fullscreen %} fullscreen{% endif %}">
     <div id="etv-trace">
-        <div style="margin: 10px;">
-            <div class="ui grid">
-                <div class="sixteen wide column center aligned">
+        <div>
+            <div class="ui grid equal width columns">
+                <div class="column" style="margin: 2px;">
+                    {% include 'reports/ETVButtons.html' %}
+                </div>
+                <div class="column center aligned" style="margin: 10px;">
                     <h3><a id="error_trace_options" href="{% url 'reports:download_error_trace' report.pk %}">{% trans 'Error trace' %}</a></h3>
                 </div>
+                <div class="column"></div>
             </div>
             {% if etv %}
                 {% include 'reports/ErrorTrace.html' with etv=etv %}

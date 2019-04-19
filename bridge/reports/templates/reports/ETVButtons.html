@@ -17,3 +17,17 @@
 
 {% load i18n %}
 
+<div class="ui buttons icon tiny orange">
+    <button class="ui tiny button icon note-popup" id="toggle_eyes" data-content="{% trans 'Toggle functions from call stack' %}">
+        <i class="ui eye icon"></i>
+    </button>
+    <button class="ui tiny button icon note-popup" id="toggle_functions" data-content="{% trans 'Toggle all functions' %}">
+        <i class="ui sitemap icon"></i>
+    </button>
+    <button class="ui tiny button icon note-popup" id="toggle_notes" data-content="{% trans 'Toggle notes code' %}">
+        <i class="ui comments outline icon"></i>
+    </button>
+    <button class="ui tiny button icon note-popup" id="toggle_hidden_notes" data-content="{% trans 'Toggle hidden notes' %}">
+        <i class="ui comment outline icon"></i>
+    </button>
+</div>

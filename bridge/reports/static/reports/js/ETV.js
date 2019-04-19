@@ -505,6 +505,58 @@ $(document).ready(function () {
             src_link.click();
         }
     });
+    $('#toggle_eyes').click(function () {
+        $(this).addClass('disabled');
+        $('.ETV_ShowCode').click();
+        $(this).removeClass('disabled');
+    });
+    $('#toggle_functions').click(function () {
+        $(this).addClass('disabled');
+        $('.ETV_HideLink').click();
+        $('.ETV_ShowCode').click();
+        $(this).removeClass('disabled');
+    });
+    var toggle_notes_state = true;
+    $('#toggle_notes').click(function () {
+        $(this).addClass('disabled');
+        $($('.ETV_ShowCommentCode').get().reverse()).each(function (){
+            if ($(this).text()) {
+                var next_code = $(this).parent().parent().next('span');
+                if (next_code.length > 0) {
+                    if (toggle_notes_state) {
+                        next_code.show();
+                        if (next_code.find('.ETV_HideLink').find('i').hasClass('right')) {
+                            next_code.find('.ETV_HideLink').click();
+                        }
+                    } else {
+                        if (next_code.find('.ETV_HideLink').find('i').hasClass('down')) {
+                            next_code.find('.ETV_HideLink').click();
+                        }
+                        next_code.hide();
+                    }
+                }
+            }
+        });
+        toggle_notes_state = !toggle_notes_state;
+        $(this).removeClass('disabled');
+    });
+    var toggle_hidden_notes_state = true;
+    $('#toggle_hidden_notes').click(function () {
+        $(this).addClass('disabled');
+        $($('.ETV_LN_Note').get().reverse()).each(function (){
+            var is_hidden = $(this).parent().find('span[class="ETV_HIDDEN_NOTE"]');
+            if (is_hidden.text()) {
+                var hidden_note = $(this).parent();
+                if (toggle_hidden_notes_state) {
+                    hidden_note.show();
+                } else {
+                    hidden_note.hide();
+                }
+            }
+        });
+        toggle_hidden_notes_state = !toggle_hidden_notes_state;
+        $(this).removeClass('disabled');
+    });
 
     $('.ETV_ShowCode').click(function () {
         var whole_line = $(this).parent().parent(), scope = $(this).attr('id'), showcode_icon = $(this).find('i');
