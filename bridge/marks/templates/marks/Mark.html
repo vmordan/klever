@@ -244,6 +244,7 @@
                 </thead>
                 <tbody>
                     {% for row_data in reports.values %}
+                        {% if row_data.0.href %}
                         <tr>
                             {% for v in row_data %}
                                 <td class="collapsing">
@@ -261,6 +262,7 @@
                                 </td>
                             {% endfor %}
                         </tr>
+                        {% endif %}
                     {%  endfor %}
                 </tbody>
             </table>
