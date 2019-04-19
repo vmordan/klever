@@ -232,10 +232,10 @@
         {% endif %}
 
         <div style="overflow-x: auto;">
-            <table class="ui compact teal celled selectable table sort-table show-min" width="100%">
+            <table class="ui compact teal celled selectable table sort-table show-min no-index" width="100%">
                 <thead>
                     {% for column_row in reports.header %}
-                        <tr>
+                        <tr style="text-align: center">
                         {% for coldata in column_row %}
                             <th colspan="{{ coldata.columns }}" rowspan="{{ coldata.rows }}">{{ coldata.title }}</th>
                         {% endfor %}
@@ -245,10 +245,20 @@
                 <tbody>
                     {% for row_data in reports.values %}
                         {% if row_data.0.href %}
-                        <tr>
+                        <tr style="text-align: center">
                             {% for v in row_data %}
                                 <td class="collapsing">
-                                    {% if v.href %}
+                                    {% if forloop.counter == 1 %}
+                                        <a class="black-link" href="{{ v.href }}">
+                                            {% if markdata.type == 'safe' %}
+                                                {% trans 'Safe' %}
+                                            {% elif markdata.type == 'unknown' %}
+                                                {% trans 'Unknown' %}
+                                            {% else %}
+                                                {% trans 'Unsafe' %}
+                                            {% endif %}
+                                        </a>
+                                    {% elif v.href %}
                                         <a class="black-link" href="{{ v.href }}">{{ v.value }}</a>
                                     {% else %}
                                         <span {% if v.color %} style="color:{{ v.color }}"{% endif %}>
