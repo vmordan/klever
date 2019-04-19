@@ -107,10 +107,16 @@
                 {% endif %}
             {% endwith %}
             {% if report_type == 'unsafe' %}
-                {% if user.extended.role == '2' %}
-                    <a class="ui tiny button purple" href="{% url 'reports:unsafe_edit' report.trace_id %}">{% trans 'Edit' %}</a>
-                {% endif %}
-                <a class="ui tiny button purple" href="{% url 'reports:unsafe_fullscreen' report.trace_id %}">{% trans 'Full screen mode' %}</a>
+                <div class="ui buttons violet icon tiny">
+                    {% if user.extended.role == '2' %}
+                        <a class="ui tiny button note-popup" href="{% url 'reports:unsafe_edit' report.trace_id %}" data-content="{% trans 'Edit' %}">
+                            <i class="ui edit icon"></i>
+                        </a>
+                    {% endif %}
+                    <a class="ui tiny button note-popup" href="{% url 'reports:unsafe_fullscreen' report.trace_id %}" data-content="{% trans 'Full screen mode' %}">
+                        <i class="ui icon expand"></i>
+                    </a>
+                </div>
             {% endif %}
         </div>
     </div>
