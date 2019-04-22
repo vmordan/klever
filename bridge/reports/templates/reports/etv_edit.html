@@ -30,13 +30,16 @@
 {% block body_block %}
     <div class="ui grid">
         <div class="sixteen wide column">
+            <button class="ui button tiny red left floated" id="cancel_changes" title="{% trans 'Attention: all changes will be lost!' %}">
+                {% trans 'Remove edited error trace' %}
+            </button>
             <div class="ui buttons tiny right floated">
-                <button class="ui button blue" id="apply_changes">
+                <button class="ui button green" id="apply_changes">
                     {% trans 'Apply' %}
                 </button>
-                <button class="ui button red" id="cancel_changes">
+                <a class="ui button blue" href="{% url 'reports:unsafe' report.trace_id %}">
                     {% trans 'Cancel' %}
-                </button>
+                </a>
             </div>
         </div>
     </div>

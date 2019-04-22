@@ -3451,3 +3451,9 @@ msgstr "Отобразить/скрыть код проверок"
 
 msgid "Toggle hidden notes"
 msgstr "Отобразить/скрыть проверки, находящиеся вне стека функций на метке ошибки"
+
+msgid "Remove edited error trace"
+msgstr "Удалить отредактированную трассу ошибки"
+
+msgid "Attention: all changes will be lost!"
+msgstr "Внимание: все изменения будут потеряны!"
