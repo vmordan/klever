@@ -61,7 +61,7 @@ MARK_TITLES = {
     'component': _('Component'),
     'pattern': _('Problem pattern'),
     'checkbox': '',
-    'ass_type': _('Manually resolve'),
+    'ass_type': _('Association type'),
     'automatic': _('Automatic association'),
     'tags': _('Tags'),
     'buttons': _('Control'),
@@ -313,7 +313,7 @@ class ReportMarkTable:
                 elif col == 'description' and len(mark_rep.mark.description) > 0:
                     val = mark_rep.mark.description
                 elif col == 'buttons':
-                    val = mark_rep.mark_id
+                    val = (mark_rep.mark_id, mark_rep.type)
                     href = '%sedit?report_to_redirect=%s' % (
                         reverse('marks:mark', args=[self.type, mark_rep.mark_id]), self.report.pk
                     )

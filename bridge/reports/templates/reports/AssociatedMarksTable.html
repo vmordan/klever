@@ -32,29 +32,23 @@
             {% for row_data in MarkTable.values %}
                 <tr style="text-align: center">
                     {% for v in row_data %}
-                        <td>
+                        <td {% if v.column == 'buttons' or v.column == 'mark_num' %}width="1%"{% endif %}>
                             {% if v.column == 'description' %}
                                 <span style="white-space: pre-wrap;">{{ v.value|safe }}</span>
                             {% elif v.column == 'buttons' %}
                                 <div class="ui buttons">
                                     <a class="ui mini icon button basic blue note-popup" href="{{ row_data.0.href }}" data-content="{% trans 'Show' %}"><i class="eye icon"></i></a>
-                                    <button id="inline_edit_mark_{{ v.value }}" class="ui mini icon button teal basic note-popup" data-content="{% trans 'Adjust description' %}"><i class="edit icon"></i></button>
+                                    <button id="inline_edit_mark_{{ v.value.0 }}" class="ui mini icon button teal basic note-popup" data-content="{% trans 'Adjust description' %}"><i class="edit icon"></i></button>
                                     <a class="ui mini icon button teal note-popup" href="{{ v.href }}" data-content="{% trans 'Edit' %}"><i class="edit outline icon"></i></a>
+                                    {% if v.value.1 != '1' %}
+                                        <a id="confirm_association_{{ v.value.0 }}" class="ui mini icon button green basic note-popup" data-content="{% trans 'Confirm' %}"><i class="check circle green icon"></i></a>
+                                    {% endif %}
+                                    {% if v.value.1 != '2' %}
+                                        <a id="unconfirm_association_{{ v.value.0 }}" class="ui mini icon button red basic note-popup" data-content="{% trans 'Unconfirm' %}"><i class="x icon red icon"></i></a>
+                                    {% endif %}
                                 </div>
                             {% elif v.column == 'ass_type' %}
-                                <div class="ui dropdown">
-                                    <div style="white-space: nowrap;">
-                                        <span{% if v.color %} style="color:{{ v.color }}"{% endif %}>{{ v.value.2 }}</span><i style="margin-left: 5px;" class="ui dropdown icon"></i>
-                                    </div>
-                                    <div class="menu">
-                                        {% if v.value.1 != '1' %}
-                                            <a id="confirm_association_{{ v.value.0 }}" class="item"><i class="check circle green icon"></i>{% trans 'Confirm' %}</a>
-                                        {% endif %}
-                                        {% if v.value.1 != '2' %}
-                                            <a id="unconfirm_association_{{ v.value.0 }}" class="item"><i class="x icon red icon"></i>{% trans 'Unconfirm' %}</a>
-                                        {% endif %}
-                                    </div>
-                                </div>
+                                <span{% if v.color %} style="color:{{ v.color }}"{% endif %}>{{ v.value.2 }}</span>
                             {% elif v.href %}
                                 <a href="{{ v.href }}">{{ v.value }}</a>
                             {% else %}

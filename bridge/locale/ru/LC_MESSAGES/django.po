@@ -3460,3 +3460,6 @@ msgstr "Внимание: все изменения будут потеряны!
 
 msgid "Edited error trace is included in compared trace as a whole sequence with error location"
 msgstr "Трасса ошибки после редактирования включается в сравниваемую трассу с учетом метки ошибки (в виде подпоследовательности)"
+
+msgid "Association type"
+msgstr "Тип применения оценки"
