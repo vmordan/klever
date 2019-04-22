@@ -223,6 +223,7 @@ CONVERSION_FUNCTIONS_DESCRIPTION = [
 COMPARISON_FUNCTIONS_DESCRIPTION = [
     _('Converted error traces are the same'),
     _('Edited error trace is included in compared trace as a whole sequence'),
+    _('Edited error trace is included in compared trace as a whole sequence with error location'),
     _('All elements of the edited error trace are included into compared trace'),
     _('Skip traces comparison (compare by attributes only)')
 ]

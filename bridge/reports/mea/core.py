@@ -21,6 +21,7 @@ CACHED_CONVERSION_FUNCTIONS = [
 # Comparison functions.
 COMPARISON_FUNCTION_EQUAL = "equal"
 COMPARISON_FUNCTION_INCLUDE = "include"
+COMPARISON_FUNCTION_INCLUDE_WITH_ERROR = "include with error"
 COMPARISON_FUNCTION_INCLUDE_PARTIAL = "partial include"
 COMPARISON_FUNCTION_SKIP = "skip"
 DEFAULT_COMPARISON_FUNCTION = COMPARISON_FUNCTION_EQUAL
@@ -101,6 +102,7 @@ def compare_error_traces(edited_error_trace: list, compared_error_trace: list, c
     functions = {
         COMPARISON_FUNCTION_EQUAL: __compare_equal,
         COMPARISON_FUNCTION_INCLUDE: __compare_include,
+        COMPARISON_FUNCTION_INCLUDE_WITH_ERROR: __compare_include_with_error,
         COMPARISON_FUNCTION_INCLUDE_PARTIAL: __compare_include_partial,
         COMPARISON_FUNCTION_SKIP: __compare_skip
     }
@@ -393,6 +395,13 @@ def __compare_include(edited_error_trace: dict, compared_error_trace: dict) -> i
         if result:
             equal_threads += 1
     return equal_threads
+
+
+def __compare_include_with_error(edited_error_trace: dict, compared_error_trace: dict) -> int:
+    for cet in [edited_error_trace, compared_error_trace]:
+        for thread, trace in cet.items():
+            cet[thread] = trace + (('WARN', ''), )
+    return __compare_include(edited_error_trace, compared_error_trace)
 
 
 def __compare_include_partial(edited_error_trace: dict, compared_error_trace: dict) -> int:
