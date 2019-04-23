@@ -87,11 +87,11 @@ ASSOCIATION_TYPE_COLOR = {
 
 def result_color(result):
     if 0 <= result <= 0.33:
-        return '#E60000'
+        return '#E60000', "red-link"
     elif 0.33 < result <= 0.66:
-        return '#CC7A29'
+        return '#CC7A29', "orange-pale-link"
     elif 0.66 < result <= 1:
-        return '#00CC66'
+        return '#00CC66', "green-pale-link"
     return None
 
 
@@ -284,10 +284,10 @@ class ReportMarkTable:
                 elif col == 'similarity' and self.type == 'unsafe':
                     if mark_rep.error is not None:
                         val = mark_rep.error
-                        color = result_color(0)
+                        color = result_color(0)[0]
                     else:
                         val = "{:.0%}".format(mark_rep.result)
-                        color = result_color(mark_rep.result)
+                        color = result_color(mark_rep.result)[0]
                 elif col == 'status':
                     val = mark_rep.mark.get_status_display()
                     color = STATUS_COLOR[mark_rep.mark.status]
@@ -641,6 +641,7 @@ class MarkReportsTable:
                 val = '-'
                 color = None
                 href = None
+                link_class = None
                 if col == 'report':
                     val = cnt
                     if JobAccess(self.user, report.root.job).can_view():
@@ -651,10 +652,10 @@ class MarkReportsTable:
                 elif col == 'similarity':
                     if mark_report.error is not None:
                         val = mark_report.error
-                        color = result_color(0)
+                        color, link_class = result_color(0)
                     else:
                         val = "{:.0%}".format(mark_report.result)
-                        color = result_color(mark_report.result)
+                        color, link_class = result_color(mark_report.result)
                 elif col == 'job':
                     val = report.root.job.name
                     if JobAccess(self.user, report.root.job).can_view():
@@ -665,7 +666,7 @@ class MarkReportsTable:
                     if mark_report.author:
                         val = mark_report.author.get_full_name()
                         href = reverse('users:show_profile', args=[mark_report.author_id])
-                values_str.append({'value': val, 'href': href, 'color': color})
+                values_str.append({'value': val, 'href': href, 'color': color, 'link_class': link_class})
 
             attr_val = {}
             for name, val in list(report.attrs.order_by('id').values_list('attr__name__name', 'attr__value')):

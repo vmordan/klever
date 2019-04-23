@@ -262,11 +262,8 @@
                                         <a class="black-link" href="{{ v.href }}">{{ v.value }}</a>
                                     {% else %}
                                         <span {% if v.color %} style="color:{{ v.color }}"{% endif %}>
-                                            {% if v.color %}
-                                                {{ v.value }}
-                                            {% else %}
-                                                <a class="black-link" href="{{ row_data.0.href }}">{{ v.value }}</a>
-                                            {% endif %}
+                                            <a class="{% if v.link_class %}{{v.link_class}}{%else%}black-link{%endif%}"
+                                               href="{{ row_data.0.href }}">{{ v.value }}</a>
                                         </span>
                                     {% endif %}
                                 </td>
