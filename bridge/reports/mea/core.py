@@ -23,6 +23,7 @@ COMPARISON_FUNCTION_EQUAL = "equal"
 COMPARISON_FUNCTION_INCLUDE = "include"
 COMPARISON_FUNCTION_INCLUDE_WITH_ERROR = "include with error"
 COMPARISON_FUNCTION_INCLUDE_PARTIAL = "partial include"
+COMPARISON_FUNCTION_INCLUDE_PARTIAL_ORDERED = "partial include ordered"
 COMPARISON_FUNCTION_SKIP = "skip"
 DEFAULT_COMPARISON_FUNCTION = COMPARISON_FUNCTION_EQUAL
 
@@ -104,6 +105,7 @@ def compare_error_traces(edited_error_trace: list, compared_error_trace: list, c
         COMPARISON_FUNCTION_INCLUDE: __compare_include,
         COMPARISON_FUNCTION_INCLUDE_WITH_ERROR: __compare_include_with_error,
         COMPARISON_FUNCTION_INCLUDE_PARTIAL: __compare_include_partial,
+        COMPARISON_FUNCTION_INCLUDE_PARTIAL_ORDERED: __compare_include_partial_ordered,
         COMPARISON_FUNCTION_SKIP: __compare_skip
     }
     if comparison_function not in functions.keys():
@@ -410,6 +412,27 @@ def __compare_include_partial(edited_error_trace: dict, compared_error_trace: di
         result = False
         for thread_2 in compared_error_trace.values():
             if all(elem in thread_2 for elem in thread_1):
+                result = True
+                break
+        if result:
+            equal_threads += 1
+    return equal_threads
+
+
+def __compare_include_partial_ordered(edited_error_trace: dict, compared_error_trace: dict) -> int:
+    equal_threads = 0
+    for thread_1 in edited_error_trace.values():
+        result = False
+        for thread_2 in compared_error_trace.values():
+            last_index = 0
+            is_eq = True
+            for elem in thread_1:
+                if elem in thread_2[last_index:]:
+                    last_index = thread_2.index(elem)
+                else:
+                    is_eq = False
+                    break
+            if is_eq:
                 result = True
                 break
         if result:

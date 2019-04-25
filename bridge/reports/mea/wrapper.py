@@ -24,7 +24,8 @@ COMPARISON_FUNCTIONS = [
     {'name': COMPARISON_FUNCTION_INCLUDE, 'id': 1},
     {'name': COMPARISON_FUNCTION_INCLUDE_WITH_ERROR, 'id': 2},
     {'name': COMPARISON_FUNCTION_INCLUDE_PARTIAL, 'id': 3},
-    {'name': COMPARISON_FUNCTION_SKIP, 'id': 4},
+    {'name': COMPARISON_FUNCTION_INCLUDE_PARTIAL_ORDERED, 'id': 4},
+    {'name': COMPARISON_FUNCTION_SKIP, 'id': 5},
 ]
 
 ET_FILE_NAME = 'converted-error-trace.json'

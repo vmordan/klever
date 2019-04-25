@@ -225,5 +225,6 @@ COMPARISON_FUNCTIONS_DESCRIPTION = [
     _('Edited error trace is included in compared trace as a whole sequence'),
     _('Edited error trace is included in compared trace as a whole sequence with error location'),
     _('All elements of the edited error trace are included into compared trace'),
+    _('All elements of the edited error trace are included into compared trace in the same order'),
     _('Skip traces comparison (compare by attributes only)')
 ]
