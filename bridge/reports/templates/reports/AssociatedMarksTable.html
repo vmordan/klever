@@ -32,7 +32,7 @@
             {% for row_data in MarkTable.values %}
                 <tr style="text-align: center">
                     {% for v in row_data %}
-                        <td {% if v.column == 'buttons' or v.column == 'mark_num' %}width="1%"{% endif %}>
+                        <td {% if v.column == 'buttons' or v.column == 'mark_num' %}width="1%" style="text-align: left"{% endif %}>
                             {% if v.column == 'description' %}
                                 <span style="white-space: pre-wrap;">{{ v.value|safe }}</span>
                             {% elif v.column == 'buttons' %}
