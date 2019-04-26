@@ -3469,3 +3469,6 @@ msgstr "Тип применения оценки"
 
 msgid "Use edited error trace"
 msgstr "Использовать отредактированную трассу ошибки"
+
+msgid "Required object does not exist"
+msgstr "Требуемый объект не существует"

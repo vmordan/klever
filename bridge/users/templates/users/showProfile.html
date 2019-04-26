@@ -22,6 +22,7 @@
 {% block title %}{% trans 'Profile' %}{% endblock %}
 
 {% block body_block %}
+{% if target %}
     <div class="ui grid">
         <div class="three wide column">
             <h3><cite>{{ target.first_name }} {{ target.last_name }}</cite></h3>
@@ -38,9 +39,10 @@
         <div class="thirteen wide column">
             <h2>{% trans 'Last Activity' %}</h2>
             {% if activity|length %}
-                <table class="ui selectable inverted celled table">
+                <table class="ui selectable celled stripped alternate-color compact table">
                     <thead>
                         <tr>
+                            <th width="1%">#</th>
                             <th class="three wide">{% trans 'Date' %}</th>
                             <th>{% trans 'Action Kind' %}</th>
                             <th>{% trans 'Object Type' %}</th>
@@ -51,6 +53,7 @@
                     <tbody>
                     {% for act in activity %}
                         <tr>
+                            <td>{{ forloop.counter }}</td>
                             <td>{{ act.date }}</td>
                             <td style="color:{{ act.act_color }}">{{ act.act_type }}</td>
                             <td>{{ act.obj_type }}</td>
@@ -71,4 +74,7 @@
             {% endif %}
         </div>
     </div>
+{% else %}
+<h1>{{error}}</h1>
+{% endif %}
 {% endblock %}

@@ -24,21 +24,23 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned, 
 from django.db.models import Q
 from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
 from django.middleware.csrf import get_token
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render
 from django.urls import reverse
-from django.utils.translation import ugettext as _, activate
 from django.utils.timezone import pytz
+from django.utils.translation import ugettext as _, activate
 
-from tools.profiling import unparallel_group
-from bridge.vars import LANGUAGES, SCHEDULER_TYPE, UNKNOWN_ERROR, VIEW_TYPES
-from bridge.utils import logger
 from bridge.populate import extend_user
-
+from bridge.utils import logger
+from bridge.vars import LANGUAGES, SCHEDULER_TYPE, UNKNOWN_ERROR, VIEW_TYPES
 from jobs.models import Job
-
+from tools.profiling import unparallel_group
 from users.forms import UserExtendedForm, UserForm, EditUserForm
 from users.models import Notifications, Extended, User, View, PreferableView
 from users.utils import DEFAULT_VIEW
+
+COLOR_CREATION = "#58bd2a"
+COLOR_MODIFICATION = "#582abd"
+DEFAULT_ACTIONS_NUMBER = 50
 
 
 @unparallel_group(['User'])
@@ -169,28 +171,34 @@ def edit_profile(request):
 @unparallel_group([])
 def show_profile(request, user_id):
     activate(request.user.extended.language)
-    target = get_object_or_404(User, pk=user_id)
+    actions_number = int(request.GET.get('actions', DEFAULT_ACTIONS_NUMBER))
+    actions_number_partial = round(actions_number / 1.5)
+    try:
+        target = User.objects.get(pk=user_id)
+    except ObjectDoesNotExist:
+        return render(request, 'users/showProfile.html', {
+            'error': _("Required object does not exist")})
     user_role = Extended.objects.get(user=request.user).role
     if not user_role == '2' and not target == request.user:
         return render(request, 'users/showProfile.html', {
-            'error': _("The view was not found or you don't have an access to it")})
+            'error': _("You don't have an access to this page")})
 
     from jobs.models import JobHistory
     from jobs.utils import JobAccess
     from marks.models import MarkSafeHistory, MarkUnsafeHistory, MarkUnknownHistory
 
     activity = []
-    for act in JobHistory.objects.filter(change_author=target).order_by('-change_date')[:30]:
+    for act in JobHistory.objects.filter(change_author=target).order_by('-change_date')[:actions_number_partial]:
         act_comment = act.comment
         small_comment = act_comment
         if len(act_comment) > 50:
             small_comment = act_comment[:47] + '...'
         if act.version == 1:
             act_type = _('Creation')
-            act_color = '#58bd2a'
+            act_color = COLOR_CREATION
         else:
             act_type = _('Modification')
-            act_color = '#31e6ff'
+            act_color = COLOR_MODIFICATION
         new_act = {
             'date': act.change_date,
             'comment': act_comment,
@@ -203,17 +211,17 @@ def show_profile(request, user_id):
         if JobAccess(request.user, act.job).can_view():
             new_act['href'] = reverse('jobs:job', args=[act.job_id])
         activity.append(new_act)
-    for act in MarkSafeHistory.objects.filter(author=target).order_by('-change_date')[:30]:
+    for act in MarkSafeHistory.objects.filter(author=target).order_by('-change_date')[:actions_number_partial]:
         act_comment = act.comment
         small_comment = act_comment
         if len(act_comment) > 50:
             small_comment = act_comment[:47] + '...'
         if act.version == 1:
             act_type = _('Creation')
-            act_color = '#58bd2a'
+            act_color = COLOR_CREATION
         else:
             act_type = _('Modification')
-            act_color = '#31e6ff'
+            act_color = COLOR_MODIFICATION
         activity.append({
             'date': act.change_date,
             'comment': act_comment,
@@ -224,17 +232,17 @@ def show_profile(request, user_id):
             'obj_link': act.mark.identifier,
             'href': reverse('marks:mark', args=['safe', act.mark_id]),
         })
-    for act in MarkUnsafeHistory.objects.filter(author=target).order_by('-change_date')[:30]:
+    for act in MarkUnsafeHistory.objects.filter(author=target).order_by('-change_date')[:actions_number_partial]:
         act_comment = act.comment
         small_comment = act_comment
         if len(act_comment) > 47:
             small_comment = act_comment[:50] + '...'
         if act.version == 1:
             act_type = _('Creation')
-            act_color = '#58bd2a'
+            act_color = COLOR_CREATION
         else:
             act_type = _('Modification')
-            act_color = '#31e6ff'
+            act_color = COLOR_MODIFICATION
         activity.append({
             'date': act.change_date,
             'comment': act_comment,
@@ -245,17 +253,17 @@ def show_profile(request, user_id):
             'obj_link': act.mark.identifier,
             'href': reverse('marks:mark', args=['unsafe', act.mark_id])
         })
-    for act in MarkUnknownHistory.objects.filter(author=target).order_by('-change_date')[:30]:
+    for act in MarkUnknownHistory.objects.filter(author=target).order_by('-change_date')[:actions_number_partial]:
         act_comment = act.comment
         small_comment = act_comment
         if len(act_comment) > 50:
             small_comment = act_comment[:47] + '...'
         if act.version == 1:
             act_type = _('Creation')
-            act_color = '#58bd2a'
+            act_color = COLOR_CREATION
         else:
             act_type = _('Modification')
-            act_color = '#31e6ff'
+            act_color = COLOR_MODIFICATION
         activity.append({
             'date': act.change_date,
             'comment': act_comment,
@@ -268,7 +276,7 @@ def show_profile(request, user_id):
         })
     return render(request, 'users/showProfile.html', {
         'target': target,
-        'activity': list(reversed(sorted(activity, key=lambda x: x['date'])))[:50],
+        'activity': list(reversed(sorted(activity, key=lambda x: x['date'])))[:actions_number],
     })
 
 

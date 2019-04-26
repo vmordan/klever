@@ -24,7 +24,7 @@ urlpatterns = [
     path('signout/', views.user_signout, name='logout'),
     path('register/', views.register, name='register'),
     path('edit/', views.edit_profile, name='edit_profile'),
-    path('profile/<int:user_id>', views.show_profile, name='show_profile'),
+    path('profile/<int:user_id>/', views.show_profile, name='show_profile'),
     path('service_signin/', views.service_signin),
     path('service_signout/', views.service_signout),
     path('ajax/save_notifications/', views.save_notifications),
