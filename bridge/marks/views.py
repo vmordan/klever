@@ -17,6 +17,7 @@
 
 import datetime
 import json
+import os
 import re
 
 from django.conf import settings
@@ -49,6 +50,7 @@ from reports.mea.wrapper import error_trace_pretty_print, get_or_convert_error_t
     CONVERSION_FUNCTIONS, DEFAULT_CONVERSION_FUNCTION, DEFAULT_COMPARISON_FUNCTION, obtain_pretty_error_trace, \
     DEFAULT_SIMILARITY_THRESHOLD, process_args
 from reports.models import ReportSafe, ReportUnsafe, ReportUnknown, Report
+from reports.utils import get_edited_error_trace
 from tools.profiling import LoggedCallMixin
 from users.models import User
 
@@ -381,6 +383,8 @@ class InlineMarkForm(LoggedCallMixin, Bview.JSONResponseMixin, DetailView):
                 context['comparison_function'] = comparison_function
         if self.kwargs['type'] != 'unknown':
             context['tags'] = TagsInfo(self.kwargs['type'], selected_tags)
+        if self.kwargs['type'] == 'unsafe' and not self.kwargs['action'] == 'edit':
+            context['use_edited_error_trace'] = os.path.exists(get_edited_error_trace(self.object))
         return context
 
 

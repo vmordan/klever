@@ -3466,3 +3466,6 @@ msgstr "Трасса ошибки после редактирования вкл
 
 msgid "Association type"
 msgstr "Тип применения оценки"
+
+msgid "Use edited error trace"
+msgstr "Использовать отредактированную трассу ошибки"

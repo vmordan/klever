@@ -80,6 +80,12 @@
     {% else %}
         <h4 class="header ui pink">{% trans 'Tags' %}</h4>
         {% include 'marks/MarkTags.html' with tags=tags.table available=tags.available selected=tags.selected %}
+        {% if use_edited_error_trace %}
+            <div class="ui checkbox">
+                <input type="checkbox" id="use_edited_error_trace">
+                <label for="use_edited_error_trace">{% trans 'Use edited error trace' %}</label>
+            </div>
+        {% endif %}
     {% endif %}
     <br><br>
     <div class="ui action input fluid">

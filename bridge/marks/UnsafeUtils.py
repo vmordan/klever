@@ -30,7 +30,7 @@ from marks.models import ConvertedTraces, MarkUnsafe, MarkUnsafeHistory, MarkUns
     MarkUnsafeTag, UnsafeTag, UnsafeReportTag, ReportUnsafeTag
 from reports.mea.wrapper import error_trace_pretty_parse, TAG_CONVERSION_FUNCTION, TAG_COMPARISON_FUNCTION, \
     TAG_EDITED_ERROR_TRACE, get_or_convert_error_trace, dump_converted_error_trace, DEFAULT_CONVERSION_FUNCTION, \
-    DEFAULT_COMPARISON_FUNCTION, is_trace_equal
+    DEFAULT_COMPARISON_FUNCTION, is_trace_equal, automatic_error_trace_editing
 from reports.models import ReportComponentLeaf, ReportAttr, ReportUnsafe, Attr, AttrName
 from users.models import User
 
@@ -65,6 +65,7 @@ class NewMark:
         self.similarity_threshold = round(int(args.get('similarity_threshold', 0)))
         self.initial_error_trace = args.get('initial_error_trace')
         self.conversion_function_args = self.__get_conversion_function_args(mark_unsafe)
+        self.use_edited_error_trace = args.get("use_edited_error_trace", False)
 
         # Optimizations.
         self.optimizations = set()
@@ -94,11 +95,24 @@ class NewMark:
         return result
 
     def __check_mark_applicability(self, mark_unsafe):
-        if not self.edited_error_trace:
-            self.edited_error_trace = get_or_convert_error_trace(mark_unsafe, self.conversion_function,
-                                                                 self.conversion_function_args)
-        else:
-            self.edited_error_trace = error_trace_pretty_parse(self.edited_error_trace)
+        is_auto_edit_success = False
+        if self.use_edited_error_trace:
+            is_auto_edit_success, edited_error_trace, conversion_function, conversion_function_args, comparison_function = \
+                automatic_error_trace_editing(mark_unsafe)
+            if is_auto_edit_success:
+                self.edited_error_trace = edited_error_trace
+                self.conversion_function = conversion_function
+                self.conversion_function_args = conversion_function_args
+                self.comparison_function = comparison_function
+            else:
+                logger.warning("Automatic editing of error trace failed, using none-edited error trace")
+        if not is_auto_edit_success:
+            if not self.edited_error_trace:
+                self.edited_error_trace = get_or_convert_error_trace(mark_unsafe, self.conversion_function,
+                                                                     self.conversion_function_args)
+            else:
+                self.edited_error_trace = error_trace_pretty_parse(self.edited_error_trace)
+
         # Check that mark is applicable to the error trace itself.
         if self.initial_error_trace:
             new_report = ReportUnsafe.objects.get(id=self.initial_error_trace)

@@ -4,6 +4,7 @@
 import json
 from io import BytesIO
 
+import reports
 from bridge.utils import ArchiveFileContent, BridgeException, file_get_or_create
 from bridge.vars import ERROR_TRACE_FILE
 from marks.models import ErrorTraceConvertionCache, ConvertedTraces, MarkUnsafe, MarkUnsafeReport
@@ -93,6 +94,55 @@ def get_or_convert_error_trace(unsafe, conversion_function: str, args: dict) -> 
         ErrorTraceConvertionCache.objects.create(unsafe=report_unsafe, function=conversion_function, converted=et_file,
                                                  args=args_str)
     return converted_error_trace
+
+
+def automatic_error_trace_editing(unsafe_report: ReportUnsafe) -> tuple:
+    conversion_function = DEFAULT_CONVERSION_FUNCTION
+    args = {TAG_USE_NOTES: True}
+    converted_error_trace = __load_json(get_or_convert_error_trace(unsafe_report, conversion_function, args))
+    visual_error_trace_json = __load_json(reports.utils.get_error_trace_content(unsafe_report))
+    visual_error_trace = convert_error_trace(visual_error_trace_json, conversion_function, args)
+
+    if visual_error_trace == converted_error_trace:
+        comparison_function = DEFAULT_COMPARISON_FUNCTION
+    else:
+        comparison_function = COMPARISON_FUNCTION_INCLUDE_PARTIAL_ORDERED
+    is_note_changed = False
+    edited_error_trace = list()
+    for elem in visual_error_trace:
+        if elem[CET_OP] == CET_OP_NOTE:
+            elem_id = elem[CET_ID]
+            edited_note = elem[CET_DISPLAY_NAME]
+            basic_note = None
+            for basic_elem in converted_error_trace:
+                if basic_elem[CET_ID] == elem_id:
+                    if basic_elem[CET_OP] == CET_OP_NOTE:
+                        basic_note = basic_elem[CET_DISPLAY_NAME]
+                    break
+            if not edited_note == basic_note:
+                if basic_note:
+                    is_note_changed = True
+                    elem[CET_DISPLAY_NAME] = basic_note
+                    edited_error_trace.append(elem)
+                else:
+                    # New note - cannot compare with other traces.
+                    pass
+            else:
+                is_note_changed = True
+                edited_error_trace.append(elem)
+        else:
+            edited_error_trace.append(elem)
+    if not is_note_changed:
+        args = {}
+
+    for cv in [CONVERSION_FUNCTION_MODEL_FUNCTIONS, CONVERSION_FUNCTION_CALL_TREE]:
+        converted_error_trace = __load_json(get_or_convert_error_trace(unsafe_report, cv, args))
+        is_equal = is_trace_equal(edited_error_trace, converted_error_trace, comparison_function,
+                                  DEFAULT_SIMILARITY_THRESHOLD)[0]
+        if is_equal:
+            conversion_function = cv
+            break
+    return is_equal, edited_error_trace, conversion_function, args, comparison_function
 
 
 def get_or_convert_error_trace_auto(unsafe_id: int, conversion_function: str, args: dict) -> list:
