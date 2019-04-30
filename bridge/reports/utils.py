@@ -193,9 +193,10 @@ def __apply_comments_changes(edges: list, comments: dict, comment_type: str):
                     del edges[edge_id][comment_type]
 
 
-def modify_error_trace(unsafe_report: ReportUnsafe, notes: dict, warns: dict):
+def modify_error_trace(unsafe_report: ReportUnsafe, notes: dict, warns: dict, is_modifiable: bool):
     error_trace = json.loads(get_error_trace_content(unsafe_report))
     edges = error_trace['edges']
+    error_trace['is_modifiable'] = is_modifiable
     __apply_comments_changes(edges, notes, 'note')
     __apply_comments_changes(edges, warns, 'warn')
     edited_error_trace = get_edited_error_trace(unsafe_report)

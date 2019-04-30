@@ -403,15 +403,19 @@ class ReportUnsafeViewById(LoggedCallMixin, Bview.DataViewMixin, DetailView):
             raise BridgeException(code=400)
         try:
             etv = GetETV(get_error_trace_content(self.object), self.request.user)
+            is_manager = self.request.user.extended.role == '2'
+            is_modifiable = bool(is_manager or bool(etv.data.get('is_modifiable', True)))
         except Exception as e:
             logger.exception(e, stack_info=True)
             etv = None
+            is_modifiable = False
         return {
             'report': self.object, 'report_type': 'unsafe', 'parents': reports.utils.get_parents(self.object),
             'SelfAttrsData': reports.utils.report_attibutes(self.object),
             'MarkTable': ReportMarkTable(self.request.user, self.object, self.get_view(VIEW_TYPES[10])),
             'etv': etv, 'include_assumptions': self.request.user.extended.assumptions, 'include_jquery_ui': True,
-            'resources': reports.utils.get_leaf_resources(self.request.user, self.object)
+            'resources': reports.utils.get_leaf_resources(self.request.user, self.object),
+            'is_modifiable': is_modifiable
         }
 
 
@@ -427,15 +431,19 @@ class ReportUnsafeView(LoggedCallMixin, Bview.DataViewMixin, DetailView):
             raise BridgeException(code=400)
         try:
             etv = GetETV(get_error_trace_content(self.object), self.request.user)
+            is_manager = self.request.user.extended.role == '2'
+            is_modifiable = bool(is_manager or bool(etv.data.get('is_modifiable', True)))
         except Exception as e:
             logger.exception(e, stack_info=True)
             etv = None
+            is_modifiable = False
         return {
             'report': self.object, 'report_type': 'unsafe', 'parents': reports.utils.get_parents(self.object),
             'SelfAttrsData': reports.utils.report_attibutes(self.object),
             'MarkTable': ReportMarkTable(self.request.user, self.object, self.get_view(VIEW_TYPES[10])),
             'etv': etv, 'include_assumptions': self.request.user.extended.assumptions, 'include_jquery_ui': True,
-            'resources': reports.utils.get_leaf_resources(self.request.user, self.object)
+            'resources': reports.utils.get_leaf_resources(self.request.user, self.object),
+            'is_modifiable': is_modifiable
         }
 
 
@@ -449,10 +457,14 @@ class FullscreenReportUnsafe(LoggedCallMixin, DetailView):
     def get_context_data(self, **kwargs):
         if not JobAccess(self.request.user, self.object.root.job).can_view():
             raise BridgeException(code=400)
+        etv = GetETV(get_error_trace_content(self.object), self.request.user)
+        is_manager = self.request.user.extended.role == '2'
+        is_modifiable = bool(is_manager or bool(etv.data.get('is_modifiable', True)))
         return {
             'report': self.object,
             'include_assumptions': self.request.user.extended.assumptions,
-            'etv': GetETV(get_error_trace_content(self.object), self.request.user)
+            'etv': etv,
+            'is_modifiable': is_modifiable
         }
 
 
@@ -480,13 +492,16 @@ class UnsafeApplyView(LoggedCallMixin, Bview.JsonDetailPostView):
     def get_context_data(self, **kwargs):
         notes = json.loads(self.request.POST.get('notes', "{}"))
         warns = json.loads(self.request.POST.get('warns', "{}"))
+        is_manager = self.request.user.extended.role == '2'
+        is_modifiable = bool(self.request.POST.get('is_modifiable', False))
+        is_modifiable = not is_manager or is_modifiable
         for common_key in set(notes.keys()).intersection(set(warns.keys())):
             if notes[common_key] and not warns[common_key]:
                 del warns[common_key]
             if not notes[common_key] and warns[common_key]:
                 del notes[common_key]
         if notes or warns:
-            modify_error_trace(self.object, notes, warns)
+            modify_error_trace(self.object, notes, warns, is_modifiable)
         return {}
 
 

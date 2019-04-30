@@ -270,11 +270,16 @@ $(document).ready(function () {
     });
     $('#apply_changes').click(function(event) {
         $(this).addClass('disabled');
+        var is_modifiable = $('#is_modifiable').is(':checked');
+        if (!is_modifiable) {
+            is_modifiable = '';
+        }
         $.post(
             '/reports/unsafe/' + $('#report_pk').val() +'/apply/',
             {
                 "notes": JSON.stringify(note_changes),
-                "warns": JSON.stringify(warn_changes)
+                "warns": JSON.stringify(warn_changes),
+                "is_modifiable": is_modifiable
             },
             function (data) {
                 if (data.error) {

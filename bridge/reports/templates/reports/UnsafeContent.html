@@ -29,14 +29,15 @@
                 </div>
                 <div class="column right aligned" style="margin: 2px;">
                     <div class="ui buttons icon tiny">
-                        {% if not edit %}
+                        {% if not edit and is_modifiable %}
                         <button id="upload_edited_trace" class="ui tiny button violet note-popup" data-content="{% trans 'Upload edited error trace' %}">
                             <i class="ui upload icon"></i>
                         </button>
                         <a class="ui tiny button violet note-popup" href="{% url 'reports:unsafe_edit' report.trace_id %}" data-content="{% trans 'Edit' %}">
                             <i class="ui edit icon"></i>
                         </a>
-                        {% else %}
+                        {% endif %}
+                        {% if edit %}
                         {% if is_edited_exist %}
                         <button class="ui button tiny red note-popup" id="cancel_changes" data-content="{% trans 'Remove edited error trace' %}">
                             <i class="ui fire icon"></i>
