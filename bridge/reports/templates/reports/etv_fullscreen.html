@@ -28,13 +28,6 @@
 {% endblock %}
 
 {% block body_block %}
-    <div class="ui grid">
-        <div class="one wide column right aligned right floated">
-            <a class="ui icon tiny button violet note-popup" href="{% url 'reports:unsafe' report.trace_id %}" data-content="{% trans 'Close' %}">
-                <i class="remove icon"></i>
-            </a>
-        </div>
-    </div>
     {% include 'reports/UnsafeContent.html' with fullscreen=True %}
     <input type="hidden" id="report_pk" value="{{ report.pk }}">
 {% endblock %}

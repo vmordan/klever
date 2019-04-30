@@ -25,9 +25,41 @@
                     {% include 'reports/ETVButtons.html' %}
                 </div>
                 <div class="column center aligned" style="margin: 10px;">
-                    <h3><a id="error_trace_options" href="{% url 'reports:download_error_trace' report.pk %}">{% trans 'Error trace' %}</a></h3>
+                    <h3><a id="error_trace_options" href="{% url 'reports:download_error_trace' report.pk %}" title="{% trans 'Download' %}">{% trans 'Error trace' %}</a></h3>
                 </div>
-                <div class="column"></div>
+                <div class="column right aligned" style="margin: 2px;">
+                    <div class="ui buttons icon tiny">
+                        {% if not edit %}
+                        <button id="upload_edited_trace" class="ui tiny button violet note-popup" data-content="{% trans 'Upload edited error trace' %}">
+                            <i class="ui upload icon"></i>
+                        </button>
+                        <a class="ui tiny button violet note-popup" href="{% url 'reports:unsafe_edit' report.trace_id %}" data-content="{% trans 'Edit' %}">
+                            <i class="ui edit icon"></i>
+                        </a>
+                        {% else %}
+                        {% if is_edited_exist %}
+                        <button class="ui button tiny red note-popup" id="cancel_changes" data-content="{% trans 'Remove edited error trace' %}">
+                            <i class="ui fire icon"></i>
+                        </button>
+                        {% endif %}
+                        <button class="ui tiny button green note-popup" id="apply_changes" data-content="{% trans 'Apply' %}">
+                            <i class="ui check circle icon"></i>
+                        </button>
+                        <a class="ui tiny button violet note-popup" href="{% url 'reports:unsafe' report.trace_id %}" data-content="{% trans 'Cancel' %}">
+                            <i class="ui undo icon"></i>
+                        </a>
+                        {% endif %}
+                        {% if not fullscreen %}
+                        <a class="ui tiny button violet note-popup" href="{% url 'reports:unsafe_fullscreen' report.trace_id %}" data-content="{% trans 'Full screen mode' %}">
+                            <i class="ui icon expand"></i>
+                        </a>
+                        {% elif not edit %}
+                        <a class="ui icon tiny button violet note-popup" href="{% url 'reports:unsafe' report.trace_id %}" data-content="{% trans 'Close' %}">
+                            <i class="remove icon"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
             {% if etv %}
                 {% include 'reports/ErrorTrace.html' with etv=etv %}
@@ -70,6 +102,24 @@
             </div>
         </div>
     {% endif %}
+
+    <div id="upload_edited_trace_popup" class="ui modal">
+        <div class="header">{% trans 'Upload edited error trace' %}</div>
+        <div class="content">
+            <div class="ui grid">
+                <div class="four wide column right aligned">
+                    <span class="ui violet button btn-file">{% trans 'Browse' %}<input id="upload_edited_trace_input" type="file"></span>
+                </div>
+                <div class="twelve wide column">
+                    <span id="upload_edited_trace_filename" class="italic"></span>
+                </div>
+            </div>
+        </div>
+        <div class="actions">
+            <button id="upload_edited_trace_start" type="button" class="ui positive left button">{% trans 'Upload' %}</button>
+            <button id="upload_edited_trace_cancel" type="button" class="ui blue button">{% trans 'Cancel' %}</button>
+        </div>
+    </div>
 
     <span id="error___line_not_found" hidden>{% trans 'Could not find the specified line' %}</span>
     <span id="error___no_selected_line" hidden>{% trans 'Please, select the line first' %}</span>

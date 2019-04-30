@@ -28,21 +28,6 @@
 {% endblock %}
 
 {% block body_block %}
-    <div class="ui grid">
-        <div class="sixteen wide column">
-            <button class="ui button tiny red left floated" id="cancel_changes" title="{% trans 'Attention: all changes will be lost!' %}">
-                {% trans 'Remove edited error trace' %}
-            </button>
-            <div class="ui buttons tiny right floated">
-                <button class="ui button green" id="apply_changes">
-                    {% trans 'Apply' %}
-                </button>
-                <a class="ui button blue" href="{% url 'reports:unsafe' report.trace_id %}">
-                    {% trans 'Cancel' %}
-                </a>
-            </div>
-        </div>
-    </div>
     {% include 'reports/UnsafeContent.html' with fullscreen=True edit=True %}
     <input type="hidden" id="report_pk" value="{{ report.pk }}">
     <input type="hidden" id="edit_et" value="true">

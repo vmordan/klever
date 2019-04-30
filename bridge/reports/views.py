@@ -469,7 +469,8 @@ class EditReportUnsafe(LoggedCallMixin, DetailView):
         return {
             'report': self.object,
             'include_assumptions': self.request.user.extended.assumptions,
-            'etv': GetETV(get_error_trace_content(self.object), self.request.user)
+            'etv': GetETV(get_error_trace_content(self.object), self.request.user),
+            'is_edited_exist': os.path.exists(get_edited_error_trace(self.object))
         }
 
 
@@ -477,8 +478,8 @@ class UnsafeApplyView(LoggedCallMixin, Bview.JsonDetailPostView):
     model = ReportUnsafe
 
     def get_context_data(self, **kwargs):
-        notes = json.loads(self.request.POST['notes'], "{}")
-        warns = json.loads(self.request.POST['warns'], "{}")
+        notes = json.loads(self.request.POST.get('notes', "{}"))
+        warns = json.loads(self.request.POST.get('warns', "{}"))
         for common_key in set(notes.keys()).intersection(set(warns.keys())):
             if notes[common_key] and not warns[common_key]:
                 del warns[common_key]
@@ -521,6 +522,23 @@ class DownloadErrorTrace(LoggedCallMixin, SingleObjectMixin, Bview.StreamingResp
         content = get_error_trace_content(self.object).encode('utf8')
         self.file_size = len(content)
         return FileWrapper(BytesIO(content), 8192)
+
+
+class UnsafeUploadView(LoggedCallMixin, Bview.JsonDetailPostView):
+    model = ReportUnsafe
+
+    def get_context_data(self, **kwargs):
+        file = self.request.FILES['file']
+        try:
+            edited_error_trace = json.loads(file.read().decode('utf8'))
+        except Exception as e:
+            logger.exception("Error while parsing error trace: %s" % e, stack_info=True)
+            raise BridgeException(_("Cannot parse edited error trace"))
+        edited_error_trace_file_name = get_edited_error_trace(self.object)
+        with open(edited_error_trace_file_name, "w") as fd:
+            json.dump(edited_error_trace, fd, ensure_ascii=False, sort_keys=True, indent=4)
+
+        return {}
 
 
 class FillComparisonCacheView(LoggedCallMixin, Bview.JsonView):

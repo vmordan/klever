@@ -59,5 +59,6 @@ urlpatterns = [
     path('upload/', views.UploadReportView.as_view()),
     path('clear_verification_files/<int:job_id>/', views.ClearVerificationFiles.as_view()),
     path('unsafe/<int:pk>/apply/', views.UnsafeApplyView.as_view()),
+    path('unsafe/<int:pk>/upload/', views.UnsafeUploadView.as_view()),
     path('unsafe/<int:pk>/cancel/', views.UnsafeCancelView.as_view())
 ]

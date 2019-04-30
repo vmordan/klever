@@ -41,7 +41,7 @@
 {% block body_block %}
     <input id="tags_type" type="hidden" value="{{ report_type }}">
     <div class="ui grid">
-        <div class="nine wide column">
+        <div class="twelve wide column">
             <div class="ui breadcrumb">
                 {% if report.root.job.name %}
                     {% trans 'Report' %} <a href="{% url 'jobs:job' report.root.job.pk %}">{{ report.root.job.name }}</a>
@@ -60,7 +60,7 @@
                 {% endif %}
             </div>
         </div>
-        <div class="seven wide column right floated right aligned">
+        <div class="four wide column right floated right aligned">
             {% if resources %}
                 <i class="ui tiny inverted violet button parent-popup" data-variation="very wide">{% trans 'Consumed resources' %}</i>
                 <div class="ui special popup">
@@ -106,18 +106,6 @@
                     <a href="{% if user.extended.coverage_data %}{% url 'reports:coverage' report.parent_id %}{% else %}{% url 'reports:coverage_light' report.parent_id %}{% endif %}" class="ui pink button">{% trans 'Coverage' %}</a>
                 {% endif %}
             {% endwith %}
-            {% if report_type == 'unsafe' %}
-                <div class="ui buttons violet icon tiny">
-                    {% if user.extended.role == '2' %}
-                        <a class="ui tiny button note-popup" href="{% url 'reports:unsafe_edit' report.trace_id %}" data-content="{% trans 'Edit' %}">
-                            <i class="ui edit icon"></i>
-                        </a>
-                    {% endif %}
-                    <a class="ui tiny button note-popup" href="{% url 'reports:unsafe_fullscreen' report.trace_id %}" data-content="{% trans 'Full screen mode' %}">
-                        <i class="ui icon expand"></i>
-                    </a>
-                </div>
-            {% endif %}
         </div>
     </div>
 

@@ -3472,3 +3472,9 @@ msgstr "Использовать отредактированную трассу
 
 msgid "Required object does not exist"
 msgstr "Требуемый объект не существует"
+
+msgid "Upload edited error trace"
+msgstr "Загрузить отредактированную трассу ошибки"
+
+msgid "Cannot parse edited error trace"
+msgstr "Не распознан формат отредактированной трассы ошибки"

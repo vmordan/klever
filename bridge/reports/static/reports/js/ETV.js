@@ -286,6 +286,46 @@ $(document).ready(function () {
             }
         );
     });
+    if (document.getElementById("upload_edited_trace")) {
+        $('#upload_edited_trace_popup').modal({transition: 'vertical flip'}).modal('attach events', '#upload_edited_trace', 'show');
+        $('#upload_edited_trace_cancel').click(function () {
+            $('#upload_edited_trace_popup').modal('hide');
+        });
+        $('#upload_edited_trace_input').on('fileselect', function () {
+            $('#upload_edited_trace_filename').text($(this)[0].files[0].name);
+        });
+        $('#upload_edited_trace_start').click(function () {
+            var files = $('#upload_edited_trace_input')[0].files, data = new FormData();
+            if (files.length <= 0) {
+                err_notify($('#error__no_file_chosen').text());
+                return false;
+            }
+            data.append('file', files[0]);
+            $('#upload_edited_trace_popup').modal('hide');
+            $('#dimmer_of_page').addClass('active');
+            $.ajax({
+                url: '/reports/unsafe/' + $('#report_pk').val() + '/upload/',
+                type: 'POST',
+                data: data,
+                dataType: 'json',
+                contentType: false,
+                processData: false,
+                mimeType: 'multipart/form-data',
+                xhr: function() {
+                    return $.ajaxSettings.xhr();
+                },
+                success: function (data) {
+                    $('#dimmer_of_page').removeClass('active');
+                    if (data.error) {
+                        err_notify(data.error);
+                    }
+                    else {
+                        window.location.replace('');
+                    }
+                }
+            });
+        });
+    }
     $('#cancel_changes').click(function(event) {
         $(this).addClass('disabled');
         $.post(
