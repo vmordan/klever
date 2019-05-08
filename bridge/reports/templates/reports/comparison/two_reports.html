@@ -203,6 +203,35 @@
                         </div>
                     </div>
                 </div>
+
+                <div align="center">{% trans 'Common components problems comparison' %}</div>
+                <div class="ui toggle checkbox" onclick="toggle_by_id('settings_problems')">
+                    <input type="checkbox" id="cs7__show_problems" {% if data.show_problems %} checked {% endif %}>
+                    <label for="cs7__show_problems">{% trans 'Show common components problems comparison' %}</label>
+                </div>
+
+                <div id="settings_problems" class="ui basic segment" {% if not data.show_problems %} hidden {% endif %}>
+                    <div class="ui bulleted list">
+                        <div class="item">
+                            <div class="ui radio checkbox">
+                                <input type="radio" id="cs7__show_diff" name="cs7__show" {% if data.show_problems_type == 'diff' %} checked {% endif %}>
+                                <label>{% trans 'Different problems' %}</label>
+                            </div>
+                        </div>
+                        <div class="item">
+                            <div class="ui radio checkbox">
+                                <input type="radio" id="cs7__show_without" name="cs7__show" {% if data.show_problems_type == 'without' %} checked {% endif %}>
+                                <label>{% trans 'Different or unmarked problems' %}</label>
+                            </div>
+                        </div>
+                        <div class="item">
+                            <div class="ui radio checkbox">
+                                <input type="radio" id="cs7__show_all" name="cs7__show" {% if data.show_problems_type == 'all' %} checked {% endif %}>
+                                <label>{% trans 'All problems' %}</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <button id="apply_new_settings" class="ui tiny red button basic"><b><i class="ui icon crosshairs"></i>{% trans 'Apply' %}</b></button>
@@ -458,7 +487,7 @@
                                 <table class="ui selectable compact table celled striped">
                                     <thead>
                                         <tr>
-                                            <td style="background: #d3d3d3" width="25%">{% trans 'Error traces' %}</td>
+                                            <td style="background: #d3d3d3; text-align: right" width="25%">{% trans 'Error traces' %}</td>
                                             <td style="background: #d3d3d3; text-align: center">{% trans 'Attributes' %} ({% trans 'Origin' %})</td>
                                             <td style="background: #d3d3d3" width="25%">{% trans 'Error traces' %}</td>
                                         </tr>
@@ -519,6 +548,44 @@
                         </div>
                     </div>
                 {% endfor %}
+            </td>
+        </tr>
+        {% endif %}
+
+        {% if data.show_problems %}
+        <tr style="vertical-align: top">
+            <td colspan="2">
+                <div class="ui accordion">
+                    <div class="title center aligned">
+                        <div class="black-link"><b>
+                            {% trans 'Common component problems' %}: {{data.problems_comparison|length}} {% trans 'selected' %}
+                        </b></div>
+                    </div>
+                    <div class="content">
+                        <table class="ui selectable compact table celled striped">
+                            <thead>
+                                <tr>
+                                    <td style="background: #d3d3d3; text-align: right" width="25%">{% trans 'Problems' %}</td>
+                                    <td style="background: #d3d3d3; text-align: center">{% trans 'Attributes' %}</td>
+                                    <td style="background: #d3d3d3" width="25%">{% trans 'Problems' %}</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for cmp in data.problems_comparison %}
+                                <tr>
+                                    <td style="text-align: right">
+                                        <a class="black-link" href="{% url 'reports:unknown' cmp.0.1 %}">{{cmp.0.0}}</a>
+                                    </td>
+                                    <td style="text-align: center; text-align: center">{{cmp.1}}</td>
+                                    <td style="text-align: left">
+                                        <a class="black-link" href="{% url 'reports:unknown' cmp.2.1 %}">{{cmp.2.0}}</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </td>
         </tr>
         {% endif %}

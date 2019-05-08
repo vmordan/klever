@@ -58,6 +58,10 @@ CLUSTERING_TYPE_DIFF_CLUSTERS = "diff_clusters"
 CLUSTERING_TYPE_DIFF_TRACES = "diff_traces"
 CLUSTERING_TYPE_ALL = "all"
 
+SHOW_PROBLEMS_DIFF = "diff"
+SHOW_PROBLEMS_WITHOUT = "without"
+SHOW_PROBLEMS_ALL = "all"
+
 TAG_AUTO_ID = "id"
 TAG_MARK = "mark"
 TAG_ORIGIN = "origin"
@@ -181,7 +185,8 @@ class JobsComparison:
                     self.__process_verdicts_transitions(verdicts_type, safes, unsafes, unsafe_incompletes, unknowns,
                                                         cmp)
                     if not self.show_same_transitions[verdicts_type]:
-                        cmp['{0}_{0}'.format(verdicts_type)] = []
+                        if not(self.show_problems and verdicts_type == VERDICTS_UNKNOWN):
+                            cmp['{0}_{0}'.format(verdicts_type)] = []
 
             if self.enable_clustering:
                 clusters.append(self.perform_clustering(unsafes, unsafe_incompletes, cmp))
@@ -275,6 +280,49 @@ class JobsComparison:
                     self.comparison[counter]['clusters_ama_lost'] = ama_lost
 
                 counter += 1
+
+        # Problems (Unknowns).
+        if self.show_problems:
+            # Since only 2 reports are supported.
+            common_unknowns = self.comparison[1]["{}_{}".format(VERDICTS_UNKNOWN, VERDICTS_UNKNOWN)]
+            report_ids = set()
+            self.problems_comparison = list()
+            for ids_1, attrs, ids_2 in common_unknowns:
+                report_ids = report_ids.union(ids_1)
+                report_ids = report_ids.union(ids_2)
+            id_to_problems = dict()
+            for problem, report_id in MarkUnknownReport.objects.filter(report__id__in=report_ids). \
+                    values_list('problem__name', 'report_id'):
+                if report_id not in id_to_problems:
+                    id_to_problems[report_id] = set()
+                id_to_problems[report_id].add(problem)
+            for ids_1, attrs, ids_2 in common_unknowns:
+                problems_1 = set()
+                problems_2 = set()
+                for report_id in ids_1:
+                    if report_id in id_to_problems:
+                        problems_1 = problems_1.union(id_to_problems[report_id])
+                for report_id in ids_2:
+                    if report_id in id_to_problems:
+                        problems_2 = problems_2.union(id_to_problems[report_id])
+                if problems_1:
+                    problems_1 = ", ".join(sorted(problems_1))
+                else:
+                    problems_1 = "Unmarked"
+                if problems_2:
+                    problems_2 = ", ".join(sorted(problems_2))
+                else:
+                    problems_2 = "Unmarked"
+                is_add = True
+                if not self.show_problems_type == SHOW_PROBLEMS_ALL:
+                    if problems_1 == problems_2:
+                        is_add = False
+                    if self.show_problems_type == SHOW_PROBLEMS_WITHOUT:
+                        if problems_1 == "Unmarked":
+                            is_add = True
+                if is_add:
+                    # TODO: maybe could be useful to rewrite for several ids
+                    self.problems_comparison.append(((problems_1, ids_1[0]), attrs, (problems_2, ids_2[0])))
 
         if unused_attrs_all:
             self.__sort_unused_attrs(unused_attrs_all)
@@ -490,6 +538,10 @@ class JobsComparison:
         self.comparison_function = DEFAULT_COMPARISON_FUNCTION
         self.clustering_type = CLUSTERING_TYPE_ALL
 
+        # Problems (Unknowns).
+        self.show_problems = False
+        self.show_problems_type = SHOW_PROBLEMS_DIFF
+
         if args:
             self.is_modified = True
             if 'same_transitions' in args:
@@ -517,6 +569,10 @@ class JobsComparison:
                 self.comparison_function = mea_config.get('comparison', self.comparison_function)
                 self.similarity = int(mea_config.get('similarity', self.similarity))
                 self.clustering_type = mea_config.get('clustering_type', self.clustering_type)
+            if 'problems_config' in args:
+                problems_config = args.get('problems_config', {})
+                self.show_problems = problems_config.get('enable', self.show_problems)
+                self.show_problems_type = problems_config.get('show_problems_type', self.show_problems_type)
 
     def __process_verdicts_transitions(self, verdicts_type: str, safes: dict, unsafes: dict, unsafe_incompletes: dict,
                                        unknowns: dict, cmp: dict) -> None:

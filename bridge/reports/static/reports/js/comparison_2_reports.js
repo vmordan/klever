@@ -29,6 +29,7 @@ function apply_new_settings() {
     var lost_transitions = [];
     var diff_attrs = [];
     var mea_config = {};
+    var problems_config = {};
     for (var elem in elems) {
         var id = elems[elem].id;
         if (id && elems[elem].checked && id.startsWith('cs1__')) {
@@ -52,10 +53,14 @@ function apply_new_settings() {
     }
     elems = $('input:radio');
     var clustering_type = "";
+    var problems_type = "";
     for (var elem in elems) {
         var id = elems[elem].id;
         if (id && elems[elem].checked && id.startsWith('cs5__show_')) {
             clustering_type = id.replace(/^cs5__show_/,"");
+        }
+        if (id && elems[elem].checked && id.startsWith('cs7__show_')) {
+            problems_type = id.replace(/^cs7__show_/,"");
         }
     }
     mea_config['enable'] = $('#cs5__auto_cluster_traces').is(':checked');
@@ -64,12 +69,16 @@ function apply_new_settings() {
     mea_config['comparison'] = $('#cs5__comparison_function').val();
     mea_config['similarity'] = $('#cs5__similarity_threshold').val();
 
+    problems_config['enable'] = $('#cs7__show_problems').is(':checked');
+    problems_config['show_problems_type'] = problems_type;
+
     data['comparison_attrs'] = comparison_attrs;
     data['filtered_values'] = filtered_values;
     data['same_transitions'] = same_transitions;
     data['lost_transitions'] = lost_transitions;
     data['diff_attrs'] = diff_attrs;
     data['mea_config'] = mea_config;
+    data['problems_config'] = problems_config;
     $('#dimmer_of_page').addClass('active');
     window.location.replace(get_url_with_get_parameter(window.location.href, 'data', JSON.stringify(data)));
 }

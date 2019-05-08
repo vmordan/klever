@@ -3478,3 +3478,24 @@ msgstr "Загрузить отредактированную трассу ош�
 
 msgid "Cannot parse edited error trace"
 msgstr "Не распознан формат отредактированной трассы ошибки"
+
+msgid "Common components problems comparison"
+msgstr "Сравнение общих проблем в компонентах"
+
+msgid "Show common components problems comparison"
+msgstr "Показать сравнение общих проблем в компонентах"
+
+msgid "Different problems"
+msgstr "Различные проблемы"
+
+msgid "Different or unmarked problems"
+msgstr "Различные или неразмеченные проблемы"
+
+msgid "All problems"
+msgstr "Все проблемы"
+
+msgid "Common component problems"
+msgstr "Общие проблемы в компонентах"
+
+msgid "selected"
+msgstr "выбрано"
