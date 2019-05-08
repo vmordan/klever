@@ -31,7 +31,7 @@ JOB_TREE_VIEW = {
     'columns': ['name', 'start_date', 'unsafe:bug', 'unsafe:false_positive',
                 'unsafe:unknown', 'unsafe:unassociated', 'unsafe:total',
                 'safe:total', 'problem:total', 'resource'],    # order: [up|down, title|date|start|finish]
-    'order': ['up', 'start'],
+    'order': ['up', 'date'],
 
     # FILTERS:
     # title: [iexact|istartswith|icontains, <any text>]
