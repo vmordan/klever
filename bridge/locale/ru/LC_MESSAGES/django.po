@@ -3499,3 +3499,9 @@ msgstr "Общие проблемы в компонентах"
 
 msgid "selected"
 msgstr "выбрано"
+
+msgid "Download error trace internal representation"
+msgstr "Сохранить внутреннее представление трассы"
+
+msgid "Download standalone trace"
+msgstr "Сохранить трассу в автономном режиме"

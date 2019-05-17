@@ -42,6 +42,7 @@ urlpatterns = [
     path('unsafe/<slug:trace_id>/edit/', views.EditReportUnsafe.as_view(), name='unsafe_edit'),
     path('get_source/<int:unsafe_id>/', views.SourceCodeView.as_view()),
     path('download-error-trace/<int:unsafe_id>/', views.DownloadErrorTrace.as_view(), name='download_error_trace'),
+    path('download-error-trace-html/<int:unsafe_id>/', views.DownloadErrorTraceHtml.as_view(), name='download_error_trace_html'),
 
     # Reports comparison
     path('fill_compare_cache/<int:job1_id>/<int:job2_id>/', views.FillComparisonCacheView.as_view()),

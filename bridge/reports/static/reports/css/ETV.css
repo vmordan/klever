@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#ETV_source_code {
+.ETV_source_code {
     width: 100%;
     position: absolute;
     left: 0;
@@ -62,7 +62,7 @@
 }
 
 .fullscreen {
-    height: 85vh!important;
+    height: 90vh!important;
 }
 
 #etv-source {

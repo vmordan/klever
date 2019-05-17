@@ -44,6 +44,7 @@
         {% block head_block %}{% endblock %}
     </head>
     <body>
+        {% if not standalone_html %}
         <div id="dimmer_of_page" class="ui dimmer">
             <div class="ui text loader">{% trans 'Please wait' %}</div>
         </div>
@@ -105,6 +106,7 @@
             </div>
         </div>
         <br>
+        {% endif %}
         {% block body_block %}{% endblock %}
         <div id="upload_marks_popup" class="ui modal">
             <div class="header">{% trans 'Upload marks' %}</div>

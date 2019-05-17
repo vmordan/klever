@@ -44,7 +44,7 @@ from reports.coverage import GetCoverage, GetCoverageSrcHTML
 from reports.etv import GetSource, GetETV
 from reports.models import ReportRoot, Report, ReportComponent, ReportSafe, ReportUnknown, ReportUnsafe, \
     AttrName, ReportAttr, CompareJobsInfo, CoverageArchive
-from reports.utils import get_edited_error_trace, get_error_trace_content, modify_error_trace
+from reports.utils import get_edited_error_trace, get_error_trace_content, modify_error_trace, get_html_error_trace
 from service.models import Task
 from tools.profiling import LoggedCallMixin
 
@@ -537,6 +537,23 @@ class DownloadErrorTrace(LoggedCallMixin, SingleObjectMixin, Bview.StreamingResp
         content = get_error_trace_content(self.object).encode('utf8')
         self.file_size = len(content)
         return FileWrapper(BytesIO(content), 8192)
+
+
+@method_decorator(login_required, name='dispatch')
+class DownloadErrorTraceHtml(LoggedCallMixin, SingleObjectMixin, Bview.StreamingResponseView):
+    model = ReportUnsafe
+    pk_url_kwarg = 'unsafe_id'
+    file_name = 'error-trace.zip'
+
+    def get_generator(self):
+        self.object = self.get_object()
+        src = dict()
+        etv = GetETV(get_error_trace_content(self.object), self.request.user)
+        for file in etv.data['files']:
+            file_prep = str(file).replace('/', '_').replace('.', '_')
+            cnt = GetSource(self.object, file).data
+            src[file_prep] = cnt
+        return get_html_error_trace(self.object, etv, src, self.request.user.extended.assumptions)
 
 
 class UnsafeUploadView(LoggedCallMixin, Bview.JsonDetailPostView):

@@ -17,6 +17,15 @@
 
 {% load i18n %}
 
+{% if standalone_html %}
+    <span id="standalone" hidden>true</span>
+    <style>
+        body {
+            padding: 5px 5px 5px 5px;
+        }
+    </style>
+{% endif %}
+
 <div id="etv" class="ui orange segment {% if fullscreen %} fullscreen{% endif %}">
     <div id="etv-trace">
         <div>
@@ -25,10 +34,20 @@
                     {% include 'reports/ETVButtons.html' %}
                 </div>
                 <div class="column center aligned" style="margin: 10px;">
-                    <h3><a id="error_trace_options" href="{% url 'reports:download_error_trace' report.pk %}" title="{% trans 'Download' %}">{% trans 'Error trace' %}</a></h3>
+                    <h3>
+                        {% if not standalone_html %}
+                            <a id="error_trace_options" href="{% url 'reports:download_error_trace' report.pk %}" title="{% trans 'Download error trace internal representation' %}">{% trans 'Error trace' %}</a>
+                        {% else %}
+                            {% trans 'Error trace' %}
+                        {% endif %}
+                    </h3>
                 </div>
                 <div class="column right aligned" style="margin: 2px;">
+                    {% if not standalone_html %}
                     <div class="ui buttons icon tiny">
+                        <a class="ui tiny button violet note-popup" href="{% url 'reports:download_error_trace_html' report.pk %}" data-content="{% trans 'Download standalone trace' %}">
+                            <i class="ui download icon"></i>
+                        </a>
                         {% if not edit and is_modifiable %}
                         <button id="upload_edited_trace" class="ui tiny button violet note-popup" data-content="{% trans 'Upload edited error trace' %}">
                             <i class="ui upload icon"></i>
@@ -60,6 +79,7 @@
                         </a>
                         {% endif %}
                     </div>
+                    {% endif %}
                 </div>
             </div>
             {% if etv %}
@@ -78,7 +98,10 @@
                     <p id="ETVSourceTitleFull"></p>
                 </div>
             </div>
-            <div class="filecontent" id="ETV_source_code"></div>
+            <div class="filecontent ETV_source_code" id="ETV_source_code"></div>
+            {% for filename, content in src.items %}
+                <div class="filecontent ETV_source_code" style="display: none" id="src_files{{filename}}">{{ content }}</div>
+            {%endfor%}
         </div>
     </div>
     <div id="etv-divider"></div>
