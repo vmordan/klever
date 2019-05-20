@@ -553,7 +553,7 @@ class DownloadErrorTraceHtml(LoggedCallMixin, SingleObjectMixin, Bview.Streaming
             file_prep = str(file).replace('/', '_').replace('.', '_')
             cnt = GetSource(self.object, file).data
             src[file_prep] = cnt
-        return get_html_error_trace(self.object, etv, src, self.request.user.extended.assumptions)
+        return get_html_error_trace(etv, src, self.request.user.extended.assumptions)
 
 
 class UnsafeUploadView(LoggedCallMixin, Bview.JsonDetailPostView):

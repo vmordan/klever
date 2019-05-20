@@ -19,7 +19,6 @@ import json
 import os
 import tempfile
 import uuid
-import zipfile
 from collections import Counter
 from wsgiref.util import FileWrapper
 
@@ -27,7 +26,6 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.files import File
 from django.db.models import Count
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
@@ -39,6 +37,7 @@ from bridge.vars import ERROR_TRACE_FILE, UNSAFE_VERDICTS, SAFE_VERDICTS
 from jobs.utils import get_resource_data, get_user_time, get_user_memory
 from marks.models import UnknownProblem, SafeTag, UnsafeTag
 from marks.utils import SAFE_COLOR, UNSAFE_COLOR, SAFE_LINK_CLASS, UNSAFE_LINK_CLASS
+from reports.etv import save_zip_trace
 from reports.models import ReportComponent, AttrFile, Attr, AttrName, ReportAttr, ReportUnsafe, ReportSafe, \
     ReportUnknown, ReportRoot
 from reports.querysets import LeavesQuery
@@ -169,39 +168,9 @@ def get_error_trace_content(unsafe_report: ReportUnsafe) -> str:
     return error_trace
 
 
-def get_html_error_trace(unsafe_report: ReportUnsafe, etv, src, assumptions):
+def get_html_error_trace(etv, src, assumptions):
     zip_trace_tmp = os.path.join(tempfile.gettempdir(), uuid.uuid4().hex + ".zip")
-    with zipfile.ZipFile(zip_trace_tmp, 'w', zipfile.ZIP_DEFLATED) as fd_zip:
-        html_trace_tmp = os.path.join(tempfile.gettempdir(), uuid.uuid4().hex)
-        with open(html_trace_tmp, 'w') as fd:
-            data = render_to_string('reports/etv_fullscreen.html',
-                                    {
-                                        'report': unsafe_report,
-                                        'include_assumptions': assumptions,
-                                        'etv': etv,
-                                        'is_modifiable': False,
-                                        'src': src,
-                                        'standalone_html': True
-                                    }
-                                    )
-
-            fd.write(data.replace("/static", "static"))
-        resource_dirs = [
-            os.path.join(os.path.dirname(__file__), os.pardir, 'static', 'js'),
-            os.path.join(os.path.dirname(__file__), os.pardir, 'static', 'css'),
-            os.path.join(os.path.dirname(__file__), os.pardir, 'static', 'semantic'),
-            os.path.join(os.path.dirname(__file__), os.pardir, 'static', 'data_tables'),
-            os.path.join(os.path.dirname(__file__), 'static', 'reports')
-        ]
-
-        for resource_dir in resource_dirs:
-            for cur_dir, _, filenames in os.walk(resource_dir):
-                for filename in filenames:
-                    filename = os.path.join(cur_dir, filename)
-                    fd_zip.write(filename, os.path.relpath(filename, os.path.join(resource_dir, os.pardir, os.pardir)))
-
-        fd_zip.write(html_trace_tmp, arcname='error-trace.html')
-        os.remove(html_trace_tmp)
+    save_zip_trace(zip_trace_tmp, etv, src, assumptions)
     data = FileWrapper(open(zip_trace_tmp, "rb"))
     os.remove(zip_trace_tmp)
     return data

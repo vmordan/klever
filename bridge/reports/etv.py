@@ -15,17 +15,17 @@
 # limitations under the License.
 #
 
-import re
 import json
+import os
+import re
+import tempfile
+import uuid
+import zipfile
 
-from django.core.exceptions import ObjectDoesNotExist
+from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
 
-from bridge.vars import ERROR_TRACE_FILE
 from bridge.utils import ArchiveFileContent, BridgeException
-
-from reports.models import ReportUnsafe
-
 
 TAB_LENGTH = 4
 SOURCE_CLASSES = {
@@ -482,9 +482,13 @@ class ParseErrorTrace:
 
 
 class GetETV:
-    def __init__(self, error_trace, user):
-        self.include_assumptions = user.extended.assumptions
-        self.triangles = user.extended.triangles
+    def __init__(self, error_trace, user=None):
+        if user:
+            self.include_assumptions = user.extended.assumptions
+            self.triangles = user.extended.triangles
+        else:
+            self.include_assumptions = False
+            self.triangles = False
         self.data = json.loads(error_trace)
         self.err_trace_nodes = get_error_trace_nodes(self.data)
         self.threads = []
@@ -541,28 +545,31 @@ class GetETV:
 
 
 class GetSource:
-    def __init__(self, report_id, file_name):
-        self.report = self.__get_report(report_id)
+    def __init__(self, report, file_name):
+        if report:
+            self.report = report
+        else:
+            self.report = None
         self.is_comment = False
         self.is_text = False
         self.text_quote = None
         self.data = self.__get_source(file_name)
 
-    def __get_report(self, report_id):
-        self.__is_not_used()
-        try:
-            return ReportUnsafe.objects.get(pk=report_id)
-        except ObjectDoesNotExist:
-            raise BridgeException(_("Could not find the corresponding unsafe"))
-
     def __get_source(self, file_name):
         data = ''
-        if file_name.startswith('/'):
-            file_name = file_name[1:]
-        try:
-            source_content = ArchiveFileContent(self.report.source, 'archive', file_name).content.decode('utf8', errors="ignore")
-        except Exception as e:
-            raise BridgeException(_("Error while extracting source from archive: %(error)s") % {'error': str(e)})
+        if self.report:
+            if file_name.startswith('/'):
+                file_name = file_name[1:]
+            try:
+                source_content = ArchiveFileContent(self.report.source, 'archive', file_name).content.decode('utf8', errors="ignore")
+            except Exception as e:
+                raise BridgeException(_("Error while extracting source from archive: %(error)s") % {'error': str(e)})
+        else:
+            if os.path.exists(file_name):
+                with open(file_name, encoding="utf8", errors='ignore') as fd:
+                    source_content = fd.read()
+            else:
+                source_content = ""
         cnt = 1
         lines = source_content.split('\n')
         for line in lines:
@@ -901,36 +908,46 @@ class ErrorTraceForests:
         return []
 
 
-def etv_callstack(unsafe_id=None, file_name='test.txt'):
-    if unsafe_id:
-        unsafe = ReportUnsafe.objects.get(id=unsafe_id)
-    else:
-        unsafe = ReportUnsafe.objects.all().first()
-    content = ArchiveFileContent(unsafe, 'error_trace', ERROR_TRACE_FILE).content.decode('utf8', errors="ignore")
-    data = json.loads(content)
-    trace = ''
-    double_returns = set()
-    ind = 0
-    for x in data['edges']:
-        if 'enter' in x:
-            if 'action' in x:
-                trace += '%s%s(%s)[action_%s] {\n' % (' ' * ind, data['funcs'][x['enter']], x['enter'], x['action'])
-            else:
-                trace += '%s%s(%s) {\n' % (' ' * ind, data['funcs'][x['enter']], x['enter'])
-            ind += 2
-            if 'return' in x:
-                double_returns.add(x['enter'])
-        elif 'return' in x:
-            ind -= 2
-            if 'action' in x:
-                trace += '%s}(%s)[action_%s]\n' % (' ' * ind, x['return'], x['action'])
-            else:
-                trace += '%s}(%s)\n' % (' ' * ind, x['return'])
-            if x['return'] in double_returns:
-                ind -= 2
-                trace += '%s}(DOUBLE)\n' % (' ' * ind)
-                double_returns.remove(x['return'])
-        elif 'action' in x:
-            trace += '%sACTION(%s)\n' % (' ' * ind, x['action'])
-    with open(file_name, mode='w', encoding='utf8') as fp:
-        fp.write(trace)
+def save_zip_trace(zip_trace_name: str, etv, src, assumptions):
+    with zipfile.ZipFile(zip_trace_name, 'w', zipfile.ZIP_DEFLATED) as fd_zip:
+        html_trace_tmp = os.path.join(tempfile.gettempdir(), uuid.uuid4().hex)
+        with open(html_trace_tmp, 'w') as fd:
+            data = render_to_string('reports/etv_fullscreen.html',
+                                    {
+                                        'report': None,
+                                        'include_assumptions': assumptions,
+                                        'etv': etv,
+                                        'is_modifiable': False,
+                                        'src': src,
+                                        'standalone_html': True
+                                    }
+                                    )
+
+            fd.write(data.replace("/static", "static"))
+        resource_dirs = [
+            os.path.join(os.path.dirname(__file__), os.pardir, 'static', 'js'),
+            os.path.join(os.path.dirname(__file__), os.pardir, 'static', 'css'),
+            os.path.join(os.path.dirname(__file__), os.pardir, 'static', 'semantic'),
+            os.path.join(os.path.dirname(__file__), os.pardir, 'static', 'data_tables'),
+            os.path.join(os.path.dirname(__file__), 'static', 'reports')
+        ]
+
+        for resource_dir in resource_dirs:
+            for cur_dir, _, filenames in os.walk(resource_dir):
+                for filename in filenames:
+                    filename = os.path.join(cur_dir, filename)
+                    fd_zip.write(filename, os.path.relpath(filename, os.path.join(resource_dir, os.pardir, os.pardir)))
+
+        fd_zip.write(html_trace_tmp, arcname='error-trace.html')
+        os.remove(html_trace_tmp)
+
+
+def convert_json_trace_to_html(json_trace: str, result_trace_name: str):
+    src = dict()
+    etv = GetETV(json_trace)
+    for file in etv.data['files']:
+        file_prep = str(file).replace('/', '_').replace('.', '_')
+        cnt = GetSource(None, file).data
+        src[file_prep] = cnt
+    save_zip_trace(result_trace_name, etv, src, False)
+
