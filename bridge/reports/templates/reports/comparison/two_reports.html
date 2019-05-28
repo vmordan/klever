@@ -234,6 +234,41 @@
                 </div>
             </div>
         </div>
+
+        <div class="ui horizontal segments">
+            <div class="ui segment purple">
+                <div class="accordion styled fluid">
+                    <div class="title right aligned"><div class="black-link">
+                        <i class="plus circle icon"></i><i>{% trans 'Add reports for comparison' %}</i>
+                    </div></div>
+                    <div class="content">
+                        <div class="ui list">
+                        {% for job in data.all_jobs %}
+                            {% if job.children %}
+                            <div class="item" style="padding-left: {{ job.level }}px; font-weight:bold">
+                                {% if not job.double_children %}
+                                <div class="black-link" style="cursor:pointer" onclick="toggle_children('settings_8_{{job.id}}')">
+                                    {{ job.name }}
+                                </div>
+                                {% else %}
+                                    {{ job.name }}
+                                {% endif %}
+                            </div>
+                            {% else %}
+                            <div class="item" id="settings_8_{% if job.id in data.potential_jobs %}checked_{% endif %}{{job.parent}}_{{job.id}}" style="padding-left: {{ job.level }}px">
+                                <div class="ui checkbox">
+                                    <input type="checkbox" id="cs8__{{ job.id }}" {% if job.id in data.potential_jobs %}checked{% endif %}>
+                                    <label>{{ job.name }}</label>
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <button id="apply_new_settings" class="ui tiny red button basic"><b><i class="ui icon crosshairs"></i>{% trans 'Apply' %}</b></button>
         {% if data.is_modified %}
         <button id="cancel_settings" class="ui tiny red button basic">{% trans 'Cancel' %}</button>

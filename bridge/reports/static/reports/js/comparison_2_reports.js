@@ -10,6 +10,16 @@ function toggle_by_id(identifier) {
     }
 }
 
+function toggle_children(parent_id) {
+    $('div[id^="' + parent_id + '_"]').each(function () {
+        if ($(this).is(':hidden')) {
+            $(this).show();
+        } else {
+            $(this).hide();
+        }
+    });
+}
+
 function change_id_1(identifier) {
     var settings = window.location.search;
     window.location.href = '/reports/comparison/' + identifier + "/" + $('#job_id_2').val() + settings;
@@ -28,6 +38,7 @@ function apply_new_settings() {
     var same_transitions = [];
     var lost_transitions = [];
     var diff_attrs = [];
+    var selected_jobs = [];
     var mea_config = {};
     var problems_config = {};
     for (var elem in elems) {
@@ -49,6 +60,9 @@ function apply_new_settings() {
         }
         if (id && elems[elem].checked && id.startsWith('cs6__')) {
             diff_attrs.push(id.replace(/^cs6__/,""));
+        }
+        if (id && elems[elem].checked && id.startsWith('cs8__')) {
+            selected_jobs.push(id.replace(/^cs8__/,""));
         }
     }
     elems = $('input:radio');
@@ -79,6 +93,7 @@ function apply_new_settings() {
     data['diff_attrs'] = diff_attrs;
     data['mea_config'] = mea_config;
     data['problems_config'] = problems_config;
+    data['selected_jobs'] = selected_jobs;
     $('#dimmer_of_page').addClass('active');
     window.location.replace(get_url_with_get_parameter(window.location.href, 'data', JSON.stringify(data)));
 }
@@ -131,4 +146,9 @@ $(document).ready(function () {
         window.location.href = '/reports/comparison/' + $('#job_id_2').val() + "/" + $('#job_id_1').val() + settings;
     });
 
+    $('div[id^="settings_8_"]').each(function () {
+        if (!$(this).find('input:checkbox').is(':checked')) {
+            $(this).hide();
+        }
+    });
 });

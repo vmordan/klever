@@ -47,6 +47,7 @@ from reports.models import ReportRoot, Report, ReportComponent, ReportSafe, Repo
 from reports.utils import get_edited_error_trace, get_error_trace_content, modify_error_trace, get_html_error_trace
 from service.models import Task
 from tools.profiling import LoggedCallMixin
+from jobs.JobTableProperties import TableTree
 
 
 # These filters are used for visualization component specific data. They should not be used for any other purposes.
@@ -611,7 +612,7 @@ class ReportsComparisonOldView(LoggedCallMixin, TemplateView):
 
 
 @method_decorator(login_required, name='dispatch')
-class ReportsComparisonView(LoggedCallMixin, TemplateView):
+class ReportsComparisonView(LoggedCallMixin, TemplateView, Bview.DataViewMixin):
     template_name = 'reports/comparison/two_reports.html'
 
     def get_context_data(self, **kwargs):
@@ -626,7 +627,20 @@ class ReportsComparisonView(LoggedCallMixin, TemplateView):
         else:
             args = {}
             other_jobs = []
-        return {'data': JobsComparison([root1, root2], args, other_jobs)}
+        tree = TableTree(self.request.user, self.get_view(VIEW_TYPES[1]))
+        jobs_tree = list()
+        for job in tree.values:
+            jobs_tree.append(
+                {
+                    'id': job['id'],
+                    'level': 10 * job['level'],
+                    'name': job['values'][0]['value'],
+                    'parent': job['parent'],
+                    'children': job['children'],
+                    'double_children': job['double_children']
+                }
+            )
+        return {'data': JobsComparison([root1, root2], args, other_jobs, jobs_tree)}
 
 
 class ReportsComparisonData(LoggedCallMixin, Bview.DetailPostView):

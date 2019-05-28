@@ -117,13 +117,17 @@ class InternalLeaf:
 
 
 class JobsComparison:
-    def __init__(self, root_reports: list, args: dict = {}, other_jobs: list = []):
+    def __init__(self, root_reports: list, args: dict = {}, other_jobs: list = [], all_jobs: list = []):
         self.__init_args(args)
+        self.all_jobs = all_jobs
 
+        if self.potential_jobs:
+            other_jobs = self.potential_jobs
         if other_jobs:
             self.job_ids = list()
             for job_id, job_name in Job.objects.filter(id__in=other_jobs).values_list('id', 'name'):
                 self.job_ids.append((job_id, job_name))
+                self.potential_jobs.add(job_id)
 
         common_attrs = dict()
         common_attrs_ids = set()
@@ -135,6 +139,7 @@ class JobsComparison:
         joint_attrs = dict()
         self.comparison = list()
         for root in root_reports:
+            self.potential_jobs.add(root.job.id)
             attrs, attrs_vals, attrs_ids, cdata = self.init_internals(root)
             if common_attrs:
                 common_attrs, common_attrs_vals = \
@@ -542,6 +547,7 @@ class JobsComparison:
         self.show_problems = False
         self.show_problems_type = SHOW_PROBLEMS_DIFF
 
+        self.potential_jobs = set()
         if args:
             self.is_modified = True
             if 'same_transitions' in args:
@@ -573,6 +579,8 @@ class JobsComparison:
                 problems_config = args.get('problems_config', {})
                 self.show_problems = problems_config.get('enable', self.show_problems)
                 self.show_problems_type = problems_config.get('show_problems_type', self.show_problems_type)
+            if 'selected_jobs' in args:
+                self.potential_jobs = set(args.get('selected_jobs', []))
 
     def __process_verdicts_transitions(self, verdicts_type: str, safes: dict, unsafes: dict, unsafe_incompletes: dict,
                                        unknowns: dict, cmp: dict) -> None:
