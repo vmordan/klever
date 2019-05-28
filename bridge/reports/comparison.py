@@ -122,7 +122,15 @@ class JobsComparison:
         self.all_jobs = all_jobs
 
         if self.potential_jobs:
-            other_jobs = self.potential_jobs
+            for root in root_reports:
+                report_id = root.job.id
+                if report_id not in self.potential_jobs:
+                    self.potential_jobs.add(report_id)
+            print(self.potential_jobs)
+            if len(self.potential_jobs) > 2:
+                other_jobs = self.potential_jobs
+            else:
+                other_jobs = list()
         if other_jobs:
             self.job_ids = list()
             for job_id, job_name in Job.objects.filter(id__in=other_jobs).values_list('id', 'name'):
@@ -580,7 +588,8 @@ class JobsComparison:
                 self.show_problems = problems_config.get('enable', self.show_problems)
                 self.show_problems_type = problems_config.get('show_problems_type', self.show_problems_type)
             if 'selected_jobs' in args:
-                self.potential_jobs = set(args.get('selected_jobs', []))
+                for job_id in args.get('selected_jobs', []):
+                    self.potential_jobs.add(int(job_id))
 
     def __process_verdicts_transitions(self, verdicts_type: str, safes: dict, unsafes: dict, unsafe_incompletes: dict,
                                        unknowns: dict, cmp: dict) -> None:
