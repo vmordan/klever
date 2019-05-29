@@ -126,7 +126,6 @@ class JobsComparison:
                 report_id = root.job.id
                 if report_id not in self.potential_jobs:
                     self.potential_jobs.add(report_id)
-            print(self.potential_jobs)
             if len(self.potential_jobs) > 2:
                 other_jobs = self.potential_jobs
             else:
