@@ -181,7 +181,7 @@
                         <input type="number" id="cs5__similarity_threshold" min="1" max="100" value="{{ data.similarity }}">
                     </div>
 
-                    <h4 class="header ui"> {% trans 'Show results for' %}:</h4>
+                    <h4 class="header ui">{% trans 'Show results for' %}:</h4>
                     <div class="ui bulleted list">
                         <div class="item">
                             <div class="ui radio checkbox">
@@ -330,7 +330,7 @@
             {% for cmp in data.comparison|slice:"1:"  %}
                 <div class="ui accordion">
                     <div class="title center aligned"><div class="black-link"><b>
-                        {% trans 'Number of launches' %}: {{data.comparison.0.launches}} -> {{cmp.launches}} ({% trans 'compared elements by attributes' %} {{data.comparison.0.elems_by_attrs}} ->  {{cmp.elems_by_attrs}})
+                        {% trans 'Verification launches' %}: {{data.comparison.0.launches}} -> {{cmp.launches}} ({% trans 'compared elements by attributes' %} {{data.comparison.0.elems_by_attrs}} ->  {{cmp.elems_by_attrs}})
                     </b></div></div>
                     <div class="content">
                         <h5 class="center aligned header"><i>{% trans 'Attributes' %}</i></h5>
