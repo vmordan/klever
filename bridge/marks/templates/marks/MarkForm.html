@@ -179,18 +179,18 @@
                         <h5>{% trans 'Conversion function arguments' %}</h5>
                         <div class="ui form">
                             <div class="fields">
-                                <div class="field">
-                                    <input type="text" id="additional_model_functions"
-                                       {% if conversion_function != 'model functions' %} hidden {% endif %}
-                                       placeholder="{% trans 'Additional model functions' %}"
-                                       onchange="update_converted_error_trace_on_args(this.value)" value="{{ args.additional_model_functions }}"
-                                    >
-                                </div>
-                                <div class="field">
+                                <div class="five wide field">
                                     <input type="text" id="filtered_model_functions"
                                        {% if conversion_function != 'model functions' and conversion_function != 'call tree' and conversion_function != 'full' %} hidden {% endif %}
                                        placeholder="{% trans 'Filtered functions' %}"
                                        onchange="update_converted_error_trace_on_args(this.value)" value="{{ args.filtered_model_functions }}"
+                                    >
+                                </div>
+                                <div class="six wide field">
+                                    <input type="text" id="additional_model_functions"
+                                       {% if conversion_function != 'model functions' %} hidden {% endif %}
+                                       placeholder="{% trans 'Additional model functions' %}"
+                                       onchange="update_converted_error_trace_on_args(this.value)" value="{{ args.additional_model_functions }}"
                                     >
                                 </div>
                             </div>
@@ -210,6 +210,8 @@
                             </div>
                         </div>
                     </div>
+                </div>
+                <div class="ui teal segment">
                     <h4 class="header ui teal">{% trans 'Error traces comparison function' %}</h4>
                     <select id="comparison_function" class="ui dropdown fluid top attached" onchange="comparison_function_change(this.value)">
                         {% for f in markdata.comparison %}
@@ -227,7 +229,6 @@
                 </div>
             {% endif %}
 
-
             {% if markdata.type == 'unknown' and problem_description %}
                 <div class="ui red segment filecontent" style="min-height:50vh;max-height:80vh;">{{ problem_description }}</div>
             {% endif %}
@@ -235,7 +236,7 @@
             {% if markdata.type == 'unsafe' %}
                 <div class="ui yellow segment">
                     <h4 class="header ui">
-                        {% trans 'Similarity threshold' %} ({% trans 'in percents' %}, 1% &le; threshold &le; 100%)
+                        {% trans 'Similarity threshold' %} ({% trans 'in percents' %})
                         <i class="question icon red" title="{% trans 'Jaccard index of threads sets' %}"></i>
                     </h4>
                     <div class="ui form">
