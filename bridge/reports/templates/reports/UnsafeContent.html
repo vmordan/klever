@@ -34,19 +34,16 @@
                     {% include 'reports/ETVButtons.html' %}
                 </div>
                 <div class="column center aligned" style="margin: 10px;">
-                    <h3>
-                        {% if not standalone_html %}
-                            <a id="error_trace_options" href="{% url 'reports:download_error_trace' report.pk %}" title="{% trans 'Download error trace internal representation' %}">{% trans 'Error trace' %}</a>
-                        {% else %}
-                            {% trans 'Error trace' %}
-                        {% endif %}
-                    </h3>
+                    <h3 id="error_trace_options">{% trans 'Error trace' %}</h3>
                 </div>
                 <div class="column right aligned" style="margin: 2px;">
                     {% if not standalone_html %}
                     <div class="ui buttons icon tiny">
                         <a class="ui tiny button violet note-popup" href="{% url 'reports:download_error_trace_html' report.pk %}" data-content="{% trans 'Download standalone trace' %}">
                             <i class="ui download icon"></i>
+                        </a>
+                        <a class="ui tiny button violet note-popup" href="{% url 'reports:download_error_trace' report.pk %}" data-content="{% trans 'Download error trace internal representation' %}">
+                            <i class="ui save outline icon"></i>
                         </a>
                         {% if not edit and is_modifiable %}
                         <button id="upload_edited_trace" class="ui tiny button violet note-popup" data-content="{% trans 'Upload edited error trace' %}">
