@@ -135,6 +135,18 @@ body {
     color: #33ff99;
 }
 
+.blue-link:link {
+    color: #3333cc;
+}
+
+.blue-link:visited {
+    color: #3333cc;
+}
+
+.blue-link:hover {
+    color: #7777ff;
+}
+
 .black-link:link {
     color: #000000;
 }

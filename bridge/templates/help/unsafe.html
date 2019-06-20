@@ -1,0 +1,179 @@
+{% extends 'help/header.html' %}
+{% comment "License" %}
+% Copyright (c) 2019 ISP RAS (http://www.ispras.ru)
+% Ivannikov Institute for System Programming of the Russian Academy of Sciences
+%
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
+%
+%    http://www.apache.org/licenses/LICENSE-2.0
+%
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License.
+{% endcomment %}
+
+{% load i18n %}
+
+
+{% block general %}
+
+{% blocktrans %}Each result {{unsafe_trans}} contains an error trace, which is a path in a program from the entry point to the checked property violation.
+This page displays representation of the error trace for the given result {{unsafe_trans}} in human-readable form.
+The main purpose of this page is to allow to the user to analyse this error trace to understand the reason of this violation.{% endblocktrans %}
+
+{% endblock %}
+{% block actions %}
+
+<div class="ui list">
+    <h5 class="ui header">{%trans 'Error trace views'%}</h5>
+    <div class="item">
+        <button class="ui mini orange button icon note-popup" data-content="{% trans 'Toggle functions from call stack' %}">
+            <i class="ui eye icon"></i>
+        </button>-
+        {% blocktrans %}show/hide all function bodies from call stack{% endblocktrans %};
+    </div>
+    <div class="item">
+        <button class="ui mini orange button icon note-popup" id="toggle_functions" data-content="{% trans 'Toggle all functions' %}">
+            <i class="ui sitemap icon"></i>
+        </button>-
+        {% blocktrans %}show/hide all functions bodies{% endblocktrans %};
+    </div>
+    <div class="item">
+        <button class="ui mini orange button icon note-popup" id="toggle_notes" data-content="{% trans 'Toggle notes code' %}">
+            <i class="ui comments outline icon"></i>
+        </button>-
+        {% blocktrans %}show/hide code lines, which are replaced by properties checks descriptions{% endblocktrans %};
+    </div>
+    <div class="item">
+        <button class="ui mini orange button icon note-popup" id="toggle_hidden_notes" data-content="{% trans 'Toggle hidden notes' %}">
+            <i class="ui comment outline icon"></i>
+        </button>-
+        {% blocktrans %}show/hide hidden properties checks descriptions, which are located outside function call stack{% endblocktrans %}.
+    </div>
+
+    <h5 class="ui header">{%trans 'Error trace control'%}</h5>
+    <div class="item">
+        <div class="ui mini icon button violet note-popup" data-content="{% trans 'Full screen mode' %}">
+            <i class="ui icon expand"></i>
+        </div>-
+        {% blocktrans %}switch to full-screen mode (error trace without applied marks){% endblocktrans %};
+    </div>
+    <div class="item">
+        <div class="ui mini icon button violet note-popup" data-content="{% trans 'Download standalone trace' %}">
+            <i class="ui download icon"></i>
+        </div>-
+        {% blocktrans %}download archive with error trace in html view (as presented on this page) for standalone usage{% endblocktrans %};
+    </div>
+    <div class="item">
+        <div class="ui mini icon button violet note-popup" data-content="{% trans 'Download error trace internal representation' %}">
+            <i class="ui save outline icon"></i>
+        </div>-
+        {% blocktrans %}download internal representation of error trace (json format){% endblocktrans %};
+    </div>
+    <div class="item">
+        <button class="ui icon mini button violet note-popup" data-content="{% trans 'Upload edited error trace' %}">
+            <i class="ui upload icon"></i>
+        </button>-
+        {% blocktrans %}upload internal representation of error trace (json format), which will be presented instead of original error trace{% endblocktrans %};
+    </div>
+    <div class="item">
+        <div class="ui icon mini button violet note-popup" data-content="{% trans 'Edit' %}">
+            <i class="ui edit icon"></i>
+        </div>-
+        {% blocktrans %}edit error trace on the page {{error_trace_edit_page}} (change representation of error trace){% endblocktrans %}.
+    </div>
+
+    <h5 class="ui header">{%trans 'Marks control'%}</h5>
+    <div class="item">
+        <a class="ui mini red button inverted right aligned"><i class="star icon"></i> {% trans 'Create default mark' %}</a> -
+        {% blocktrans %}create new mark with default settings{% endblocktrans %};
+    </div>
+    <div class="item">
+        <div class="ui mini red button"><i class="empty star icon"></i> {% trans 'Create extended mark' %}</div> -
+        {% blocktrans %}create new mark with adjusted settings on the page {{unsafe_mark_page}} (note, this is for advanced users only){% endblocktrans %};
+    </div>
+    <div class="item">
+        <div class="ui mini icon button basic blue note-popup" data-content="{% trans 'Show' %}"><i class="eye icon"></i></div> -
+        {% blocktrans %}show mark description with all error traces, for which the mark was applied,
+with ability to edit (on the {{unsafe_mark_page}} page) or removed it{% endblocktrans %};
+    </div>
+    <div class="item">
+        <button class="ui mini icon button teal basic note-popup" data-content="{% trans 'Adjust description' %}"><i class="edit icon"></i></button> -
+        {% blocktrans %}edit mark description, which does not affect its application{% endblocktrans %};
+    </div>
+    <div class="item">
+        <div class="ui mini icon button teal note-popup" data-content="{% trans 'Edit' %}"><i class="edit outline icon"></i></div> -
+        {% blocktrans %}fully edit mark on the {{unsafe_mark_page}} page, which may change its application{% endblocktrans %};
+    </div>
+    <div class="item">
+        <div class="ui mini icon button green basic note-popup" data-content="{% trans 'Confirm' %}"><i class="check circle green icon"></i></div> -
+        {% blocktrans %}confirm, that this automatic mark application was correct{% endblocktrans %};
+    </div>
+    <div class="item">
+        <div class="ui mini icon button red basic note-popup" data-content="{% trans 'Unconfirm' %}"><i class="x icon red icon"></i></div> -
+        {% blocktrans %}unconfirm this automatic mark application{% endblocktrans %};
+    </div>
+    <div class="item">
+        <button class="ui mini pink basic button"><i class="ui add icon"></i>{% trans 'Create new tag' %}</button>-
+        {% blocktrans %}create new tag, which will be used for this mark (see page {{tags_page}}){% endblocktrans %}.
+    </div>
+    <div class="ui segment basic">
+        <i>*{%trans 'Some actions requires corresponding permissions for the user'%}.</i>
+    </div>
+</div>
+
+{% endblock %}
+{% block use_cases %}
+
+<div class="ui ordered list">
+    <div class="item">
+        <b>{%trans 'Create default mark'%}</b><br>
+        {% blocktrans %}The user analyses this error trace and determines, whether it corresponds to real bug or to false alarm.
+Then the user chooses action "Create default mark", specifies verdict (bug/false alarm/unknown), current status and description,
+chooses tags to group this error trace (see page {{tags_page}}) and presses "Save". After that a table will be shown with
+all error traces from current report, for which created mark was successfully applied. The user should check each trace in order to
+understand, whether this application was correct or not (ideally, one and only one mark should be applied to each error trace).
+If at least one application is incorrect, then the user should use some way for extended mark creation.{% endblocktrans %}
+    </div>
+    <div class="item">
+        <b>{%trans 'Create mark by edited trace'%}</b><br>
+        {% blocktrans %}The user could not create required default mark and there is a suggestion, which element should be added to the trace
+or removed from the trace, so its mark would satisfy the users needs. The user removes previously created mark, edits the error trace
+(see page {{error_trace_edit_page}}) by adding or removing required elements, then creates a new default mark with selected option
+"Use edited error trace". If the new mark still does not meet the user requirements, the user should create extended mark.{% endblocktrans %}
+    </div>
+    <div class="item">
+        <b>{%trans 'Create or edit extended mark (advanced users only)'%}</b><br>
+        {% blocktrans %}The user chooses action "Create extended mark" or "Edit" for already created mark and then iteratively
+adjusts settings until this mark meets the requirements according to instructions (see page {{unsafe_mark_page}}){% endblocktrans %}.
+    </div>
+    <div class="item">
+        <b>{%trans 'Adjust mark description'%}</b><br>
+        {% blocktrans %}The user intends to adjust mark without changing its application,
+chooses action "Adjust mark description" and changes mark verdict, status, tags or description.{% endblocktrans %}
+    </div>
+    <div class="item">
+        <b>{%trans 'Resolve a problem with incompatible marks'%}</b><br>
+        {% blocktrans %}If several marks were applied to some error trace, then at least one of them is incorrect. The user should either edit marks,
+until only one of them is applied to the given error trace (see third use case) or (as a temporary solution) manually "unconfirm" some marks.
+This will not affect other error traces, which are marked incorrectly, but will remove "Incompatible marks" verdict for this error trace.{% endblocktrans %}
+    </div>
+    <div class="item">
+        <b>{%trans 'Save error trace for standalone usage'%}</b><br>
+        {% blocktrans %}If current error trace should be demonstrated outside of this web-interface, the user chooses action
+"Download standalone trace". Resulting archive contains html version of error trace with required resources.{% endblocktrans %}
+    </div>
+    <div class="item">
+        <b>{%trans 'Edit error trace'%}</b><br>
+        {% blocktrans %}In order to improve error trace visualization, the user can change, add or remove displayed messages
+on the error trace by choosing action "Edit". Also edited error trace can be used in a standalone mode or
+for more accurate mark creation. The user can save changes of the error trace with help of action "Download error trace internal representation"
+(in internal representation), which can be uploaded later to display instead of this or other error trace with help of action
+"Upload edited error trace".{% endblocktrans %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends 'help/header.html' %}
+{% comment "License" %}
+% Copyright (c) 2019 ISP RAS (http://www.ispras.ru)
+% Ivannikov Institute for System Programming of the Russian Academy of Sciences
+%
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
+%
+%    http://www.apache.org/licenses/LICENSE-2.0
+%
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License.
+{% endcomment %}
+
+{% load i18n %}
+
+
+{% block general %}
+
+{%trans 'This page presents overall information about verification report and allows to the users to select specific data for further analysis'%}.
+{%trans 'Presented information blocks'%}:
+
+<div class="ui bulleted list">
+    <div class="item">
+        {%trans 'Verification results'%} (<button class="ui mini button red">{%trans 'Unsafes'%}</button>,
+        <button class="ui mini button green">{%trans 'Safes'%}</button>,
+        <button class="ui mini button orange">{%trans 'Unknowns'%}</button>) -
+        {%trans 'provide access to each result type on the pages' %} {{unsafe_page}}, {{safe_page}}, {{unknown_page}}.
+        {%trans 'This block includes some common filters (e.g., "False alarms" for unsafes)'%}.
+    </div>
+    <div class="item">
+        {%trans 'Consumed resources'%} {%trans 'by the whole verification process and its components'%}.
+    </div>
+    <div class="item">
+        {%trans 'Attributes'%} ({%trans 'can be used to filter results'%}).
+    </div>
+    <div class="item">
+        {%trans 'Children'%} -
+        {% blocktrans %}short description of children reports in accordance with reports hierarchy, presented on the page {{jobs_page}}
+(for inner tree nodes only){% endblocktrans %}.
+    </div>
+</div>
+
+{% endblock %}
+{% block actions %}
+
+<div class="ui list">
+    <h5 class="ui header">{%trans 'Filter by attributes'%}</h5>
+    <div class="item">
+        <button class="ui mini red button basic"><b><i class="ui icon crosshairs"></i>{% trans 'Apply' %}</b></button>-
+        {%trans 'apply selected attributes values to filter verification results'%};
+    </div>
+    <div class="item">
+        <button class="ui mini red button basic ">{% trans 'Cancel' %}</button>-
+        {%trans 'cancel applied before attributes filter'%}.
+    </div>
+</div>
+
+{% endblock %}
+{% block use_cases %}
+
+<div class="ui ordered list">
+    <div class="item">
+        <b>{%trans 'Mark all error traces'%}</b><br>
+        {% blocktrans %}The user filters results by required attributes (by default no filter is applied), analyses each unsafe result
+from the given list in order to determine, whether it corresponds to a real bug in a program or to false alarm (see page {{unsafe_page}}){% endblocktrans %}.
+    </div>
+    <div class="item">
+        <b>{%trans 'Mark all component failures'%}</b><br>
+        {%trans 'The user analyses each unknown result from the given list in order to determine the cause of the problem'%}
+        ({%trans 'see page'%} {{unknown_page}}).
+    </div>
+</div>
+{% endblock %}

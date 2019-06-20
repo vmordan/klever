@@ -1,0 +1,73 @@
+{% extends 'help/header.html' %}
+{% comment "License" %}
+% Copyright (c) 2019 ISP RAS (http://www.ispras.ru)
+% Ivannikov Institute for System Programming of the Russian Academy of Sciences
+%
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
+%
+%    http://www.apache.org/licenses/LICENSE-2.0
+%
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License.
+{% endcomment %}
+
+{% load i18n %}
+
+
+{% block general %}
+
+{% blocktrans %}This page shows tool log (either verification system component or verifier) in case of failure
+and applied marks. Marks are applied by regular expression to logs and attributes.{% endblocktrans %}
+
+{% endblock %}
+{% block actions %}
+
+<div class="ui list">
+    <h5 class="ui header">{%trans 'Marks control'%}</h5>
+    <div class="item">
+        <a class="ui mini red button inverted right aligned"><i class="star icon"></i> {% trans 'Create default mark' %}</a> -
+        {% blocktrans %}create new mark with default attributes values{% endblocktrans %};
+    </div>
+    <div class="item">
+        <div class="ui mini red button"><i class="empty star icon"></i> {% trans 'Create extended mark' %}</div> -
+        {% blocktrans %}create new mark with ability to test regular expressions and to change attributes values{% endblocktrans %};
+    </div>
+    <div class="item">
+        <div class="ui mini icon button basic blue note-popup" data-content="{% trans 'Show' %}"><i class="eye icon"></i></div> -
+        {% blocktrans %}show mark description with all unknown results, for which this mark was applied, with ability to edit or delete it{% endblocktrans %};
+    </div>
+    <div class="item">
+        <button class="ui mini icon button teal basic note-popup" data-content="{% trans 'Adjust description' %}"><i class="edit icon"></i></button> -
+        {% blocktrans %}edit mark description (without changing mark attributes){% endblocktrans %};
+    </div>
+    <div class="item">
+        <div class="ui mini icon button teal note-popup" data-content="{% trans 'Edit' %}"><i class="edit outline icon"></i></div> -
+        {% blocktrans %}edit mark description (including attributes){% endblocktrans %};
+    </div>
+    <div class="item">
+        <div class="ui mini icon button green basic note-popup" data-content="{% trans 'Confirm' %}"><i class="check circle green icon"></i></div> -
+        {% blocktrans %}confirm, that this automatic mark application was correct{% endblocktrans %};
+    </div>
+    <div class="item">
+        <div class="ui mini icon button red basic note-popup" data-content="{% trans 'Unconfirm' %}"><i class="x icon red icon"></i></div> -
+        {% blocktrans %}unconfirm this automatic mark application{% endblocktrans %}.
+    </div>
+</div>
+
+{% endblock %}
+{% block use_cases %}
+
+<div class="ui ordered list">
+    <div class="item">
+        <b>{%trans 'Create new mark'%}</b><br>
+        {% blocktrans %}The user analyses the given log, finds the cause of the problem, creates regular expression,
+which should be applied to the problem cause, adds description of the problem and creates new mark. If the user intends to changes mark attributes
+extended mark should be created.{% endblocktrans %}
+    </div>
+</div>
+{% endblock %}

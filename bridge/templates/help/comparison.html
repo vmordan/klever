@@ -1,0 +1,183 @@
+{% extends 'help/header.html' %}
+{% comment "License" %}
+% Copyright (c) 2019 ISP RAS (http://www.ispras.ru)
+% Ivannikov Institute for System Programming of the Russian Academy of Sciences
+%
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
+%
+%    http://www.apache.org/licenses/LICENSE-2.0
+%
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License.
+{% endcomment %}
+
+{% load i18n %}
+
+
+{% block general %}
+
+{% blocktrans %}This page presents configurable comparison of 2 verification reports by different criterias.{% endblocktrans %}
+
+<div class="ui header horizontal divider">{%trans 'Required theoretical information'%}</div>
+
+{% blocktrans %}The verification report consists of several verification tool launches, and each launch contains the following data{% endblocktrans %}:
+
+<div class="ui bulleted list">
+    <div class="item">
+        {% blocktrans %}Verification results, each result can be {{safes_trans}}, {{unsafes_trans}}, or {{unknowns_trans}}.
+Each launch may contain several results{% endblocktrans %}.
+    </div>
+    <div class="item">
+        {% blocktrans %}Consumed resources by verification tool{% endblocktrans %}.
+    </div>
+    <div class="item">
+        {% blocktrans %}Attributes, which makes this launch unique (e.g., what and where is being verified).
+Note, that some launch results may contain additional attributes, which make them unique in comparison with other results{% endblocktrans %}.
+    </div>
+</div>
+
+{% blocktrans %}In order to compare reports we choose some "core" attributes (can be adjusted in the Settings),
+divide all verification results by so called compared elements with chosen attributes (each object has the same values of those attributes)
+and then compare such elements with the same attribute values by different criterias.
+Note, that compared elements may match verification launches or not.{% endblocktrans %}
+
+<div class="ui header horizontal divider">{%trans 'Comparison criterias'%}</div>
+<div class="ui ordered list">
+    <div class="item">
+        <b>{% trans 'Verification launches' %}</b>:
+        {% blocktrans %}comparison of overall information on verification launches (number of launches and compared elements){% endblocktrans %}.
+        <div class="ui bulleted list">
+            <div class="item">
+                <b>{% trans 'Attributes' %}</b>:
+                {% blocktrans %}set of attributes values for all verification launches (values for compared elements are highlighted){% endblocktrans %}.
+            </div>
+            <div class="item">
+                <b>{% trans 'Failures before verifier' %}</b>:
+                {% blocktrans %}components problems, which happened before verification launches and thus potentially could affect them{% endblocktrans %}.
+            </div>
+            <div class="item">
+                <b>{% trans 'Missing results due to different attributes' %}</b>:
+                {% blocktrans %}elements, which are not compared (they are shown for each verdict type, which is specified in the Settings){% endblocktrans %}.
+            </div>
+            <div class="item">
+                <b>{% trans 'Different attributes' %}</b>:
+                {% blocktrans %}comparison of none-"core" attributes values for compared elements (for each additional attribute specified in the Settings){% endblocktrans %}.
+            </div>
+        </div>
+    </div>
+    <div class="item">
+        <b>{% trans 'CPU time' %}</b>:
+        {% blocktrans %}comparison of consumed resources (by compared elements only and by all verification launches){% endblocktrans %}.
+    </div>
+    <div class="item">
+        <b>{% trans 'Results transitions' %}</b>:
+        {% blocktrans %}the next four sections contain verification results transitions from some results type to other types.
+These sections require, that each compared element consist of either:{% endblocktrans %}
+        <ul>
+            <li>
+                {% blocktrans %}only one result type {{safe_trans}} (and thus the element has overall result {{safe_trans}}) or{% endblocktrans %}
+            </li>
+            <li>
+                {% blocktrans %}only one result type {{unknowns_trans}} (and thus the element has overall result {{unknowns_trans}}) or{% endblocktrans %}
+            </li>
+            <li>
+                {% blocktrans %}one or more results of type {{unsafe_trans}} (and thus element has overall result {{unsafe_trans}}) or{% endblocktrans %}
+            </li>
+            <li>
+                {% blocktrans %}one or more results of type {{unsafe_trans}} and one result type {{unknowns_trans}} (and thus element has overall result {{unsafe_incomplete_trans}}){% endblocktrans %}.
+            </li>
+        </ul>
+        {% blocktrans %}Note, that transitions to the same result type (e.g., {{unsafe_trans}}->{{unsafe_trans}}) can be accessed via the Settings.{% endblocktrans %}
+    </div>
+    <div class="item">
+        <b>{% trans 'Error trace clusters' %}</b>:
+        {% blocktrans %}comparison of error traces, which are in the same compared elements (can be enabled in the Settings).
+First, all error traces for each compared element are divided into clusters (equivalence of two error traces is defined on the page {{unsafe_mark_page}}),
+then all clusters are compared for each compared element. Each cluster represents either already existed mark (see page {{marks_page}}) or automatically applied mark.
+New and lost clusters are highlighted{% endblocktrans %}.
+    </div>
+    <div class="item">
+        <b>{% trans 'Common component problems' %}</b>:
+        {% blocktrans %}comparison of common {{unknowns_trans}} results. 2 elements with result {{unknown_trans}} are considered equivalent,
+if they have the same set of applied marks (see page {{marks_page}}){% endblocktrans %}.
+    </div>
+</div>
+
+<div class="ui header horizontal divider">{%trans 'Settings'%}</div>
+<div class="ui bulleted list">
+    <div class="item">
+        {% trans 'Compare by attributes' %}:
+        {% blocktrans %}adjustment of "core" attributes{% endblocktrans %}.
+    </div>
+    <div class="item">
+        {% trans 'Select attributes values' %}:
+        {% blocktrans %}restriction of attribute values (elements with unselected values will be excluded from comparison){% endblocktrans %}.
+    </div>
+    <div class="item">
+        {% trans 'Show the same transitions' %}:
+        {% blocktrans %}enables the same transitions in results transition section for specified results type{% endblocktrans %}.
+    </div>
+    <div class="item">
+        {% trans 'Show reports without common attributes' %}:
+        {% blocktrans %}enables section missing results due to different attributes for specified results type{% endblocktrans %}.
+    </div>
+    <div class="item">
+        {% trans 'Error trace clustering' %}:
+        {% blocktrans %}enables error trace clustering. Arguments for performing comparison of two error traces are defined on the page {{unsafe_mark_page}}.
+Argument "show results for" determines, which clusters should be displayed.
+Note, this option may require a lot of time for some arguments and big number of error traces{% endblocktrans %}.
+    </div>
+    <div class="item">
+        {% trans 'Common components problems comparison' %}:
+        {% blocktrans %}enables comparison of common {{unknowns_trans}} results and determines, which results should be displayed{% endblocktrans %}.
+    </div>
+    <div class="item">
+        {% trans 'Add reports for comparison' %}:
+        {% blocktrans %}adds or removes reports for comparison. Note, that reports are added into some pool, from which they can be selected later.
+You cannot remove currently compared report{% endblocktrans %}.
+    </div>
+</div>
+
+{% endblock %}
+{% block actions %}
+
+<div class="ui list">
+    <h5 class="ui header">{% blocktrans %}Compared reports change{% endblocktrans %}</h5>
+    <div class="item">
+        <i class="exchange icon" style="cursor:pointer"></i> -
+        {% blocktrans %}swap compared reports{% endblocktrans %};
+    </div>
+    <div class="item">
+        <select>
+            <option>Report 1</option>
+            <option selected>Report 2</option>
+            <option>Report 3</option>
+        </select> -
+        {% blocktrans %}choose report for comparison on the current position (available if more than 2 reports selected for comparison){% endblocktrans %}.
+    </div>
+    <h5 class="ui header">{% blocktrans %}Settings control{% endblocktrans %}</h5>
+    <div class="item">
+        <button class="ui mini red button basic"><b><i class="ui icon crosshairs"></i>{% trans 'Apply' %}</b></button> -
+        {% blocktrans %}apply settings to adjust comparison criterias{% endblocktrans %};
+    </div>
+    <div class="item">
+        <button class="ui mini red button basic">{% trans 'Cancel' %}</button> -
+        {% blocktrans %}apply default settings for comparison criterias{% endblocktrans %}.
+    </div>
+</div>
+
+{% endblock %}
+{% block use_cases %}
+
+<div class="ui ordered list">
+    <div class="item">
+        <b>{%trans 'Compare reports'%}</b><br>
+        {% blocktrans %}The user selects required reports, adjusts comparison criterias via Settings if needed, and compares values.{% endblocktrans %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends 'help/header.html' %}
+{% comment "License" %}
+% Copyright (c) 2019 ISP RAS (http://www.ispras.ru)
+% Ivannikov Institute for System Programming of the Russian Academy of Sciences
+%
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
+%
+%    http://www.apache.org/licenses/LICENSE-2.0
+%
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License.
+{% endcomment %}
+
+{% load i18n %}
+
+
+{% block general %}
+
+{% blocktrans %}This page presents all verification jobs as a tree.
+Inner tree nodes form hierarchical structure, whereas leaf nodes contain reports on solved verification jobs.
+Detailed description of reports is presented on the page {{job_page}}.
+This page can be accessed from any page via{% endblocktrans %}
+{%trans 'Menu'%} -> {%trans 'Jobs'%} -> {%trans 'Jobs Tree'%}.
+
+{% endblock %}
+{% block actions %}
+
+<div class="ui bulleted list">
+    <div class="item">
+        {% blocktrans %}{{group_actions_trans}} -> {{compare_reports_trans}} -
+compares several solved verification jobs (leaf tree nodes). Results will be presented on the page {{comparison_page}}.{% endblocktrans %}
+    </div>
+</div>
+
+{% endblock %}
+{% block use_cases %}
+
+<div class="ui ordered list">
+    <div class="item">
+        <b>{%trans 'Analyse verification report'%}</b><br>
+        {% blocktrans %}The user finds required node by its name and continues its analysis on the page {{job_page}}.{% endblocktrans %}
+    </div>
+    <div class="item">
+        <b>{%trans 'Compare reports'%}</b><br>
+        {% blocktrans %}The user selects required solved verification jobs (leaf tree nodes) and chooses action {{compare_reports_trans}}.
+Note, that comparison cannot be performed on inner tree nodes.{% endblocktrans %}
+    </div>
+</div>
+{% endblock %}

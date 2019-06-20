@@ -1,0 +1,178 @@
+{% extends 'help/header.html' %}
+{% comment "License" %}
+% Copyright (c) 2019 ISP RAS (http://www.ispras.ru)
+% Ivannikov Institute for System Programming of the Russian Academy of Sciences
+%
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
+%
+%    http://www.apache.org/licenses/LICENSE-2.0
+%
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License.
+{% endcomment %}
+
+{% load i18n %}
+
+{% block general %}
+
+{% blocktrans %}This page allows to adjust settings for unsafe mark in order to meet the user requirements.
+Usually this page should be used, if unsafe mark with default settings does not meet the requirements, i.e.
+either it is applied to traces, which correspond to other bugs, or there are trace, which correspond to the same bug,
+but the mark was not applied to them.{% endblocktrans %}
+
+<div class="ui header horizontal divider">{%trans 'Required theoretical information'%}</div>
+{% blocktrans %}Internal representation of an error trace is a sequence of elements, each element contains the following data:{% endblocktrans %}
+<div class="ui bulleted list">
+    <div class="item">
+        {% blocktrans %}type (function call, assignment, assumption, etc.){% endblocktrans %};
+    </div>
+    <div class="item">
+        {% blocktrans %}link to the source code (file name, line number){% endblocktrans %};
+    </div>
+    <div class="item">
+        {% blocktrans %}thread identifier (for multi-threaded error traces){% endblocktrans %};
+    </div>
+    <div class="item">
+        {% blocktrans %}(optional) property checks descriptions (both passed and violated){% endblocktrans %}.
+    </div>
+</div>
+
+{% with t1="<code>t<sub>analysed</sub></code>" t2="<code>t<sub>compared</sub></code>"%}
+
+{% blocktrans %}Error traces are called <b>equivalent</b> if they correspond to the same bug (or to the same reason of false alarm).
+In order to compare error trace under analysis {{t1}} with some other error trace {{t2}} the <code>is_equivalent({{t1}}, {{t2}})</code>
+function is suggested:{% endblocktrans %}
+<h4 class="ui header center aligned">
+    <code>is_equivalent({{t1}}, {{t2}}) ≡ similarity(comparison(manual(conversion({{t1}}, args)), conversion({{t2}}, args))) >= similarity_threshold</code>
+</h4>
+{% blocktrans %}In case of one-threaded error trace this function is simplified into:{% endblocktrans %}
+<h4 class="ui header center aligned">
+    <code>is_equivalent({{t1}}, {{t2}}) ≡ comparison(manual(conversion({{t1}}, args)), conversion({{t2}}, args))</code>
+</h4>
+{% blocktrans %}Conversion function <code>conversion(t, args)</code> removes nonessential error trace elements,
+<code>args</code> are optional parameters.
+Comparison function <code>comparison(t<sub>1</sub>, t<sub>2</sub>)</code> determines, how two error traces are compared (as sequences).
+If an error trace consists of multiple threads, then it returns the number of equivalent threads.
+Function <code>manual(t)</code> corresponds to the user changes in an error trace
+(e.g., the user may remove some elements in addition to conversion function).
+In case of multi-threaded error trace, function <code>similarity(n)</code> evaluates similarity of 2 error traces based on the number of equivalent threads,
+which should be greater or equal to the given <code>similarity_threshold</code> value in order to consider traces to be equivalent.
+Therefore, unsafe mark is determined by the following parameters <code>conversion, args, comparison, similarity, similarity_threshold</code>.<br>
+Note, that traces are considered to be equivalent with respect to the given parameters. If they are meaningless, this comparison means nothing.{% endblocktrans %}
+{% endwith %}
+{% endblock %}
+{% block actions %}
+
+{% with t1="<code>t<sub>analysed</sub></code>" t2="<code>t<sub>compared</sub></code>"%}
+
+<div class="ui header horizontal divider">{%trans 'Parameters'%}</div>
+
+<div class="ui bulleted list">
+    <div class="item">
+        {% blocktrans %}Default mark creation parameters (verdict, status, tags, description). They do not affect mark application.{% endblocktrans %}
+    </div>
+    <div class="item">
+        <b>{%trans 'Attributes'%}</b> -
+        {% blocktrans %}this error trace will be compared with other traces, which have the same selected attributes with the same values.{% endblocktrans %}
+    </div>
+    <div class="item">
+        <b>{%trans 'Error traces conversion function'%}</b> -
+        {% blocktrans %}allows to choose function <code>conversion(t)</code> from the predefined list.
+Each function comes with description. By default function <code>model functions</code> is used (model function is a function, which
+contains property check).{% endblocktrans %}
+    </div>
+    <div class="item">
+        <b>{%trans 'Conversion function arguments'%}</b> - {%trans 'allows to specify additional parameters <code>args</code>'%}:
+        <div class="ui list">
+            <div class="item">
+                <b>{%trans 'Filtered functions'%}</b> -
+                {% trans 'remove specified function calls from error trace (function names should be separated by commas)' %};
+            </div>
+            <div class="item">
+                <b>{%trans 'Additional model functions'%}</b> -
+                {% trans 'specify functions, which should be considered as model even if they does not contain property checks (function names should be separated by commas)' %};
+            </div>
+            <div class="item">
+                <b>{%trans 'Add verifier notes'%}</b> -
+                {% trans 'add passed property checks descriptions' %};
+            </div>
+            <div class="item">
+                <b>{%trans 'Use verifier warnings'%}</b> -
+                {% trans 'add property violation descriptions' %}.
+            </div>
+        </div>
+    </div>
+    <div class="item">
+        <b>{%trans 'Error traces conversion function'%}</b> -
+        {% blocktrans %}allows to choose function <code>comparison(t<sub>1</sub>, t<sub>2</sub>)</code> from the predefined list.
+Each function comes with description. By default function <code>equal</code> is used.{% endblocktrans %}
+    </div>
+    <div class="item">
+        <b>{%trans 'Similarity threshold'%}</b> -
+        {% blocktrans %}allows to choose <code>similarity_threshold</code> for the <code>similarity(n)</code> function.
+Currently the <code>similarity(n)</code> function is Jaccard index. By default value 100% is used (error traces have the same number of threads
+and they are equal).{% endblocktrans %}
+    </div>
+    <div class="item">
+        <b>{%trans 'Converted error trace'%}</b> -
+        {% blocktrans %}allows to manually change error trace after applying conversion function to it
+(<code>manual</code> function).{% endblocktrans %}
+    </div>
+    <div class="item">
+        <b>{%trans 'Optimizations'%}</b> -
+        {% blocktrans %}allows to speed up the process of marks application by applying mark only to the current report
+('Apply only to current report'). Use optimizations only as a last resort, because such marks may be lost for future reports,
+which wastes all efforts of creating the mark.{% endblocktrans %}
+    </div>
+    <div class="item">
+        <b>{%trans 'Change initial error trace for this mark'%}</b> -
+        {% blocktrans %}allows to change initial ({{t1}}) error trace for this mark (only on editing).
+This may change converted error trace (e.g., swap {{t1}} and {{t2}} in the <code>is_equivalent({{t1}}, {{t2}})</code> function)
+and thus drastically change mark application.{% endblocktrans %}
+    </div>
+</div>
+
+{% endwith %}
+{% endblock %}
+{% block use_cases %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% blocktrans %}The general schema of extended unsafe mark creation is the following:{% endblocktrans %}
+
+<div class="ui segment">
+    <img class="ui centered image" src="/static/images/mea_manual_schema.png">
+</div>
+
+
+{% blocktrans %}Therefore, the user iteratively increases (scenario 1) or reduces (scenario 2) accuracy of the mark,
+until it is applied to error traces, which corresponds to the same bug.{% endblocktrans %}
+
+<div class="ui ordered list">
+    <div class="item">
+        <b>{%trans 'The mark is applied to an error trace, which corresponds to other bugs'%}</b><br>
+        {% blocktrans %}The user finds out, which elements are missing in converted error trace, but can be used to distinguish 2 traces,
+then chooses more accurate conversion function or changes conversion function arguments
+(e.g., by adding new model functions or verifier notes), until the required elements show up in the converted error trace.
+After saving this mark, the user must check all other error traces, for which mark was applied, in order to make sure, that none of them
+corresponds to the other bug. If this is not the case, the operation should be repeated, taking into account new error trace, which correspond to other bug.
+Note, if the mark is too accurate, it may not be applied to some traces, which correspond to the same bug (see the second scenario).{% endblocktrans %}
+    </div>
+    <div class="item">
+        <b>{%trans 'There is a trace, which corresponds to the same bug, but the mark was not applied to it'%}</b><br>
+        {% blocktrans %}The user finds out, which elements distinguishes 2 equivalent error traces,
+then chooses less accurate conversion function, changes conversion function arguments
+(e.g., by excluding some functions or verifier notes) or removes some elements from the error trace manually
+until the required elements are removed from the converted error trace. In case of manual changes, the user should also change
+comparison function to check elements for inclusion instead of equivalence.
+After saving this mark, the user must check all other error traces, for which mark was applied, in order to make sure, that none of them
+corresponds to the other bug (see the first scenario), and there is no error trace, which correspond to the same bug and for which this mark was not applied.
+If this is not the case, the operation should be repeated, taking into account new error trace, which correspond to the same bug.{% endblocktrans %}
+    </div>
+</div>
+
+{% endblock %}

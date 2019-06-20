@@ -1,0 +1,43 @@
+{% extends 'help/header.html' %}
+{% comment "License" %}
+% Copyright (c) 2019 ISP RAS (http://www.ispras.ru)
+% Ivannikov Institute for System Programming of the Russian Academy of Sciences
+%
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
+%
+%    http://www.apache.org/licenses/LICENSE-2.0
+%
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License.
+{% endcomment %}
+
+{% load i18n %}
+
+
+{% block general %}
+
+{% blocktrans %}This page shows correctness proof and applied marks.
+Note, that currently correctness proof are not given by the verifier in any readable form and thus cannot be presented.
+Therefore, any information about correctness proof is presented in attributes, and marks are applied only by comparing selected attributes values.{% endblocktrans %}
+
+{% endblock %}
+{% block actions %}
+
+{% blocktrans %}Similar to the {{unknown_page}} page{% endblocktrans %}.
+
+{% endblock %}
+{% block use_cases %}
+
+<div class="ui ordered list">
+    <div class="item">
+        <b>{%trans 'Create new mark'%}</b><br>
+        {% blocktrans %}If the given correctness proof is invalid (e.g., a real bug is missing or coverage value is suspicious),
+the user creates new mark (extended if compared set of attributes should be changed).{% endblocktrans %}
+    </div>
+</div>
+{% endblock %}
