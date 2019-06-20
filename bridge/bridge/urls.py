@@ -33,5 +33,8 @@ urlpatterns = [
     path('tools/', include(('tools.urls', 'tools'), namespace='tools')),
     path('', views.index_page),
     path('population/', views.population, name='population'),
+    path('help/<slug:page>/', views.help_pages, name='help'),
+    path('get_help_pages/<slug:page>/', views.get_help_pages, name="get_help_pages"),
+    path('help/', views.help_pages, name='help'),
     path('media/<path>', serve, {'document_root': settings.MEDIA_ROOT, 'show_indexes': True})
 ]

@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% comment "License" %}
+% Copyright (c) 2019 ISP RAS (http://www.ispras.ru)
+% Ivannikov Institute for System Programming of the Russian Academy of Sciences
+%
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
+%
+%    http://www.apache.org/licenses/LICENSE-2.0
+%
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License.
+{% endcomment %}
+
+{% load i18n %}
+
+{% block title %}{% trans 'Help' %}{% endblock %}
+{% block head_block %}
+    <script src="/static/js/help.js"></script>
+{% endblock %}
+
+{% block body_block %}
+
+{% trans "Job" as job_trans %}
+{% trans "Job reports comparison" as comparison_trans %}
+{% trans "Unsafe" as unsafe_trans %}
+{% trans "Safe" as safe_trans %}
+{% trans "Unknowns" as unknowns_trans %}
+{% trans "Error trace edit" as error_trace_edit_trans %}
+{% trans "Unsafes mark" as unsafe_mark_trans %}
+{% trans "Marks" as marks_trans %}
+{% trans "Tags" as tags_trans %}
+{% trans "Jobs Tree" as jobs_trans %}
+{% trans "Page" as page_trans %}
+
+<div class="ui grid">
+    <div class="three wide column">
+        <div class="ui segment green">
+            <div class="ui centered grid">
+                <div class="column center aligned">
+                    <div class="ui buttons green icon tiny">
+                        <div id="control_back" class="ui button disabled">
+                            <i class="ui icon arrow alternate circle left"></i>
+                        </div>
+                        <div id="control_home" class="ui button{%if not page%} disabled{%endif%}">
+                            <i class="ui icon home"></i>
+                        </div>
+                        <div id="control_forward" class="ui button disabled">
+                            <i class="ui icon arrow alternate circle right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ui header center aligned">{% trans 'Content' %}</div>
+            <div class="ui list ordered">
+                <div id="unsafe" class="item help">
+                    <a class="blue-link" href="#" onclick="activate('unsafe')">{{page_trans}} '{{unsafe_trans}}'</a>
+                    <p>
+                        <i>{% trans 'Representation of error trace with applied marks' %}</i>
+                    </p>
+                </div>
+                <div id="error_trace_edit" class="item help">
+                    <a class="blue-link" href="#" onclick="activate('error_trace_edit')">{{page_trans}} '{{error_trace_edit_trans}}'</a>
+                    <p>
+                        <i>{% trans 'Form for editing representation of error trace' %}</i>
+                    </p>
+                </div>
+                <div id="unsafe_mark" class="item help">
+                    <a class="blue-link" href="#" onclick="activate('unsafe_mark')">{{page_trans}} '{{unsafe_mark_trans}}'</a>
+                    <p>
+                        <i>{% trans 'Extended unsafe marks' %}</i>
+                    </p>
+                </div>
+                <div id="job" class="item help">
+                    <a class="blue-link" href="#" onclick="activate('job')">{{page_trans}} '{{job_trans}}'</a>
+                    <p>
+                        <i>{% trans 'Detailed report on solved verification job' %}</i>
+                    </p>
+                </div>
+                <div id="comparison" class="item help">
+                    <a class="blue-link" href="#" onclick="activate('comparison')">{{page_trans}} '{{comparison_trans}}'</a>
+                    <p>
+                        <i>{% trans 'Comparison of verification reports' %}</i>
+                    </p>
+                </div>
+                <div id="unknown" class="item help">
+                    <a class="blue-link" href="#" onclick="activate('unknown')">{{page_trans}} '{{unknowns_trans}}'</a>
+                    <p>
+                        <i>{% trans 'Component problem description with applied marks' %}</i>
+                    </p>
+                </div>
+                <div id="safe" class="item help">
+                    <a class="blue-link" href="#" onclick="activate('safe')">{{page_trans}} '{{safe_trans}}'</a>
+                    <p>
+                        <i>{% trans 'Correctness proof with applied marks' %}</i>
+                    </p>
+                </div>
+                <div id="marks_list" class="item help">
+                    <a class="blue-link" href="#" onclick="activate('marks_list')">{% trans 'Pages' %} '{{marks_trans}}'</a>
+                    <p>
+                        <i>{% trans 'List of all marks for specified result' %}</i>
+                    </p>
+                </div>
+                <div id="tags_tree" class="item help">
+                    <a class="blue-link" href="#" onclick="activate('tags_tree')">{% trans 'Pages' %} '{{tags_trans}}'</a>
+                    <p>
+                        <i>{% trans 'Tags tree for specified result' %}</i>
+                    </p>
+                </div>
+                <div id="jobs_tree" class="item help">
+                    <a class="blue-link" href="#" onclick="activate('jobs_tree')">{{page_trans}} '{{jobs_trans}}'</a>
+                    <p>
+                        <i>{% trans 'All verification jobs in structured view' %}</i>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="thirteen wide column">
+        <div class="ui segment blue">
+            <div id="help_details"></div>
+        </div>
+    </div>
+</div>
+<span id="start_help_page" hidden>{{page}}</span>
+{% endblock %}

@@ -18,6 +18,9 @@
 
 {% load i18n %}
 {% load staticfiles %}
+{% if markdata.type == 'unsafe' %}
+{% block help_link %}unsafe_mark{% endblock %}
+{% endif %}
 
 {% block title %}
     {% if markdata.type == 'safe' %}{% trans 'Safes mark' %}{% elif markdata.type == 'unknown' %}{% trans 'Unknowns mark' %}{% else %}{% trans 'Unsafes mark' %}{% endif %}

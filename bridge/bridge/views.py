@@ -17,19 +17,19 @@
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
+from django.template.loader import TemplateDoesNotExist
 from django.urls import reverse
 from django.utils.translation import ugettext as _, activate
 
-from tools.profiling import unparallel_group
-from bridge.vars import USER_ROLES, UNKNOWN_ERROR
-from bridge.utils import logger, BridgeErrorResponse, BridgeException
 from bridge.populate import Population
-
-from users.models import Extended
+from bridge.utils import logger, BridgeErrorResponse, BridgeException
+from bridge.vars import USER_ROLES, UNKNOWN_ERROR
 from marks.models import MarkSafe, MarkUnsafe, MarkUnknown
 from reports.models import AttrName
+from tools.profiling import unparallel_group
+from users.models import Extended
 
 
 def index_page(request):
@@ -66,3 +66,17 @@ def population(request):
             return render(request, 'Population.html', {'error': str(UNKNOWN_ERROR)})
         return render(request, 'Population.html', {'changes': changes})
     return render(request, 'Population.html', {'need_service': need_service})
+
+
+@login_required
+def help_pages(request, page=''):
+    return render(request, 'help/main.html', {'page': page})
+
+
+@login_required
+def get_help_pages(request, page=''):
+    try:
+        return render(request, 'help/{}.html'.format(page))
+    except TemplateDoesNotExist:
+        return HttpResponse('<div class="ui header center aligned red">{}</div>'.
+                            format(_('Required object does not exist')))

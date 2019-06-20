@@ -19,6 +19,8 @@
 {% load i18n %}
 {% load staticfiles %}
 
+{% block help_link %}{% if report_type == 'safe' %}safe{% elif report_type == 'unsafe' %}unsafe{% else %}unknown{% endif %}{% endblock %}
+
 {% block title %}{% if report_type == 'safe' %}{% trans 'Safe' %}{% elif report_type == 'unsafe' %}{% trans 'Unsafe' %}{% else %}{% trans 'Unknown' %}{% endif %}{% endblock %}
 
 {% block head_block %}
