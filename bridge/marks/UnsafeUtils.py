@@ -26,12 +26,13 @@ from django.utils.translation import ugettext_lazy as _
 from bridge.utils import logger, BridgeException, unique_id
 from bridge.vars import UNKNOWN_ERROR, UNSAFE_VERDICTS, USER_ROLES, MARK_STATUS, MARK_UNSAFE, MARK_TYPE, \
     ASSOCIATION_TYPE
+from marks.attributes import create_attributes, get_marks_attributes, get_reports_by_attributes, get_user_attrs
 from marks.models import ConvertedTraces, MarkUnsafe, MarkUnsafeHistory, MarkUnsafeReport, MarkUnsafeAttr, \
     MarkUnsafeTag, UnsafeTag, UnsafeReportTag, ReportUnsafeTag
 from reports.mea.wrapper import error_trace_pretty_parse, TAG_CONVERSION_FUNCTION, TAG_COMPARISON_FUNCTION, \
     TAG_EDITED_ERROR_TRACE, get_or_convert_error_trace, dump_converted_error_trace, DEFAULT_CONVERSION_FUNCTION, \
     DEFAULT_COMPARISON_FUNCTION, is_trace_equal, automatic_error_trace_editing
-from reports.models import ReportComponentLeaf, ReportAttr, ReportUnsafe, Attr, AttrName
+from reports.models import ReportComponentLeaf, ReportUnsafe
 from users.models import User
 
 UNSAFE_MARK_TIME_THRESHOLD = 1  # sec
@@ -112,6 +113,16 @@ class NewMark:
                                                                      self.conversion_function_args)
             else:
                 self.edited_error_trace = error_trace_pretty_parse(self.edited_error_trace)
+
+        # Check attributes.
+        if isinstance(mark_unsafe, ReportUnsafe):
+            report = mark_unsafe
+        else:
+            report = mark_unsafe.report
+        marks_attrs = get_user_attrs(self._args)
+        mark_reports = get_reports_by_attributes('unsafe', marks_attrs, {'report': report})
+        if not mark_reports:
+            raise BridgeException(_("Mark cannot be applied to the selected attributes"), response_type='json')
 
         # Check that mark is applicable to the error trace itself.
         if self.initial_error_trace:
@@ -302,58 +313,7 @@ class NewMark:
         return markversion
 
     def __create_attributes(self, markversion_id, inst=None):
-        if 'attrs' in self._args and (not isinstance(self._args['attrs'], list) or len(self._args['attrs']) == 0):
-            del self._args['attrs']
-        if 'attrs' in self._args:
-            for a in self._args['attrs']:
-                if not isinstance(a, dict) or not isinstance(a.get('attr'), str) \
-                        or not isinstance(a.get('is_compare'), bool):
-                    raise ValueError('Wrong attribute found: %s' % a)
-                if inst is None and not isinstance(a.get('value'), str):
-                    raise ValueError('Wrong attribute found: %s' % a)
-
-        need_recalc = False
-        new_attrs = []
-        if isinstance(inst, ReportUnsafe):
-            for a_id, a_name, associate in inst.attrs.order_by('id')\
-                    .values_list('attr_id', 'attr__name__name', 'associate'):
-                if 'attrs' in self._args:
-                    for a in self._args['attrs']:
-                        if a['attr'] == a_name:
-                            new_attrs.append(MarkUnsafeAttr(
-                                mark_id=markversion_id, attr_id=a_id, is_compare=a['is_compare']
-                            ))
-                            break
-                    else:
-                        raise ValueError('Not enough attributes in args')
-                else:
-                    new_attrs.append(MarkUnsafeAttr(mark_id=markversion_id, attr_id=a_id, is_compare=associate))
-        elif isinstance(inst, MarkUnsafeHistory):
-            for a_id, a_name, is_compare in inst.attrs.order_by('id')\
-                    .values_list('attr_id', 'attr__name__name', 'is_compare'):
-                if 'attrs' in self._args:
-                    for a in self._args['attrs']:
-                        if a['attr'] == a_name:
-                            new_attrs.append(MarkUnsafeAttr(
-                                mark_id=markversion_id, attr_id=a_id, is_compare=a['is_compare']
-                            ))
-                            if a['is_compare'] != is_compare:
-                                need_recalc = True
-                            break
-                    else:
-                        raise ValueError('Not enough attributes in args')
-                else:
-                    new_attrs.append(MarkUnsafeAttr(mark_id=markversion_id, attr_id=a_id, is_compare=is_compare))
-        else:
-            if 'attrs' not in self._args:
-                raise ValueError('Attributes are required')
-            for a in self._args['attrs']:
-                attr = Attr.objects.get_or_create(
-                    name=AttrName.objects.get_or_create(name=a['attr'])[0], value=a['value']
-                )[0]
-                new_attrs.append(MarkUnsafeAttr(mark_id=markversion_id, attr=attr, is_compare=a['is_compare']))
-        MarkUnsafeAttr.objects.bulk_create(new_attrs)
-        return need_recalc
+        return create_attributes(MarkUnsafeAttr, self._args, markversion_id, inst)
 
     def __get_tags_changes(self, data):
         for report in self.changes:
@@ -378,8 +338,9 @@ class ConnectMarks:
         self.optimizations = optimizations
 
         self._marks_attrs = self.__get_marks_attrs()
-        self._unsafes_attrs = self.__get_unsafes_attrs()
-        if len(self._unsafes_attrs) == 0:
+        self.marks_reports = get_reports_by_attributes('unsafe', self._marks_attrs)
+
+        if len(self.marks_reports) == 0:
             return
         self.__clear_connections()
         self._author = dict((m.id, m.author) for m in self._marks)
@@ -387,30 +348,12 @@ class ConnectMarks:
         self.__connect()
         self.__update_verdicts()
 
-    def __get_unsafes_attrs(self):
-        self.__is_not_used()
-        attrs_ids = set()
-        for m_id in self._marks_attrs:
-            attrs_ids |= self._marks_attrs[m_id]
-
-        unsafes_attrs = {}
-        for r_id, a_id in ReportAttr.objects.exclude(report__reportunsafe=None).filter(attr_id__in=attrs_ids)\
-                .values_list('report_id', 'attr_id'):
-            if r_id not in unsafes_attrs:
-                unsafes_attrs[r_id] = set()
-            unsafes_attrs[r_id].add(a_id)
-        return unsafes_attrs
-
     def __get_marks_attrs(self):
         attr_filters = {
             'mark__mark__in': self._marks, 'is_compare': True,
             'mark__version': F('mark__mark__version')
         }
-        marks_attrs = {}
-        for attr_id, mark_id in MarkUnsafeAttr.objects.filter(**attr_filters).values_list('attr_id', 'mark__mark_id'):
-            if mark_id not in marks_attrs:
-                marks_attrs[mark_id] = set()
-            marks_attrs[mark_id].add(attr_id)
+        marks_attrs = get_marks_attributes(MarkUnsafeAttr, attr_filters)
         for m_id, comparison_name, conversion_name, pattern_id in MarkUnsafeHistory.objects\
                 .filter(mark_id__in=marks_attrs, version=F('mark__version'))\
                 .values_list('mark_id', 'comparison_function', 'conversion_function', 'error_trace_id'):
@@ -440,18 +383,10 @@ class ConnectMarks:
         return time_previous
 
     def __connect(self):
-        marks_reports = {}
         unsafes_ids = set()
-        for mark_id in self._marks_attrs:
-            marks_reports[mark_id] = set()
-            for unsafe_id in self._unsafes_attrs:
-                if self._marks_attrs[mark_id].issubset(self._unsafes_attrs[unsafe_id]):
-                    marks_reports[mark_id].add(unsafe_id)
-                    unsafes_ids.add(unsafe_id)
-            if len(marks_reports[mark_id]) == 0:
-                del self.edited_error_trace[mark_id]
-                del self.comparison_functions[mark_id]
-                del self.conversion_functions[mark_id]
+        for mark_id, report_ids in self.marks_reports.items():
+            unsafes_ids.update(report_ids)
+
         patterns = {}
         for converted in ConvertedTraces.objects.filter(id__in=set(self.edited_error_trace.values())):
             with converted.file as fp:
@@ -488,7 +423,7 @@ class ConnectMarks:
 
         for unsafe in target_unsafes:
             for mark_id in self.edited_error_trace:
-                if unsafe.id not in marks_reports[mark_id]:
+                if unsafe.id not in self.marks_reports[mark_id]:
                     continue
                 compare_error = None
                 compare_result = 0
@@ -582,22 +517,17 @@ class ConnectReport:
         self._marks = {}
 
         MarkUnsafeReport.objects.filter(report=self._unsafe).delete()
-        self._unsafe_attrs = set(a_id for a_id, in self._unsafe.attrs.values_list('attr_id'))
         self._marks_attrs = self.__get_marks_attrs()
-
+        self.marks_reports = get_reports_by_attributes('unsafe', self._marks_attrs, {'report': unsafe})
         self.__connect()
 
     def __get_marks_attrs(self):
         attr_filters = {'is_compare': True, 'mark__version': F('mark__mark__version')}
-        marks_attrs = {}
-        for attr_id, mark_id in MarkUnsafeAttr.objects.filter(**attr_filters).values_list('attr_id', 'mark__mark_id'):
-            if mark_id not in marks_attrs:
-                marks_attrs[mark_id] = set()
-            marks_attrs[mark_id].add(attr_id)
-        for m_id, f_comparison, f_conversion, edited_error_trace, verdict, report, similarity, args in MarkUnsafeHistory.objects\
-                .filter(mark_id__in=marks_attrs, version=F('mark__version'))\
-                .values_list('mark_id', 'comparison_function', 'conversion_function', 'error_trace_id', 'verdict',
-                             'mark__report', 'similarity', 'args'):
+        marks_attrs = get_marks_attributes(MarkUnsafeAttr, attr_filters)
+        for m_id, f_comparison, f_conversion, edited_error_trace, verdict, report, similarity, args in \
+                MarkUnsafeHistory.objects.filter(mark_id__in=marks_attrs, version=F('mark__version'))\
+                        .values_list('mark_id', 'comparison_function', 'conversion_function', 'error_trace_id',
+                                     'verdict','mark__report', 'similarity', 'args'):
             self._marks[m_id] = {'comparison_functions': f_comparison, 'conversion_functions': f_conversion,
                                  'edited_error_trace': edited_error_trace, 'verdict': verdict, 'report': report,
                                  'similarity_threshold': similarity, 'args': args}
@@ -606,9 +536,8 @@ class ConnectReport:
     def __connect(self):
         new_markreports = []
         for mark_id in self._marks_attrs:
-            if not self._marks_attrs[mark_id].issubset(self._unsafe_attrs):
+            if not self.marks_reports.get(mark_id, None):
                 del self._marks[mark_id]
-                continue
         patterns = {}
         for converted in ConvertedTraces.objects.filter(
                 id__in=set(self._marks[mid]['edited_error_trace'] for mid in self._marks)):

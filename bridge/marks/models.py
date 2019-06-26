@@ -19,8 +19,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import pre_delete
 from django.dispatch.dispatcher import receiver
-
-from bridge.vars import FORMAT, MARK_STATUS, MARK_UNSAFE, MARK_SAFE, MARK_TYPE, ASSOCIATION_TYPE
+from bridge.vars import FORMAT, MARK_STATUS, MARK_UNSAFE, MARK_SAFE, MARK_TYPE, ASSOCIATION_TYPE, ATTRIBUTES_OPERATORS
 from jobs.models import Job
 from reports.models import Attr, ReportUnsafe, ReportSafe, ReportComponent, Component, ReportUnknown
 
@@ -130,6 +129,7 @@ class MarkSafeHistory(MarkHistory):
 class MarkSafeAttr(models.Model):
     mark = models.ForeignKey(MarkSafeHistory, models.CASCADE, related_name='attrs')
     attr = models.ForeignKey(Attr, models.CASCADE)
+    operator = models.CharField(max_length=2, choices=ATTRIBUTES_OPERATORS, default='eq')
     is_compare = models.BooleanField(default=True)
 
     class Meta:
@@ -183,6 +183,7 @@ class MarkUnsafeHistory(MarkHistory):
 class MarkUnsafeAttr(models.Model):
     mark = models.ForeignKey(MarkUnsafeHistory, models.CASCADE, related_name='attrs')
     attr = models.ForeignKey(Attr, models.CASCADE)
+    operator = models.CharField(max_length=2, choices=ATTRIBUTES_OPERATORS, default='eq')
     is_compare = models.BooleanField(default=True)
 
     class Meta:
@@ -324,6 +325,7 @@ class MarkUnknownHistory(MarkHistory):
 class MarkUnknownAttr(models.Model):
     mark = models.ForeignKey(MarkUnknownHistory, models.CASCADE, related_name='attrs')
     attr = models.ForeignKey(Attr, models.CASCADE)
+    operator = models.CharField(max_length=2, choices=ATTRIBUTES_OPERATORS, default='eq')
     is_compare = models.BooleanField(default=True)
 
     class Meta:

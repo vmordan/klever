@@ -37,7 +37,8 @@ import bridge.CustomViews as Bview
 import marks.utils as mutils
 from bridge.utils import logger, extract_archive, ArchiveFileContent, BridgeException
 from bridge.vars import USER_ROLES, MARK_STATUS, MARK_SAFE, MARK_UNSAFE, MARK_TYPE, ASSOCIATION_TYPE, \
-    VIEW_TYPES, PROBLEM_DESC_FILE, COMPARISON_FUNCTIONS_DESCRIPTION, CONVERSION_FUNCTIONS_DESCRIPTION
+    VIEW_TYPES, PROBLEM_DESC_FILE, COMPARISON_FUNCTIONS_DESCRIPTION, CONVERSION_FUNCTIONS_DESCRIPTION, \
+    ATTRIBUTES_OPERATORS
 from marks.Download import UploadMark, MarkArchiveGenerator, AllMarksGen, UploadAllMarks, PresetMarkFile
 from marks.UnsafeUtils import decode_optimizations
 from marks.models import MarkSafe, MarkUnsafe, MarkUnknown, MarkSafeHistory, MarkUnsafeHistory, MarkUnknownHistory, \
@@ -119,7 +120,8 @@ class MarkPage(LoggedCallMixin, Bview.DataViewMixin, DetailView):
                                         page=self.request.GET.get('page', 1)),
             'desc': desc,
             'similarity': similarity,
-            'args': args, 'optimizations': optimizations
+            'args': args, 'optimizations': optimizations,
+            'operators': ATTRIBUTES_OPERATORS
         }
 
 
@@ -233,7 +235,7 @@ class MarkFormView(LoggedCallMixin, DetailView):
         return self.model_map[self.kwargs['action']][self.kwargs['type']].objects.all()
 
     def get_context_data(self, **kwargs):
-        context = {'versions': [], 'action': self.kwargs['action']}
+        context = {'versions': [], 'action': self.kwargs['action'], 'operators': ATTRIBUTES_OPERATORS}
         if self.kwargs['action'] == 'edit':
             access = mutils.MarkAccess(self.request.user, mark=self.object)
             if not access.can_edit():

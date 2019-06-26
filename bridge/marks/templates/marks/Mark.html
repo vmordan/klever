@@ -189,17 +189,33 @@
                     </div>
                     <div class="content">
                         <div style="overflow-x:auto;">
-                            <table class="ui celled compact teal table">
+                            <table class="ui selectable compact table celled grey striped">
+                                <thead style="background: #d3d3d3;">
+                                    <tr>
+                                        <td>{% trans 'Name' %}</td>
+                                        <td width="1%">{% trans 'Operator' %}</td>
+                                        <td>{% trans 'Value of attribute' %}</td>
+                                    </tr>
+                                </thead>
                                 <tbody>
                                     {% for v in markdata.attributes %}
                                         <tr>
-                                            <th class="collapsing">{{ v.0 }}</th>
                                             <td class="collapsing">
                                                 {% if v.2 %}
                                                     <i class="ui green small checkmark icon"></i>
                                                 {% else %}
                                                     <i class="ui red small remove icon"></i>
                                                 {% endif %}
+                                                {{ v.0 }}
+                                            </td>
+                                            <td class="collapsing" style="text-align: center">
+                                                {% for op in operators %}
+                                                    {%if op.0 == v.3%}
+                                                        <span {%if op.0 == 're'%}title="{% trans 'Regular expression' %}"{%endif%}>{{op.1|safe}}</span>
+                                                    {%endif%}
+                                                {% endfor %}
+                                            </td>
+                                            <td class="collapsing">
                                                 {{ v.1 }}
                                             </td>
                                         </tr>

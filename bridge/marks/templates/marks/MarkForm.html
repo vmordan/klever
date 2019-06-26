@@ -288,15 +288,36 @@
                     </div>
                     <div class="content">
                         <div style="overflow-x:auto;">
-                            <table class="ui celled compact purple table">
+                            <table class="ui selectable compact table celled grey striped">
+                                <thead style="background: #d3d3d3;">
+                                    <tr>
+                                        <td width="1%">{% trans 'Name' %}</td>
+                                        <td width="1%">{% trans 'Operator' %}</td>
+                                        <td>{% trans 'Value of attribute' %}</td>
+                                    </tr>
+                                </thead>
                                 <tbody>
                                     {% for v in markdata.attributes %}
                                         <tr>
-                                            <th class="collapsing">{{ v.0 }}</th>
                                             <td class="collapsing">
                                                 <div class="ui small checkbox">
-                                                    <label for="attr_checkbox__{{ v.0 }}">{{ v.1 }}</label>
-                                                    <input id="attr_checkbox__{{ v.0 }}" type="checkbox" value="{{ v.0 }}"{% if v.2 %} checked{% endif %}>
+                                                    <label for="attr_checkbox__{{ v.0 }}">{{ v.0 }}</label>
+                                                    <input onchange="change_attr_checkbox('{{ v.0 }}')" id="attr_checkbox__{{ v.0 }}" type="checkbox" value="{{ v.0 }}"{% if v.2 %} checked{% endif %}>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <select id="attr_op__{{v.0}}" style="padding-bottom: 0px;padding-top: 0px">
+                                                    {% for op in operators %}
+                                                        <option value="{{op.0}}" {%if op.0 == 're'%}title="{% trans 'Regular expression' %}"{%endif%}
+                                                            {%if op.0 == v.3%}selected{%endif%}>
+                                                            {{op.1|safe}}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </td>
+                                            <td class="collapsing">
+                                                <div class="ui form fluid">
+                                                    <input type="text" class="ui {% if not v.2 %}disabled{% endif %} field" id="attr_values__{{ v.0 }}" value="{{ v.1 }}">
                                                 </div>
                                             </td>
                                         </tr>

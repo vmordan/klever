@@ -498,7 +498,8 @@ class MarkData:
     def __get_attributes(self, report):
         if isinstance(self.mark_version, (MarkUnsafeHistory, MarkSafeHistory, MarkUnknownHistory)):
             return list(
-                self.mark_version.attrs.order_by('id').values_list('attr__name__name', 'attr__value', 'is_compare')
+                self.mark_version.attrs.order_by('id').values_list('attr__name__name', 'attr__value', 'is_compare',
+                                                                   'operator')
             )
         elif isinstance(report, (ReportUnsafe, ReportSafe, ReportUnknown)):
             return list(report.attrs.order_by('id').values_list('attr__name__name', 'attr__value', 'associate'))

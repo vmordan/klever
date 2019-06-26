@@ -21,7 +21,15 @@
 
 function collect_attrs_data() {
     var attrs = [];
-    $("input[id^='attr_checkbox__']").each(function () { attrs.push({attr: $(this).val(), is_compare: $(this).is(':checked')}) });
+    $("input[id^='attr_checkbox__']").each(function () {
+        var attr_name = $(this).val().replace(/^attr_checkbox__/,"");
+        attrs.push({
+            attr: $(this).val(),
+            is_compare: $(this).is(':checked'),
+            value: $("[id='attr_values__" + attr_name + "']").val(),
+            op: $("[id='attr_op__" + attr_name + "']").val()
+        });
+    });
     return attrs;
 }
 
@@ -222,6 +230,16 @@ function save_mark() {
                 + '/?time=' + overall_time + "&report_to_redirect=" + data['report_to_redirect']);
         }
     });
+}
+
+function change_attr_checkbox(attr_name) {
+    var values_field = "[id='attr_values__" + attr_name + "']";
+    var checkbox_field = "[id='attr_checkbox__" + attr_name + "']";
+    if ($(checkbox_field).is(':checked')) {
+        $(values_field).removeClass('disabled');
+    } else {
+        $(values_field).addClass('disabled');
+    }
 }
 
 $(document).ready(function () {

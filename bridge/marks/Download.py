@@ -55,9 +55,10 @@ class MarkArchiveGenerator:
                 'description': markversion.description,
                 'attrs': list()
             }
-            for aname, aval, compare in markversion.attrs.order_by('id') \
-                    .values_list('attr__name__name', 'attr__value', 'is_compare'):
-                version_data['attrs'].append({'attr': aname, 'value': aval, 'is_compare': compare})
+            for aname, aval, compare, operator in markversion.attrs.order_by('id') \
+                    .values_list('attr__name__name', 'attr__value', 'is_compare', 'operator'):
+                version_data['attrs'].append({'attr': aname, 'value': aval, 'is_compare': compare,
+                                              'op': operator})
 
             if self.type == 'unknown':
                 version_data['function'] = markversion.function

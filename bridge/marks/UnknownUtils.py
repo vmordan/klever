@@ -15,23 +15,23 @@
 # limitations under the License.
 #
 
+import json
 import os
 import re
-import json
 
-from django.db.models import ProtectedError, F
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import ProtectedError, F
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
-from bridge.vars import USER_ROLES, MARK_STATUS, MARK_TYPE, ASSOCIATION_TYPE, PROBLEM_DESC_FILE
 from bridge.utils import unique_id, BridgeException, logger, ArchiveFileContent
-
-from users.models import User
-from reports.models import ReportAttr, ReportUnknown, ReportComponentLeaf, Component, Attr, AttrName
-from marks.models import MarkUnknown, MarkUnknownHistory, MarkUnknownAttr, MarkUnknownReport, UnknownProblem,\
+from bridge.vars import USER_ROLES, MARK_STATUS, MARK_TYPE, ASSOCIATION_TYPE, PROBLEM_DESC_FILE
+from marks.attributes import create_attributes, get_marks_attributes, get_reports_by_attributes
+from marks.models import MarkUnknown, MarkUnknownHistory, MarkUnknownAttr, MarkUnknownReport, UnknownProblem, \
     UnknownAssociationLike
+from reports.models import ReportUnknown, ReportComponentLeaf, Component, Attr, AttrName
+from users.models import User
 
 
 class NewMark:
@@ -188,56 +188,7 @@ class NewMark:
         )
 
     def __create_attributes(self, markversion_id, inst=None):
-        if 'attrs' in self._args and (not isinstance(self._args['attrs'], list) or len(self._args['attrs']) == 0):
-            del self._args['attrs']
-        if 'attrs' in self._args:
-            for a in self._args['attrs']:
-                if not isinstance(a, dict) or not isinstance(a.get('attr'), str) \
-                        or not isinstance(a.get('is_compare'), bool):
-                    raise ValueError('Wrong attribute found: %s' % a)
-                if inst is None and not isinstance(a.get('value'), str):
-                    raise ValueError('Wrong attribute found: %s' % a)
-
-        need_recalc = False
-        new_attrs = []
-        if isinstance(inst, ReportUnknown):
-            for a_id, a_name, associate in inst.attrs.order_by('id')\
-                    .values_list('attr_id', 'attr__name__name', 'associate'):
-                if 'attrs' in self._args:
-                    for a in self._args['attrs']:
-                        if a['attr'] == a_name:
-                            new_attrs.append(MarkUnknownAttr(
-                                mark_id=markversion_id, attr_id=a_id, is_compare=a['is_compare']
-                            ))
-                            break
-                    else:
-                        raise ValueError('Not enough attributes in args')
-                else:
-                    new_attrs.append(MarkUnknownAttr(mark_id=markversion_id, attr_id=a_id, is_compare=associate))
-        elif isinstance(inst, MarkUnknownHistory):
-            for a_id, a_name, is_compare in inst.attrs.order_by('id')\
-                    .values_list('attr_id', 'attr__name__name', 'is_compare'):
-                if 'attrs' in self._args:
-                    for a in self._args['attrs']:
-                        if a['attr'] == a_name:
-                            new_attrs.append(MarkUnknownAttr(
-                                mark_id=markversion_id, attr_id=a_id, is_compare=a['is_compare']
-                            ))
-                            if a['is_compare'] != is_compare:
-                                need_recalc = True
-                            break
-                    else:
-                        raise ValueError('Not enough attributes in args')
-                else:
-                    new_attrs.append(MarkUnknownAttr(mark_id=markversion_id, attr_id=a_id, is_compare=is_compare))
-        elif 'attrs' in self._args:
-            for a in self._args['attrs']:
-                attr = Attr.objects.get_or_create(
-                    name=AttrName.objects.get_or_create(name=a['attr'])[0], value=a['value']
-                )[0]
-                new_attrs.append(MarkUnknownAttr(mark_id=markversion_id, attr=attr, is_compare=a['is_compare']))
-        MarkUnknownAttr.objects.bulk_create(new_attrs)
-        return need_recalc
+        return create_attributes(MarkUnknownAttr, self._args, markversion_id, inst)
 
     def __is_not_used(self):
         pass
@@ -248,30 +199,20 @@ class ConnectMark:
         self.mark = mark
         self._prime_id = prime_id
         self.changes = {}
-        self._mark_attrs = self.__get_mark_attrs()
-        self._unknowns_attrs = self.__get_unknowns_attrs()
-        if len(self._mark_attrs) > 0 and len(self._unknowns_attrs) == 0:
-            return
+
+        self._marks_attrs = self.__get_mark_attrs()
+        self.marks_reports = get_reports_by_attributes('unknown', self._marks_attrs,
+                                                       {'report__reportunknown__component': self.mark.component})
         self.__clear_connections()
         self.__connect_unknown_mark()
 
     def __get_mark_attrs(self):
-        return set(a_id for a_id, in MarkUnknownAttr.objects.filter(
-            mark__mark=self.mark, is_compare=True, mark__version=F('mark__mark__version')
-        ).values_list('attr_id'))
-
-    def __get_unknowns_attrs(self):
-        if len(self._mark_attrs) == 0:
-            return {}
-
-        unknowns_attrs = {}
-        for r_id, a_id in ReportAttr.objects.exclude(report__reportunknown=None)\
-                .filter(attr_id__in=self._mark_attrs, report__reportunknown__component=self.mark.component)\
-                .values_list('report_id', 'attr_id'):
-            if r_id not in unknowns_attrs:
-                unknowns_attrs[r_id] = set()
-            unknowns_attrs[r_id].add(a_id)
-        return unknowns_attrs
+        attr_filters = {
+            'mark__mark': self.mark, 'is_compare': True,
+            'mark__version': F('mark__mark__version')
+        }
+        marks_attrs = get_marks_attributes(MarkUnknownAttr, attr_filters)
+        return marks_attrs
 
     def __clear_connections(self):
         for mr in self.mark.markreport_set.all():
@@ -287,13 +228,14 @@ class ConnectMark:
         self.mark.markreport_set.all().delete()
 
     def __connect_unknown_mark(self):
-        reports_filter = {'component': self.mark.component}
-
-        if len(self._mark_attrs) > 0:
-            reports_filter['id__in'] = set()
-            for unknown_id in self._unknowns_attrs:
-                if self._mark_attrs.issubset(self._unknowns_attrs[unknown_id]):
-                    reports_filter['id__in'].add(unknown_id)
+        id_in = set()
+        reports_filter = {
+            'component': self.mark.component
+        }
+        for unknown_ids in self.marks_reports.values():
+            id_in.update(unknown_ids)
+        if id_in:
+            reports_filter['id__in'] = id_in
 
         new_markreports = []
         problems = {}
@@ -338,21 +280,16 @@ class ConnectReport:
         self._update_cache = update_cache
         self.report = report
         self._marks_attrs = self.__get_marks_attrs()
+        self.marks_reports = get_reports_by_attributes('unknown', self._marks_attrs, {'report': self.report})
         self.__connect()
 
     def __get_marks_attrs(self):
         attr_filters = {'is_compare': True, 'mark__version': F('mark__mark__version')}
-        marks_attrs = {}
-        for attr_id, mark_id in MarkUnknownAttr.objects.filter(**attr_filters).values_list('attr_id', 'mark__mark_id'):
-            if mark_id not in marks_attrs:
-                marks_attrs[mark_id] = set()
-            marks_attrs[mark_id].add(attr_id)
+        marks_attrs = get_marks_attributes(MarkUnknownAttr, attr_filters)
         return marks_attrs
 
     def __connect(self):
         self.report.markreport_set.all().delete()
-        unknown_attrs = set(a_id for a_id, in self.report.attrs.values_list('attr_id'))
-
         try:
             problem_desc = ArchiveFileContent(self.report, 'problem_description', PROBLEM_DESC_FILE)\
                 .content.decode('utf8')
@@ -362,7 +299,7 @@ class ConnectReport:
         new_markreports = []
         problems = {}
         for mark in MarkUnknown.objects.filter(component=self.report.component):
-            if mark.id in self._marks_attrs and not self._marks_attrs[mark.id].issubset(unknown_attrs):
+            if mark.id in self._marks_attrs and not self.marks_reports.get(mark.id, None):
                 continue
 
             problem = MatchUnknown(problem_desc, mark.function, mark.problem_pattern, mark.is_regexp).problem
