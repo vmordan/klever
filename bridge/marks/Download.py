@@ -52,8 +52,13 @@ class MarkArchiveGenerator:
             version_data = {
                 'status': markversion.status,
                 'comment': markversion.comment,
-                'description': markversion.description
+                'description': markversion.description,
+                'attrs': list()
             }
+            for aname, aval, compare in markversion.attrs.order_by('id') \
+                    .values_list('attr__name__name', 'attr__value', 'is_compare'):
+                version_data['attrs'].append({'attr': aname, 'value': aval, 'is_compare': compare})
+
             if self.type == 'unknown':
                 version_data['function'] = markversion.function
                 version_data['problem'] = markversion.problem_pattern
@@ -61,11 +66,6 @@ class MarkArchiveGenerator:
                 if markversion.link is not None:
                     version_data['link'] = markversion.link
             else:
-                version_data['attrs'] = []
-                for aname, aval, compare in markversion.attrs.order_by('id')\
-                        .values_list('attr__name__name', 'attr__value', 'is_compare'):
-                    version_data['attrs'].append({'attr': aname, 'value': aval, 'is_compare': compare})
-
                 version_data['tags'] = list(tag for tag, in markversion.tags.values_list('tag__tag'))
                 version_data['verdict'] = markversion.verdict
 
