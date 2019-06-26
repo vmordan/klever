@@ -365,7 +365,7 @@
                                                 <div class="ui list">
                                                     {% for unk in data.comparison.0.other_components_unknowns %}
                                                     <div class="item">
-                                                        <a class="black-link" href="{% url 'reports:unknown' unk.id %}">
+                                                        <a class="blue-link" href="{% url 'reports:unknown' unk.id %}">
                                                             {{unk.component}} {%if unk.problem%}({{unk.problem}}){% endif %}
                                                         </a>
                                                     </div>
@@ -376,7 +376,7 @@
                                                 <div class="ui list">
                                                     {% for unk in cmp.other_components_unknowns %}
                                                     <div class="item">
-                                                        <a class="black-link" href="{% url 'reports:unknown' unk.id %}">
+                                                        <a class="blue-link" href="{% url 'reports:unknown' unk.id %}">
                                                             {{unk.component}} {%if unk.problem%}({{unk.problem}}){% endif %}
                                                         </a>
                                                     </div>
@@ -610,11 +610,11 @@
                             {% for cmp in data.problems_comparison %}
                                 <tr>
                                     <td style="text-align: right">
-                                        <a class="black-link" href="{% url 'reports:unknown' cmp.0.1 %}">{{cmp.0.0}}</a>
+                                        <a class="blue-link" href="{% url 'reports:unknown' cmp.0.1 %}">{{cmp.0.0}}</a>
                                     </td>
                                     <td style="text-align: center; text-align: center">{{cmp.1}}</td>
                                     <td style="text-align: left">
-                                        <a class="black-link" href="{% url 'reports:unknown' cmp.2.1 %}">{{cmp.2.0}}</a>
+                                        <a class="blue-link" href="{% url 'reports:unknown' cmp.2.1 %}">{{cmp.2.0}}</a>
                                     </td>
                                 </tr>
                             {% endfor %}

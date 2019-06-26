@@ -41,10 +41,10 @@
 <div class="ui grid">
     <div class="column left aligned">
         <div class="ui breadcrumb">
-            <h3><a href="{% url 'jobs:tree' %}">{% trans 'Reports tree' %}</a>
+            <h3><a class="blue-link" href="{% url 'jobs:tree' %}">{% trans 'Reports tree' %}</a>
             {% if parents.0 %}
                 {% for parent in parents|slice:"0:" %}
-                     <i class="icon arrow right divider"></i> <a class="violet-link" href="{% url 'jobs:job' parent.pk %}">{{ parent.name }}</a>
+                     <i class="icon arrow right divider"></i> <a class="blue-link" href="{% url 'jobs:job' parent.pk %}">{{ parent.name }}</a>
                 {% endfor %}
             {% endif %}
             <i class="icon arrow right divider"></i> {{ job.name }}
@@ -94,7 +94,7 @@
                     <td>
                         {% if user.extended.data_format == 'hum' %}{{ last_version.change_date|naturaltime }}{% else %}{{ last_version.change_date }}{% endif %}
                         {% if last_version.change_author %}
-                            (<a class="purple-link" href="{% url 'users:show_profile' last_version.change_author.pk %}">{{ last_version.change_author.get_full_name }}</a>)
+                            (<a class="blue-link" href="{% url 'users:show_profile' last_version.change_author.pk %}">{{ last_version.change_author.get_full_name }}</a>)
                         {% endif %}
                     </td>
                 </tr>
@@ -102,7 +102,7 @@
                     <td class="right aligned">{% trans 'Status' %}</td>
                     <td>
                         {% if reportdata.report %}
-                            <a class="purple-link" href="{% url 'reports:component' reportdata.report.id %}">{{ job.get_status_display }} ({% trans 'components tree' %})</a>
+                            <a class="blue-link" href="{% url 'reports:component' reportdata.report.id %}">{{ job.get_status_display }} ({% trans 'components tree' %})</a>
                         {% else %}
                             <span>{{ job.get_status_display }}</span>
                         {% endif %}

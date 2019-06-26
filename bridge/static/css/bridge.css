@@ -147,6 +147,30 @@ body {
     color: #7777ff;
 }
 
+a:link {
+    color: #3333cc;
+}
+
+a:visited {
+    color: #3333cc;
+}
+
+a:hover {
+    color: #7777ff;
+}
+
+.ui.breadcrumb a:link {
+    color: #3333cc;
+}
+
+.ui.breadcrumb a:visited {
+    color: #3333cc;
+}
+
+.ui.breadcrumb a:hover {
+    color: #7777ff;
+}
+
 .black-link:link {
     color: #000000;
 }

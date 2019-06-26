@@ -81,7 +81,7 @@
                     {% if markdata.author %}
                         <tr>
                             <td class="right aligned">{% trans 'Author' %}</td>
-                            <td><a class="purple-link" href="{% url 'users:show_profile' markdata.author.pk %}">{{ markdata.author.get_full_name }}</a></td>
+                            <td><a class="blue-link" href="{% url 'users:show_profile' markdata.author.pk %}">{{ markdata.author.get_full_name }}</a></td>
                         </tr>
                     {% endif %}
 
@@ -98,7 +98,7 @@
                             <td class="right aligned">{% trans 'Problem' %}</td>
                             <td>
                                 {% if markdata.unknown_data.2 %}
-                                    <a class="purple-link" href="{{ markdata.unknown_data.2 }}">{{ markdata.unknown_data.1 }}</a>
+                                    <a class="blue-link" href="{{ markdata.unknown_data.2 }}">{{ markdata.unknown_data.1 }}</a>
                                 {% else %}
                                     <span>{{ markdata.unknown_data.1 }}</span>
                                 {% endif %}
@@ -125,7 +125,7 @@
                                 {% endif %}
                                 {% if args %}
                                 <div class="ui accordion">
-                                    <div class="title"><a class="purple-link" href="#">{% trans 'Arguments' %}</a></div>
+                                    <div class="title"><a class="blue-link" href="#">{% trans 'Arguments' %}</a></div>
                                     <div class="content">
                                         <table class="table selectable">
                                             <tbody>
