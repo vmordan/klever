@@ -78,7 +78,10 @@ Note, that traces are considered to be equivalent with respect to the given para
     </div>
     <div class="item">
         <b>{%trans 'Attributes'%}</b> -
-        {% blocktrans %}this error trace will be compared with other traces, which have the same selected attributes with the same values.{% endblocktrans %}
+        {% blocktrans %}this error trace will be compared with other traces, which have the same selected attributes with the same values.
+In order to use some attribute for comparison first select it, then choose required comparison operator and input attribute value.
+In case of comparison for equality, inequality or by regular expression (RE) you can input several values, separated by commas.
+In case of numeric comparison operators both user value and all values for that attribute should be numbers.{% endblocktrans %}
     </div>
     <div class="item">
         <b>{%trans 'Error traces conversion function'%}</b> -
