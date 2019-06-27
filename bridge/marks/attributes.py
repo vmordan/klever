@@ -16,7 +16,7 @@
 #
 
 from django.db.models import FloatField
-from django.db.models import Q
+from django.db.models import Q, F
 from django.db.models.functions import Cast
 
 from bridge.utils import logger
@@ -26,6 +26,31 @@ from marks.models import MarkUnsafeHistory, MarkSafeHistory, MarkUnknownHistory
 from reports.models import ReportAttr, ReportUnsafe, Attr, AttrName, ReportSafe, ReportUnknown
 
 VALUES_SEPARATOR = ","
+
+
+def get_basic_attributes(mark_unsafe) -> list:
+    attrs = []
+    if isinstance(mark_unsafe, ReportUnsafe):
+        for name, value, cmp in mark_unsafe.attrs.order_by('id').\
+                values_list('attr__name__name', 'attr__value', 'associate'):
+            attrs.append({
+                "attr": name,
+                "is_compare": cmp,
+                "value": value,
+                "op": ATTRIBUTES_OPERATOR_EQ
+            })
+    else:
+        last_v = MarkUnsafeHistory.objects.get(mark=mark_unsafe, version=F('mark__version'))
+        for name, value, cmp, op in last_v.attrs.order_by('id').\
+                values_list('attr__name__name', 'attr__value', 'is_compare', 'operator'):
+            attrs.append({
+                "attr": name,
+                "is_compare": cmp,
+                "value": value,
+                "op": op
+            })
+
+    return attrs
 
 
 def __get_or_create_attrs(name: str, val: str) -> Attr:

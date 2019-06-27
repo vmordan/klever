@@ -26,7 +26,8 @@ from django.utils.translation import ugettext_lazy as _
 from bridge.utils import logger, BridgeException, unique_id
 from bridge.vars import UNKNOWN_ERROR, UNSAFE_VERDICTS, USER_ROLES, MARK_STATUS, MARK_UNSAFE, MARK_TYPE, \
     ASSOCIATION_TYPE
-from marks.attributes import create_attributes, get_marks_attributes, get_reports_by_attributes, get_user_attrs
+from marks.attributes import create_attributes, get_marks_attributes, get_reports_by_attributes, get_user_attrs, \
+    get_basic_attributes
 from marks.models import ConvertedTraces, MarkUnsafe, MarkUnsafeHistory, MarkUnsafeReport, MarkUnsafeAttr, \
     MarkUnsafeTag, UnsafeTag, UnsafeReportTag, ReportUnsafeTag
 from reports.mea.wrapper import error_trace_pretty_parse, TAG_CONVERSION_FUNCTION, TAG_COMPARISON_FUNCTION, \
@@ -119,6 +120,10 @@ class NewMark:
             report = mark_unsafe
         else:
             report = mark_unsafe.report
+
+        if 'attrs' not in self._args:
+            self._args['attrs'] = get_basic_attributes(mark_unsafe)
+
         marks_attrs = get_user_attrs(self._args)
         mark_reports = get_reports_by_attributes('unsafe', marks_attrs, {'report': report})
         if not mark_reports:
