@@ -3032,26 +3032,49 @@ msgstr "Полноэкранный режим"
 msgid "Converted error trace"
 msgstr "Трасса ошибки после применения функции преобразования"
 
-msgid "Converted error traces are the same"
-msgstr "Трассы ошибки после применения функции преобразования полностью совпадают"
+msgid ""
+"Functions call tree, in which each leaf is a model function. "
+"Model function is a function, which contains property checks. "
+"This conversion function is used by default."
+msgstr "Дерево вызовов функций, в котором каждый лист является модельной функцией. Модельной называется такая функция, которая содержит проверку требования. Данная функция преобразования используется по умолчанию."
 
-msgid "Functions call tree, in which each leaf is a model function"
-msgstr "Дерево вызовов модельных функций"
+msgid "Functions call tree. This conversion function is more accurate, than model functions."
+msgstr "Дерево вызовов функций. Данная функция преобразования более точная, чем функция model functions."
 
-msgid "Functions call tree"
-msgstr "Дерево вызовов функций"
+msgid "Error trace conditions. Usually this conversion function is more accurate, than call tree."
+msgstr "Условия трассы ошибок. Обычно данная функция преобразования более точная, чем  функция call tree."
 
-msgid "Error trace conditions"
-msgstr "Условия трассы ошибок"
+msgid "Error trace assignments. Usually this conversion function is more accurate, than call tree."
+msgstr "Присваивания трассы ошибок. Обычно данная функция преобразования более точная, чем  функция call tree."
 
-msgid "Error trace assignments"
-msgstr "Присваивания трассы ошибок"
+msgid "Description of property checks (both passed and violated). The accuracy of this conversion function depends on corresponding descriptions."
+msgstr "Описания проверок требований (как прошедшие проверку, так и нарушенные). Точность данной функции преобразования зависит от данных описаний."
 
-msgid "Added by the verifier description of error locations"
-msgstr "Добавленные системой верификации описания меток ошибок"
+msgid "Full error trace. This is the most accurate conversion function."
+msgstr "Вся трасса ошибки. Данная функция преобразования является самой точной."
 
-msgid "Full error trace"
-msgstr "Полная трасса ошибки"
+msgid ""
+"Edited error trace and compared error trace is exactly the same sequence of elements. "
+"This conversion function is used by default."
+msgstr "Редактированная трасса ошибки полностью совпадает со сравниваемой трассой ошибки как последовательность элементов. "
+"Данная функция сравнения используется по умолчанию."
+
+msgid "Edited error trace is included in compared error trace as a whole sequence."
+msgstr "Редактированная трасса ошибки включается в сравниваемую трассу ошибки в виде подпоследовательности."
+
+msgid ""
+"Edited error trace is included in compared error trace as a whole sequence with error location "
+"(compared error trace ends with edited error trace)."
+msgstr "Редактированная трасса ошибки включается в сравниваемую трассу ошибки в виде подпоследовательности с учетом метки ошибки (сравниваемая трасса ошибки заканчивается редактированной трассой ошибки)."
+
+msgid "All elements of the edited error trace are included into compared error trace."
+msgstr "Все элементы редактированной трассы ошибки включаются в сравниваемую трассу ошибки."
+
+msgid "All elements of the edited error trace are included into compared error trace in the same order."
+msgstr "Все элементы редактированной трассы ошибки включаются в сравниваемую трассу ошибки в том же порядке."
+
+msgid "Skip error traces comparison (therefore mark will be applied based on attributes comparison only)."
+msgstr "Не выполнять сравнение трасс (таким образом, оценка будет применяться только на основе сравнения значений атрибутов)."
 
 msgid "Similarity threshold"
 msgstr "Порог похожести"
@@ -3116,15 +3139,6 @@ msgstr "Параметры"
 msgid "Change initial error trace for this mark"
 msgstr "Изменить исходную трассу ошибки для оценки"
 
-msgid "Edited error trace is included in compared trace as a whole sequence"
-msgstr "Трасса ошибки после редактирования включается в сравниваемую трассу (в виде подпоследовательности)"
-
-msgid "All elements of the edited error trace are included into compared trace"
-msgstr "Все элементы трассы ошибки после редактирования включаются в сравниваемую трассу"
-
-msgid "All elements of the edited error trace are included into compared trace in the same order"
-msgstr "Все элементы трассы ошибки после редактирования включаются в сравниваемую трассу в том же порядке"
-
 msgid "Apply only to current report"
 msgstr "Применять к трассам только из анализируемого отчета"
 
@@ -3178,9 +3192,6 @@ msgstr "Кэш компонентов"
 
 msgid "Remove call log that is older than 30 days"
 msgstr "Удалить внутренние логи, созданные более 30 дней назад"
-
-msgid "Skip traces comparison (compare by attributes only)"
-msgstr "Пропустить сравнение трасс (сравнивать только по атрибутам)"
 
 msgid "Unsafe-incomplete"
 msgstr "Предупреждения об ошибках (потенциально не все)"
@@ -3460,9 +3471,6 @@ msgstr "Удалить отредактированную трассу ошиб�
 
 msgid "Attention: all changes will be lost!"
 msgstr "Внимание: все изменения будут потеряны!"
-
-msgid "Edited error trace is included in compared trace as a whole sequence with error location"
-msgstr "Трасса ошибки после редактирования включается в сравниваемую трассу с учетом метки ошибки (в виде подпоследовательности)"
 
 msgid "Association type"
 msgstr "Тип применения оценки"

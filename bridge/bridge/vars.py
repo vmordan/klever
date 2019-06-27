@@ -229,19 +229,24 @@ ATTRIBUTES_OPERATORS = (
 ROOT_REPORT = "Root report"
 
 CONVERSION_FUNCTIONS_DESCRIPTION = [
-    _('Functions call tree, in which each leaf is a model function'),
-    _('Functions call tree'),
-    _('Error trace conditions'),
-    _('Error trace assignments'),
-    _('Added by the verifier description of error locations'),
-    _('Full error trace')
+    _("Functions call tree, in which each leaf is a model function. "
+      "Model function is a function, which contains property checks. "
+      "This conversion function is used by default."),
+    _("Functions call tree. This conversion function is more accurate, than model functions."),
+    _("Error trace conditions. Usually this conversion function is more accurate, than call tree."),
+    _("Error trace assignments. Usually this conversion function is more accurate, than call tree."),
+    _("Description of property checks (both passed and violated). "
+      "The accuracy of this conversion function depends on corresponding descriptions."),
+    _("Full error trace. This is the most accurate conversion function.")
 ]
 
 COMPARISON_FUNCTIONS_DESCRIPTION = [
-    _('Converted error traces are the same'),
-    _('Edited error trace is included in compared trace as a whole sequence'),
-    _('Edited error trace is included in compared trace as a whole sequence with error location'),
-    _('All elements of the edited error trace are included into compared trace'),
-    _('All elements of the edited error trace are included into compared trace in the same order'),
-    _('Skip traces comparison (compare by attributes only)')
+    _("Edited error trace and compared error trace is exactly the same sequence of elements. "
+      "This conversion function is used by default."),
+    _("Edited error trace is included in compared error trace as a whole sequence."),
+    _("Edited error trace is included in compared error trace as a whole sequence with error location "
+      "(compared error trace ends with edited error trace)."),
+    _("All elements of the edited error trace are included into compared error trace."),
+    _("All elements of the edited error trace are included into compared error trace in the same order."),
+    _("Skip error traces comparison (therefore mark will be applied based on attributes comparison only).")
 ]
