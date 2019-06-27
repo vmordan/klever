@@ -101,12 +101,16 @@ contains property check).{% endblocktrans %}
                 {% trans 'specify functions, which should be considered as model even if they does not contain property checks (function names should be separated by commas)' %};
             </div>
             <div class="item">
-                <b>{%trans 'Add verifier notes'%}</b> -
+                <b>{%trans 'Add property checks description'%}</b> -
                 {% trans 'add passed property checks descriptions' %};
             </div>
             <div class="item">
-                <b>{%trans 'Use verifier warnings'%}</b> -
+                <b>{%trans 'Add error label description'%}</b> -
                 {% trans 'add property violation descriptions' %}.
+            </div>
+            <div class="item">
+                <b>{%trans 'Do not consider property checks description'%}</b> -
+                {% trans 'add only location of property checks (without description)' %}.
             </div>
         </div>
     </div>
@@ -160,7 +164,7 @@ until it is applied to error traces, which corresponds to the same bug.{% endblo
         <b>{%trans 'The mark is applied to an error trace, which corresponds to other bugs'%}</b><br>
         {% blocktrans %}The user finds out, which elements are missing in converted error trace, but can be used to distinguish 2 traces,
 then chooses more accurate conversion function or changes conversion function arguments
-(e.g., by adding new model functions or verifier notes), until the required elements show up in the converted error trace.
+(e.g., by adding new model functions or property checks description), until the required elements show up in the converted error trace.
 After saving this mark, the user must check all other error traces, for which mark was applied, in order to make sure, that none of them
 corresponds to the other bug. If this is not the case, the operation should be repeated, taking into account new error trace, which correspond to other bug.
 Note, if the mark is too accurate, it may not be applied to some traces, which correspond to the same bug (see the second scenario).{% endblocktrans %}
@@ -169,7 +173,7 @@ Note, if the mark is too accurate, it may not be applied to some traces, which c
         <b>{%trans 'There is a trace, which corresponds to the same bug, but the mark was not applied to it'%}</b><br>
         {% blocktrans %}The user finds out, which elements distinguishes 2 equivalent error traces,
 then chooses less accurate conversion function, changes conversion function arguments
-(e.g., by excluding some functions or verifier notes) or removes some elements from the error trace manually
+(e.g., by excluding some functions or property checks description) or removes some elements from the error trace manually
 until the required elements are removed from the converted error trace. In case of manual changes, the user should also change
 comparison function to check elements for inclusion instead of equivalence.
 After saving this mark, the user must check all other error traces, for which mark was applied, in order to make sure, that none of them

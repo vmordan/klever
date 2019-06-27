@@ -205,13 +205,19 @@
                                 <div class="field">
                                     <div class="ui checkbox">
                                         <input id="model_functions_use_notes" type="checkbox" onchange="update_converted_error_trace_on_args(this.value)" {% if args.use_notes %} checked {% endif %}>
-                                        <label>{% trans 'Add verifier notes' %}</label>
+                                        <label>{% trans 'Add property checks description' %}</label>
                                     </div>
                                 </div>
                                 <div class="field" id="model_functions_use_warns_hide">
                                     <div class="ui checkbox">
                                         <input id="model_functions_use_warns" type="checkbox" onchange="update_converted_error_trace_on_args(this.value)" {% if args.use_warns %} checked {% endif %}>
-                                        <label>{% trans 'Use verifier warnings' %}</label>
+                                        <label>{% trans 'Add error label description' %}</label>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <div class="ui checkbox">
+                                        <input id="model_functions_ignore_notes_text" type="checkbox" onchange="update_converted_error_trace_on_args(this.value)" {% if args.ignore_notes_text %} checked {% endif %}>
+                                        <label>{% trans 'Do not consider property checks description' %}</label>
                                     </div>
                                 </div>
                             </div>

@@ -108,6 +108,7 @@ function get_conversion_function_args() {
     args['additional_model_functions'] = $('#additional_model_functions').val();
     args['filtered_model_functions'] = $('#filtered_model_functions').val();
     args['use_notes'] = $('#model_functions_use_notes').is(':checked');
+    args['ignore_notes_text'] = $('#model_functions_ignore_notes_text').is(':checked');
     args['use_warns'] = $('#model_functions_use_warns').is(':checked');
     return JSON.stringify(args);
 }
