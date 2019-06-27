@@ -40,7 +40,8 @@ DEBUG_ERROR_TRACE_COMPARISON = False
 
 
 def process_args(args: dict, as_str=False):
-    for tag in [TAG_ADDITIONAL_MODEL_FUNCTIONS, TAG_FILTERED_MODEL_FUNCTIONS, TAG_USE_NOTES, TAG_USE_WARNS]:
+    for tag in [TAG_ADDITIONAL_MODEL_FUNCTIONS, TAG_FILTERED_MODEL_FUNCTIONS, TAG_USE_NOTES, TAG_USE_WARNS,
+                TAG_IGNORE_NOTES_TEXT]:
         if tag in args:
             contents = args.get(tag, "")
             if contents:
@@ -98,7 +99,7 @@ def get_or_convert_error_trace(unsafe, conversion_function: str, args: dict) -> 
 
 def automatic_error_trace_editing(unsafe_report: ReportUnsafe) -> tuple:
     conversion_function = DEFAULT_CONVERSION_FUNCTION
-    args = {TAG_USE_NOTES: True}
+    args = {TAG_IGNORE_NOTES_TEXT: True}
     converted_error_trace = __load_json(get_or_convert_error_trace(unsafe_report, conversion_function, args))
     visual_error_trace_json = __load_json(reports.utils.get_error_trace_content(unsafe_report))
     visual_error_trace = convert_error_trace(visual_error_trace_json, conversion_function, args)

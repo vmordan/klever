@@ -37,6 +37,7 @@ TAG_ADDITIONAL_MODEL_FUNCTIONS = "additional_model_functions"
 TAG_FILTERED_MODEL_FUNCTIONS = "filtered_model_functions"
 TAG_USE_NOTES = "use_notes"
 TAG_USE_WARNS = "use_warns"
+TAG_IGNORE_NOTES_TEXT = "ignore_notes_text"
 
 # Converted error trace tags.
 CET_OP = "op"
@@ -54,6 +55,7 @@ CET_LINE = "line"
 ASSIGN_MARK = " = "
 
 DEFAULT_SIMILARITY_THRESHOLD = 100  # in % (all threads are equal)
+DEFAULT_PROPERTY_CHECKS_TEXT = "property check description"
 
 
 def convert_error_trace(error_trace: dict, conversion_function: str, args: dict = dict) -> list:
@@ -72,7 +74,7 @@ def convert_error_trace(error_trace: dict, conversion_function: str, args: dict 
         conversion_function = DEFAULT_CONVERSION_FUNCTION
     result = functions[conversion_function](error_trace, args)
 
-    if args.get(TAG_USE_NOTES, args.get(TAG_USE_WARNS, False)) and \
+    if (args.get(TAG_USE_NOTES, args.get(TAG_USE_WARNS, False)) or args.get(TAG_IGNORE_NOTES_TEXT, False)) and \
             conversion_function not in [CONVERSION_FUNCTION_FULL, CONVERSION_FUNCTION_NOTES]:
         result += __convert_notes(error_trace, args)
         result = sorted(result, key=operator.itemgetter(CET_ID))
@@ -263,30 +265,36 @@ def __convert_notes(error_trace: dict, args: dict = {}) -> list:
     counter = 0
     use_notes = args.get(TAG_USE_NOTES, False)
     use_warns = args.get(TAG_USE_WARNS, False)
+    ignore_text = args.get(TAG_IGNORE_NOTES_TEXT, False)
     if not use_notes and not use_warns:
         # Ignore, since we need at least one flag as True.
         use_notes = True
         use_warns = True
 
     for edge in error_trace['edges']:
+        text = DEFAULT_PROPERTY_CHECKS_TEXT
         if 'note' in edge:
+            if not ignore_text:
+                text = edge['note']
             if use_notes:
                 converted_error_trace.append({
                     CET_OP: CET_OP_NOTE,
                     CET_THREAD: edge['thread'],
                     CET_SOURCE: edge['source'],
                     CET_LINE: edge['start line'],
-                    CET_DISPLAY_NAME: edge['note'],
+                    CET_DISPLAY_NAME: text,
                     CET_ID: counter
                 })
         elif 'warn' in edge:
+            if not ignore_text:
+                text = edge['warn']
             if use_warns:
                 converted_error_trace.append({
                     CET_OP: CET_OP_WARN,
                     CET_THREAD: edge['thread'],
                     CET_SOURCE: edge['source'],
                     CET_LINE: edge['start line'],
-                    CET_DISPLAY_NAME: edge['warn'],
+                    CET_DISPLAY_NAME: text,
                     CET_ID: counter
                 })
         counter += 1
