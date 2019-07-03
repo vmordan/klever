@@ -214,6 +214,10 @@ class UploadReport:
                     'parent id': data['parent id'],
                     'problem desc': data['problem desc']
                 })
+                if 'resources' in data:
+                    self.data.update({
+                        'resources': data['resources']
+                    })
             except KeyError as e:
                 raise ValueError("property '%s' is required." % e)
             if self.data['problem desc'] not in self.archives:
@@ -569,6 +573,11 @@ class UploadReport:
             report.cpu_time = self.parent.cpu_time
             report.wall_time = self.parent.wall_time
             report.memory = self.parent.memory
+        else:
+            resources = self.data.get('resources', {})
+            report.cpu_time = resources.get('CPU time', 0)
+            report.wall_time = resources.get('wall time', 0)
+            report.memory = resources.get('memory size', 0)
         report.add_problem_desc(REPORT_ARCHIVE['problem desc'], self.archives[self.data['problem desc']], True)
         if not os.path.exists(os.path.join(settings.MEDIA_ROOT, report.problem_description.name)):
             report.delete()
