@@ -1009,9 +1009,6 @@ class UploadReportsWithoutDecision:
     def __upload(self, data, report_type):
         # Collecting report data
         report = data.copy()
-        for field in set(report):
-            if field not in self.fields[report_type]:
-                del report[field]
         if 'resources' in self.fields[report_type] and 'resources' not in report:
             report['resources'] = {'CPU time': 0, 'wall time': 0, 'memory size': 0}
         if report_type == 'start' and report['id'] == '/':

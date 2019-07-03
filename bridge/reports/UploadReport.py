@@ -88,8 +88,6 @@ class UploadReport:
         if 'type' not in data or 'id' not in data or not isinstance(data['id'], str) or len(data['id']) == 0 \
                 or not data['id'].startswith('/'):
             raise ValueError('type and id are required or have wrong format')
-        if 'parent id' in data and not isinstance(data['parent id'], str):
-            raise ValueError('parent id has wrong format')
 
         if 'resources' in data:
             if not isinstance(data['resources'], dict) \
