@@ -416,14 +416,10 @@ class LCOV:
                     if os.path.isfile(real_file_name) and \
                             all(os.path.commonpath((p, file_name)) != p for p in excluded_dirs):
                         for dest, srcs in dir_map:
-                            for src in (s for s in srcs if os.path.commonpath((s, file_name)) == s):
-                                if dest == 'generated models':
-                                    copy_file_name = os.path.join(self.coverage_info_dir,
-                                                                  os.path.relpath(file_name, src))
-                                    if not os.path.exists(os.path.dirname(copy_file_name)):
-                                        os.makedirs(os.path.dirname(copy_file_name))
-                                    shutil.copy(real_file_name, copy_file_name)
-                                    file_name = copy_file_name
+                            for src in srcs:
+                                if os.path.commonpath([real_file_name, src]) != src:
+                                    continue
+                                if dest == 'generated models' or dest == 'specifications':
                                     new_file_name = os.path.join(dest, os.path.basename(file_name))
                                 else:
                                     new_file_name = os.path.join(dest, os.path.relpath(file_name, src))
