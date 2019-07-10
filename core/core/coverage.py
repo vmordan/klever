@@ -345,11 +345,11 @@ class LCOV:
 
     def parse(self):
         dir_map = (
-            ('source files', self.source_dirs),
+            ('sources', self.source_dirs),
             ('specifications', (
                 os.path.normpath(os.path.join(self.main_work_dir, 'job', 'root', 'specifications')),
             )),
-            ('generated models', (
+            ('generated', (
                 os.path.normpath(self.main_work_dir),
             ))
         )
@@ -420,7 +420,7 @@ class LCOV:
                             for src in srcs:
                                 if os.path.commonpath([real_file_name, src]) != src:
                                     continue
-                                if dest == 'generated models' or dest == 'specifications':
+                                if dest == 'generated' or dest == 'specifications':
                                     new_file_name = os.path.join(dest, os.path.basename(file_name))
                                 else:
                                     new_file_name = os.path.join(dest, os.path.relpath(file_name, src))
