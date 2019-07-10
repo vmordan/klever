@@ -195,7 +195,10 @@ class GetCoverageSrcHTML:
             if os.path.splitext(fp.name)[-1] != '.zip':
                 raise ValueError('Archive type is not supported')
             with zipfile.ZipFile(fp, 'r') as zfp:
-                return zfp.read(self.filename).decode('utf8')
+                try:
+                    return zfp.read(self.filename).decode('utf8')
+                except KeyError:
+                    return ''
 
     def __get_coverage(self):
         if self._covfile is None:
