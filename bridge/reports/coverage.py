@@ -345,16 +345,16 @@ class GetCoverageSrcHTML:
             self._is_text = False
             return self.__wrap_line(before, 'text') + self.__parse_line(after)
 
+        m = re.match('(.*?)//(.*)', line)
+        if m is not None and m.group(1).find('"') == -1 and m.group(1).find("'") == -1:
+            new_line = self.__parse_line(m.group(1))
+            new_line += self.__wrap_line('//' + m.group(2), 'comment')
+            return new_line
         m = re.match('(.*?)/\*(.*)', line)
         if m is not None and m.group(1).find('"') == -1 and m.group(1).find("'") == -1:
             new_line = self.__parse_line(m.group(1))
             self._is_comment = True
             new_line += self.__parse_line('/*' + m.group(2))
-            return new_line
-        m = re.match('(.*?)//(.*)', line)
-        if m is not None and m.group(1).find('"') == -1 and m.group(1).find("'") == -1:
-            new_line = self.__parse_line(m.group(1))
-            new_line += self.__wrap_line('//' + m.group(2), 'comment')
             return new_line
 
         m = re.match('(.*?)([\'\"])(.*)', line)
