@@ -4643,3 +4643,15 @@ msgstr "Оценка не применима к исходной трассе о
 msgid "Mark cannot be applied to the selected attributes"
 msgstr "Оценка не применима к выбранным атрибутам"
 
+msgid "Coverage"
+msgstr "Покрытие"
+
+msgid "Show function bodies"
+msgstr "Показать тело функций"
+
+msgid "Line coverage"
+msgstr "Покрытие строк"
+
+msgid "Function coverage"
+msgstr "Покрытие функций"
+
