@@ -305,12 +305,12 @@ class LCOV:
     FUNCTION_NAME_PREFIX = "FN:"
     PARIALLY_ALLOWED_EXT = ('.c', '.i', '.c.aux')
 
-    def __init__(self, logger, coverage_file, clade, source_dirs, search_dirs, main_work_dir, completeness,
+    def __init__(self, logger, coverage_file, clade_dir, source_dirs, search_dirs, main_work_dir, completeness,
                  coverage_id, coverage_info_dir, collect_functions):
         # Public
         self.logger = logger
         self.coverage_file = coverage_file
-        self.clade_dir = os.path.normpath(clade.storage_dir)
+        self.clade_dir = clade_dir
         self.source_dirs = [os.path.normpath(p) for p in source_dirs]
         self.search_dirs = [os.path.normpath(p) for p in search_dirs]
         self.main_work_dir = main_work_dir

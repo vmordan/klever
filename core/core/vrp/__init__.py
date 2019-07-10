@@ -533,7 +533,7 @@ class RP(core.components.Component):
         exception = None
         try:
             self.verification_coverage = LCOV(self.logger, os.path.join('output', 'coverage.info'),
-                                              self.storage, self.source_paths,
+                                              self.storage.storage_dir, self.source_paths,
                                               self.search_dirs, self.conf['main working directory'],
                                               opts.get('coverage'),
                                               os.path.join(self.conf['main working directory'],
