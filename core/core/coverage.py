@@ -206,7 +206,7 @@ class JCR(core.components.Component):
                         coverage = get_coverage(coverage_info)
 
                         with open(total_coverage_file, 'w', encoding='utf8') as fp:
-                            json.dump(coverage, fp, ensure_ascii=True, sort_keys=True, indent=4)
+                            json.dump(coverage, fp, ensure_ascii=True, sort_keys=True, indent="\t")
 
                         coverage_info_dumped_files.append(total_coverage_file)
                         arcnames.update(arcfiles[sub_job_id][requirement])
@@ -330,12 +330,12 @@ class LCOV:
 
                 if coverage_id:
                     with open(coverage_id, 'w', encoding='utf-8') as fp:
-                        json.dump(self.coverage_info, fp, ensure_ascii=True, sort_keys=True, indent=4)
+                        json.dump(self.coverage_info, fp, ensure_ascii=True, sort_keys=True, indent="\t")
 
                 coverage = {}
                 add_to_coverage(coverage, self.coverage_info)
                 with open('coverage.json', 'w', encoding='utf-8') as fp:
-                    json.dump(get_coverage(coverage), fp, ensure_ascii=True, sort_keys=True, indent=4)
+                    json.dump(get_coverage(coverage), fp, ensure_ascii=True, sort_keys=True, indent=None)
         except Exception:
             if os.path.isfile('coverage.json'):
                 os.remove('coverage.json')
