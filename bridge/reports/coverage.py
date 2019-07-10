@@ -51,15 +51,14 @@ COLOR = {
 
 TABLE_STAT_COLOR = ['#f18fa6', '#f1c0b2', '#f9e19b', '#e4f495', '#acf1a8']
 
-ROOT_DIRS_ORDER = ['source files', 'specifications', 'generated models']
+ROOT_DIRS_ORDER = ['generated', 'sources', 'specifications']
 
 
-def coverage_color(curr_cov, max_cov, delta=0):
+def coverage_color(curr_cov, max_cov=0, delta=0):
     if curr_cov == 0:
-        return 'rgb(200, 190, 255)'
-    green = 140 + int(100 * (1 - curr_cov / max_cov))
-    blue = 140 + int(100 * (1 - curr_cov / max_cov)) - delta
-    return 'rgb(255, %s, %s)' % (green, blue)
+        return '#ebadad'
+    else:
+        return '#adebad'
 
 
 def get_legend(max_cov, leg_type, number=5, with_zero=False):
@@ -155,13 +154,13 @@ class GetCoverage:
         self._statistic = CoverageStatistics(self.cov_arch)
         self.statistic_table = self._statistic.table_data
         if self._statistic.first_file:
-            self.first_file = GetCoverageSrcHTML(self.cov_arch, self._statistic.first_file, with_data)
+            self.first_file = GetCoverageSrcHTML(self.cov_arch, self._statistic.first_file, with_data, True)
         if with_data:
             self.data_statistic = DataStatistic(self.cov_arch.id).table_html
 
 
 class GetCoverageSrcHTML:
-    def __init__(self, cov_arch, filename, with_data):
+    def __init__(self, cov_arch, filename, with_data, hide_function_bodies):
         self._cov_arch = cov_arch
         self.filename = os.path.normpath(filename).replace('\\', '/')
         try:
@@ -179,13 +178,17 @@ class GetCoverageSrcHTML:
         self._total_lines = 1
         self._lines_with_data = set()
         self.data_html = ''
+        self.hide_function_bodies = hide_function_bodies
         if self._with_data:
             self.data_html = self.__get_data()
         self.src_html = self.__get_source_html()
+        self.legend = None
+        '''
         self.legend = loader.get_template('reports/coverage/cov_legend.html').render({'legend': {
             'lines': get_legend(self._max_cov_line, 'lines', 5, True),
             'funcs': get_legend(self._max_cov_func, 'funcs', 5, False)
         }})
+        '''
 
     def __get_arch_content(self):
         with self._cov_arch.archive as fp:
@@ -243,18 +246,54 @@ class GetCoverageSrcHTML:
             'data_values': CoverageDataValue.objects.filter(id__in=data_ids).values_list('id', 'value')
         })
 
+    def __check_for_function_body_start(self, line: str) -> bool:
+        if "{" in line:
+            return True
+        return False
+
     def __get_source_html(self):
         data = []
         cnt = 1
         lines = self._content.split('\n')
         self._total_lines = len(str(len(lines)))
+        is_hide = False
+        is_function_declaration = False
+        declaration_code = ""
+        is_covered = False
         for line in lines:
             line = line.replace('\t', ' ' * TAB_LENGTH).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-            data.append(self.__get_line_data(cnt, self.__parse_line(line)))
+            if line.startswith("}"):
+                is_hide = False
+            if cnt in self._func_coverage:
+                is_covered = self._func_coverage[cnt]
+                code_str = line
+                is_hide = True
+                is_function_declaration = True
+                if self.__check_for_function_body_start(code_str):
+                    code_str = code_str[:-1]
+                    line = line.replace("{", "")
+                    is_function_declaration = False
+                declaration_code = code_str
+            if is_function_declaration:
+                code_str = line
+                if self.__check_for_function_body_start(code_str):
+                    code_str = code_str[:-1]
+                    line = line.replace("{", "")
+                    is_function_declaration = False
+                declaration_code += "\n" + code_str
+
+            if not self.hide_function_bodies or (not is_hide or is_function_declaration or declaration_code):
+                if declaration_code:
+                    line_data = self.__get_line_data(cnt, self.__parse_line(line), True, is_covered)
+                else:
+                    line_data = self.__get_line_data(cnt, self.__parse_line(line))
+                if not self.hide_function_bodies or (declaration_code and line and not line.isspace()):
+                    data.append(line_data)
+                declaration_code = ""
             cnt += 1
         return loader.get_template('reports/coverage/coverageFile.html').render({'linedata': data})
 
-    def __get_line_data(self, line, code):
+    def __get_line_data(self, line, code, force_cov=False, covered=False):
         lineclass = None
         line_num = {
             'class': 'COVLine', 'static': True, 'data': [],
@@ -265,6 +304,8 @@ class GetCoverageSrcHTML:
             line_num['data'].append(('number', self._line_coverage[line]))
             code['color'] = coverage_color(self._line_coverage[line], self._max_cov_line)
             code['data'] = [('number', self._line_coverage[line])]
+        elif force_cov:
+            code['color'] = coverage_color(covered)
 
         if line in self._lines_with_data:
             line_num['data'].append(('line', line))
@@ -274,11 +315,8 @@ class GetCoverageSrcHTML:
             func_cov['data'] = [('number', self._func_coverage[line])]
             if self._func_coverage[line] == 0:
                 lineclass = 'func-uncovered'
-                func_cov['content'] = '<i class="ui mini red remove icon"></i>'
             else:
                 lineclass = 'func-covered'
-                func_cov['content'] = '<i class="ui mini blue checkmark icon"></i>'
-                func_cov['color'] = coverage_color(self._func_coverage[line], self._max_cov_func, 40)
 
         linedata = [line_num]
         if self._with_data and line in self._lines_with_data:
@@ -462,7 +500,7 @@ class CoverageStatistics:
                 return children
             for fi in other_data:
                 if fi['parent_id'] == file_info['id']:
-                    fi['indent'] = '    ' * depth
+                    fi['indent'] = '  ' * depth
                     children.append(fi)
                     children.extend(__get_all_children(fi, depth + 1))
             return children

@@ -105,7 +105,7 @@
             </div>
             {% with parents|last as parent %}
                 {% if parent.has_coverage %}
-                    <a href="{% if user.extended.coverage_data %}{% url 'reports:coverage' report.parent_id %}{% else %}{% url 'reports:coverage_light' report.parent_id %}{% endif %}" class="ui pink button">{% trans 'Coverage' %}</a>
+                    <a href="{% url 'reports:coverage_light' report.parent_id %}" class="ui tiny pink button">{% trans 'Coverage' %}</a>
                 {% endif %}
             {% endwith %}
         </div>

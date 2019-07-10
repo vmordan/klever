@@ -696,7 +696,12 @@ class CoverageSrcView(LoggedCallMixin, Bview.JsonDetailPostView):
     pk_url_kwarg = 'archive_id'
 
     def get_context_data(self, **kwargs):
-        res = GetCoverageSrcHTML(self.object, self.request.POST['filename'], bool(int(self.request.POST['with_data'])))
+        if self.request.POST.get('show_function_bodies', "true") == "true":
+            hide_function_bodies = False
+        else:
+            hide_function_bodies = True
+        res = GetCoverageSrcHTML(self.object, self.request.POST['filename'], bool(int(self.request.POST['with_data'])),
+                                 hide_function_bodies)
         return {'content': res.src_html, 'data': res.data_html, 'legend': res.legend}
 
 

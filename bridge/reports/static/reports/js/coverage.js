@@ -16,7 +16,7 @@
  */
 
 $(document).ready(function () {
-    $('.parent-popup').popup({inline:true});
+    $('.parent-popup').popup({inline:true, hoverable:true});
     $('.ui.dropdown').dropdown();
 
     var src_code_content = $("#CoverageSRCContent"),
@@ -32,7 +32,11 @@ $(document).ready(function () {
             method: 'post',
             url: '/reports/get-coverage-src/' + $('#cov_arch_id').val() + '/',
             dataType: 'json',
-            data: {filename: filename, with_data: with_data},
+            data: {
+                filename: filename,
+                with_data: with_data,
+                show_function_bodies: $('#show_function_bodies').is(':checked')
+            },
             success: function(data) {
                 if (data.error) {
                     err_notify(data.error);
@@ -40,10 +44,10 @@ $(document).ready(function () {
                 }
                 $('#selected_file_name').text(filename);
                 src_code_content.html(data['content']).scrollTop(0);
-                if ($(with_data === '1')) {
+                /*if ($(with_data === '1')) {
                     src_data_content.html(data['data']).find('.item').tab();
                 }
-                $('#div_for_legend').html(data['legend']);
+                $('#div_for_legend').html(data['legend']);*/
             }
         });
     }
@@ -114,6 +118,9 @@ $(document).ready(function () {
         }
         line_container.addClass('COVLineSelected');
     });
+    $('#show_function_bodies').change(function () {
+        show_src_code($('#selected_file_name').text());
+    });
     src_code_content.on('mouseenter', '.COVLine[data-number]', function () {
         $(this).append($('<span>', {'class': 'CovNumberPopup', text: $(this).data('number')}));
     });
@@ -132,27 +139,6 @@ $(document).ready(function () {
     });
     src_code_content.on('mouseleave', '.COVCode[data-number]', function () {
         $(this).siblings('.COVStatic').find('.CovNumberPopup').remove();
-    });
-
-    $('#show_cov_attributes').click(function () {
-        if (cov_attr_table.is(':visible')) {
-            cov_attr_table.hide();
-        }
-        else {
-            cov_stat_table.hide();
-            data_stat_table.hide();
-            cov_attr_table.show();
-        }
-    });
-    $('#get_coverage_table').click(function () {
-        if (cov_stat_table.is(':visible')) {
-            cov_stat_table.hide();
-        }
-        else {
-            cov_attr_table.hide();
-            data_stat_table.hide();
-            cov_stat_table.show();
-        }
     });
 
     if (with_data === '1') {
