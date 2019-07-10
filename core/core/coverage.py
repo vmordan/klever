@@ -306,7 +306,7 @@ class LCOV:
     PARIALLY_ALLOWED_EXT = ('.c', '.i', '.c.aux')
 
     def __init__(self, logger, coverage_file, clade_dir, source_dirs, search_dirs, main_work_dir, completeness,
-                 coverage_id=None, coverage_info_dir=None, collect_functions=True):
+                 coverage_id=None, coverage_info_dir=None, collect_functions=True, ignore_files=set()):
         # Public
         self.logger = logger
         self.coverage_file = coverage_file
@@ -318,6 +318,7 @@ class LCOV:
         self.coverage_info_dir = coverage_info_dir
         self.arcnames = {}
         self.collect_functions = collect_functions
+        self.ignore_files = ignore_files
 
         # Sanity checks
         if self.completeness not in ('full', 'partial', 'lightweight', 'none', None):
@@ -424,6 +425,9 @@ class LCOV:
                                     new_file_name = os.path.join(dest, os.path.basename(file_name))
                                 else:
                                     new_file_name = os.path.join(dest, os.path.relpath(file_name, src))
+
+                                if new_file_name in self.ignore_files:
+                                    continue
                                 ignore_file = False
                                 break
                             else:
