@@ -15,11 +15,11 @@
 # limitations under the License.
 #
 
+import json
 import os
 import re
-import json
-import zipfile
 import tempfile
+import zipfile
 from datetime import datetime
 from io import BytesIO
 
@@ -27,25 +27,23 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File
 from django.db import transaction
-from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import pytz
+from django.utils.translation import ugettext_lazy as _
 
-from bridge.vars import FORMAT, JOB_STATUS, REPORT_ARCHIVE, JOB_WEIGHT
-from bridge.utils import logger, file_get_or_create, unique_id, BridgeException, OpenFiles
 from bridge.ZipGenerator import ZipStream, CHUNK_SIZE
-
-from jobs.models import Job, RunHistory, JobFile
-from reports.models import Report, ReportRoot, ReportSafe, ReportUnsafe, ReportUnknown, ReportComponent,\
-    Component, Computer, ReportAttr, ComponentResource, CoverageArchive, AttrFile, ErrorTraceSource
-from service.models import SolvingProgress, JobProgress, Scheduler
-from jobs.utils import change_job_status, remove_jobs_by_id
-from reports.utils import AttrData
-from service.utils import StartJobDecision
-from tools.utils import Recalculation
-
+from bridge.utils import logger, file_get_or_create, unique_id, BridgeException, OpenFiles
+from bridge.vars import FORMAT, JOB_STATUS, REPORT_ARCHIVE, JOB_WEIGHT
 from jobs.configuration import GetConfiguration
 from jobs.jobForm import LoadFilesTree, JobForm
+from jobs.models import Job, RunHistory, JobFile
+from jobs.utils import change_job_status, remove_jobs_by_id
 from reports.UploadReport import UploadReport
+from reports.models import Report, ReportRoot, ReportSafe, ReportUnsafe, ReportUnknown, ReportComponent, \
+    Component, Computer, ReportAttr, ComponentResource, CoverageArchive, AttrFile, ErrorTraceSource
+from reports.utils import AttrData
+from service.models import SolvingProgress, JobProgress, Scheduler
+from service.utils import StartJobDecision
+from tools.utils import Recalculation
 
 ARCHIVE_FORMAT = 12
 
@@ -950,7 +948,7 @@ class UploadReportsWithoutDecision:
     }
     files_fields = [
         'attr data', 'log', 'coverage', 'input files of static verifiers',
-        'proof', 'sources', 'error traces', 'problem desc'
+        'proof', 'sources', 'error traces', 'problem desc', 'coverage sources'
     ]
 
     def __init__(self, job, user, reports_dir):

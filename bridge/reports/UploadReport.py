@@ -181,6 +181,8 @@ class UploadReport:
                     raise ValueError("Coverage for verification report must be a string")
                 if self.data['coverage'] not in self.archives:
                     raise ValueError("Coverage archive wasn't found in the archives list")
+            if 'coverage sources' in data:
+                self.data['coverage sources'] = data['coverage sources']
             if 'task identifier' in data:
                 try:
                     self.data['task'] = Task.objects.get(id=data['task identifier'])
@@ -419,6 +421,11 @@ class UploadReport:
         if 'coverage' in self.data:
             carch = CoverageArchive(report=report)
             carch.save_archive(REPORT_ARCHIVE['coverage'], self.archives[self.data['coverage']])
+
+        if 'coverage sources' in self.data:
+            source = ErrorTraceSource(root=report.root)
+            source.add_sources(REPORT_ARCHIVE['coverage sources'], self.archives[REPORT_ARCHIVE['coverage sources']],
+                               True)
 
         # Check that report archives were successfully saved on disk
         for field_name in ['log', 'verifier_input']:

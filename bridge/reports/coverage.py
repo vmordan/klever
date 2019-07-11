@@ -15,10 +15,10 @@
 # limitations under the License.
 #
 
+import hashlib
+import json
 import os
 import re
-import json
-import hashlib
 import zipfile
 from io import StringIO
 
@@ -28,12 +28,10 @@ from django.db import transaction
 from django.template import loader
 
 from bridge.vars import COVERAGE_FILE
-
-from reports.models import CoverageFile, CoverageData, CoverageDataValue, CoverageDataStatistics, CoverageArchive
-
-from reports.utils import get_parents
 from reports.etv import TAB_LENGTH, KEY1_WORDS, KEY2_WORDS
-
+from reports.models import CoverageFile, CoverageData, CoverageDataValue, CoverageDataStatistics, CoverageArchive, \
+    ErrorTraceSource
+from reports.utils import get_parents
 
 SOURCE_CLASSES = {
     'comment': "COVComment",
@@ -162,6 +160,12 @@ class GetCoverage:
 class GetCoverageSrcHTML:
     def __init__(self, cov_arch, filename, with_data, hide_function_bodies):
         self._cov_arch = cov_arch
+        try:
+            coverage_sources = ErrorTraceSource.objects.get(root=cov_arch.report.root, reportunsafe=None)
+            self.src_arch = coverage_sources
+        except Exception:
+            # Backward compatibility here.
+            self.src_arch = cov_arch
         self.filename = os.path.normpath(filename).replace('\\', '/')
         try:
             self._covfile = CoverageFile.objects.get(archive=self._cov_arch, name=self.filename)
@@ -191,7 +195,7 @@ class GetCoverageSrcHTML:
         '''
 
     def __get_arch_content(self):
-        with self._cov_arch.archive as fp:
+        with self.src_arch.archive as fp:
             if os.path.splitext(fp.name)[-1] != '.zip':
                 raise ValueError('Archive type is not supported')
             with zipfile.ZipFile(fp, 'r') as zfp:
