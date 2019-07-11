@@ -49,8 +49,6 @@ COLOR = {
 
 TABLE_STAT_COLOR = ['#f18fa6', '#f1c0b2', '#f9e19b', '#e4f495', '#acf1a8']
 
-ROOT_DIRS_ORDER = ['generated', 'sources', 'specifications']
-
 
 def coverage_color(curr_cov, max_cov=0, delta=0):
     if curr_cov == 0:
@@ -512,8 +510,12 @@ class CoverageStatistics:
                     children.extend(__get_all_children(fi, depth + 1))
             return children
 
+        root_dirs = set()
+        for path in parents:
+            root_dirs.add(path.split(os.path.sep)[0])
+
         first_lvl = []
-        for root_name in ROOT_DIRS_ORDER:
+        for root_name in sorted(root_dirs):
             if root_name in parents:
                 first_lvl.append(parents[root_name])
 
