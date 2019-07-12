@@ -198,7 +198,7 @@ class GetCoverageSrcHTML:
                 raise ValueError('Archive type is not supported')
             with zipfile.ZipFile(fp, 'r') as zfp:
                 try:
-                    return zfp.read(self.filename).decode('utf8')
+                    return zfp.read(self.filename).decode('utf8', errors='ignore')
                 except KeyError:
                     return ''
 
@@ -210,7 +210,7 @@ class GetCoverageSrcHTML:
         line_data = {}
         func_data = {}
         with self._covfile.file.file as fp:
-            coverage = json.loads(fp.read().decode('utf8'))
+            coverage = json.loads(fp.read().decode('utf8', errors='ignore'))
         for linecov in coverage[0]:
             max_line_cov = max(max_line_cov, linecov[0])
             for line in linecov[1]:
@@ -547,7 +547,7 @@ class DataStatistic:
         active = True
         for stat in CoverageDataStatistics.objects.filter(archive_id=cov_arch_id).order_by('name'):
             with stat.data.file as fp:
-                data.append({'tab': stat.name, 'active': active, 'content': fp.read().decode('utf8')})
+                data.append({'tab': stat.name, 'active': active, 'content': fp.read().decode('utf8', errors='ignore')})
             active = False
         return data
 
@@ -635,7 +635,7 @@ class FillCoverageCache:
         for cov_arch in report.coverages.all():
             with cov_arch.archive as fp:
                 with zipfile.ZipFile(fp, 'r') as zfp:
-                    yield cov_arch, json.loads(zfp.read(COVERAGE_FILE).decode('utf8'))
+                    yield cov_arch, json.loads(zfp.read(COVERAGE_FILE).decode('utf8', errors='ignore'))
 
     def __fill_data(self):
         covdata = []
