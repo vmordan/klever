@@ -598,7 +598,7 @@ class CreateCoverageFiles:
                 covered_lines=self._coverage_stat[fname][0], total_lines=self._coverage_stat[fname][1],
                 covered_funcs=self._coverage_stat[fname][2], total_funcs=self._coverage_stat[fname][3]
             )
-            covfile.file.save('coverage.json', NewFile(file_coverage))
+            covfile.file.save(COVERAGE_FILE, NewFile(file_coverage))
 
     def __num_of_lines(self, lines):
         self.__is_not_used()
