@@ -271,21 +271,19 @@ class GetCoverageSrcHTML:
                 is_hide = False
             if cnt in self._func_coverage:
                 is_covered = self._func_coverage[cnt]
-                code_str = line
                 is_hide = True
                 is_function_declaration = True
-                if self.__check_for_function_body_start(code_str):
-                    code_str = code_str[:-1]
-                    line = line.replace("{", "")
+                if self.__check_for_function_body_start(line):
+                    if self.hide_function_bodies:
+                        line = line.replace("{", "")
                     is_function_declaration = False
-                declaration_code = code_str
+                declaration_code = line
             if is_function_declaration:
-                code_str = line
-                if self.__check_for_function_body_start(code_str):
-                    code_str = code_str[:-1]
-                    line = line.replace("{", "")
+                if self.__check_for_function_body_start(line):
+                    if self.hide_function_bodies:
+                        line = line.replace("{", "")
                     is_function_declaration = False
-                declaration_code += "\n" + code_str
+                declaration_code += "\n" + line
 
             if not self.hide_function_bodies or (not is_hide or is_function_declaration or declaration_code):
                 if declaration_code:
