@@ -29,7 +29,7 @@ import marks.SafeUtils as SafeUtils
 import marks.UnknownUtils as UnknownUtils
 import marks.UnsafeUtils as UnsafeUtils
 from bridge.utils import logger, unique_id, ArchiveFileContent
-from bridge.vars import REPORT_ARCHIVE, JOB_WEIGHT, JOB_STATUS, USER_ROLES, CONVERTED_ERROR_TRACES_FILE
+from bridge.vars import REPORT_ARCHIVE, JOB_WEIGHT, JOB_STATUS, USER_ROLES, CONVERTED_ERROR_TRACES_FILE, COVERAGE_FILE
 from marks.models import ErrorTraceConvertionCache
 from reports.coverage import FillCoverageCache
 from reports.etv import GetETV
@@ -47,6 +47,8 @@ AVTG_TOTAL_NAME = 'total number of abstract verification task descriptions to be
 AVTG_FAIL_NAME = 'faulty generated abstract verification task descriptions'
 VTG_FAIL_NAME = 'faulty processed abstract verification task descriptions'
 BT_TOTAL_NAME = 'the number of verification tasks prepared for abstract verification task'
+
+TAG_PERCENT = "percent"
 
 
 class CheckArchiveError(Exception):
@@ -463,8 +465,18 @@ class UploadReport:
         if self.parent is None or self.parent.parent is None:
             report.covnum = len(self.data['coverage'])
             for cov_id in self.data['coverage']:
-                carch = CoverageArchive(report=report, identifier=cov_id)
-                carch.save_archive(REPORT_ARCHIVE['coverage'], self.archives[self.data['coverage'][cov_id]])
+                uploaded_arch = self.archives[self.data['coverage'][cov_id]]
+                functions_percent, lines_percent = 0.0, 0.0
+                with zipfile.ZipFile(uploaded_arch, 'r') as zfp:
+                    try:
+                        data = json.loads(zfp.read(COVERAGE_FILE).decode('utf8', errors='ignore'))
+                        functions_percent = data.get(TAG_PERCENT, {}).get('function coverage', 0.0)
+                        lines_percent = data.get(TAG_PERCENT, {}).get('line coverage', 0.0)
+                    except Exception as e:
+                        logger.warning("Error on uploading coverage data: ", str(e), exc_info=True)
+                carch = CoverageArchive(report=report, identifier=cov_id, functions_percent=functions_percent,
+                                        lines_percent=lines_percent)
+                carch.save_archive(REPORT_ARCHIVE['coverage'], uploaded_arch)
             report.save()
             FillCoverageCache(report)
         else:
