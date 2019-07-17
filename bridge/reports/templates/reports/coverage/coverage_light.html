@@ -68,7 +68,10 @@
         </div>
         <div class="ui basic segment">
             <div class="ui checkbox">
-                <input type="checkbox" id="show_function_bodies">
+                <input type="checkbox" id="show_function_bodies"
+                       {%if not coverage.first_file.filename %}disabled{%endif%}
+                       {%if coverage.display_function_bodies%}checked{%endif%}
+                >
                 <label>{% trans 'Show function bodies' %}</label>
             </div>
         </div>
@@ -103,11 +106,15 @@
                 </div>
             </div>
             <div class="six wide column right aligned">
-                {% if coverage.coverage_archives|length > 1 or coverage.cov_arch.identifier != '' %}
+                {% if coverage.coverage_archives_aux|length > 1 or coverage.cov_arch.identifier != '' %}
                     <div class="ui field">
                         <label for="identifier_selector"></label>
                         <select id="identifier_selector" class="ui dropdown">
-                            {% for arch_id, identifier in coverage.coverage_archives %}
+                            {% for arch_id, identifier in coverage.coverage_archives_aux %}
+                                <option value="{{ arch_id }}"{% if arch_id == coverage.cov_arch.id %} selected{% endif %}>{{ identifier }}</option>
+                            {% endfor %}
+                            <option disabled>{% trans 'By property' %}</option>
+                            {% for arch_id, identifier in coverage.coverage_archives_property %}
                                 <option value="{{ arch_id }}"{% if arch_id == coverage.cov_arch.id %} selected{% endif %}>{{ identifier }}</option>
                             {% endfor %}
                         </select>

@@ -17,10 +17,12 @@
 
 import hashlib
 import json
+import logging
 import os
 import re
 import zipfile
 from io import StringIO
+from django.utils.translation import ugettext as _, override
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File as NewFile
@@ -137,20 +139,35 @@ def json_to_html(data):
 
 
 class GetCoverage:
-    def __init__(self, report, cov_arch_id, with_data):
+    def __init__(self, report, args: dict, with_data):
         self.report = report
+        cov_arch_id = args.get('archive')
+        cur_page = args.get('cur_page', None)
+        self.display_function_bodies = args.get('show_function_bodies', False)
         if cov_arch_id is None:
-            self.cov_arch = self.report.coverages.order_by('identifier').first()
+            try:
+                self.cov_arch = self.report.coverages.get(identifier='union')
+            except Exception:
+                self.cov_arch = self.report.coverages.order_by('identifier').first()
         else:
             self.cov_arch = CoverageArchive.objects.get(id=cov_arch_id, report=report)
-        self.coverage_archives = self.report.coverages.order_by('identifier').values_list('id', 'identifier')
+        self.coverage_archives_aux = list(self.report.coverages.filter(identifier__in=['union', 'intersection', 'max']).
+                        order_by('identifier').values_list('id', 'identifier'))
+        self.coverage_archives_property = list(self.report.coverages.exclude(identifier__in=['union', 'intersection',
+                                                                                             'max']).
+                        order_by('identifier').values_list('id', 'identifier'))
         self.job = self.report.root.job
 
         self.parents = get_parents(self.report)
-        self._statistic = CoverageStatistics(self.cov_arch)
+        self._statistic = CoverageStatistics(self.cov_arch, cur_page)
         self.statistic_table = self._statistic.table_data
-        if self._statistic.first_file:
-            self.first_file = GetCoverageSrcHTML(self.cov_arch, self._statistic.first_file, with_data, True)
+        if cur_page:
+            self.first_file = GetCoverageSrcHTML(self.cov_arch, cur_page, with_data,
+                                                 not self.display_function_bodies)
+        else:
+            self.first_file = dict()
+            self.first_file["src_html"] = "<h3 align='center'>" + _("Select source file to see its coverage") + "</h3>"
+
         if with_data:
             self.data_statistic = DataStatistic(self.cov_arch.id).table_html
 
@@ -159,9 +176,10 @@ class GetCoverageSrcHTML:
     def __init__(self, cov_arch, filename, with_data, hide_function_bodies):
         self._cov_arch = cov_arch
         try:
-            coverage_sources = ErrorTraceSource.objects.get(root=cov_arch.report.root, reportunsafe=None)
-            self.src_arch = coverage_sources
-        except Exception:
+            coverage_sources = ErrorTraceSource.objects.filter(root=cov_arch.report.root, reportunsafe=None)
+            self.src_arch = coverage_sources[0]
+        except Exception as e:
+            logging.warning("Using outdated coverage sources: ", str(e), exc_info=True)
             # Backward compatibility here.
             self.src_arch = cov_arch
         self.filename = os.path.normpath(filename).replace('\\', '/')
@@ -199,7 +217,9 @@ class GetCoverageSrcHTML:
             with zipfile.ZipFile(fp, 'r') as zfp:
                 try:
                     return zfp.read(self.filename).decode('utf8', errors='ignore')
-                except KeyError:
+                except KeyError as e:
+                    logging.warning("Cannot find file {} in coverage source archive: ".format(self.filename), str(e),
+                                    exc_info=True)
                     return ''
 
     def __get_coverage(self):
@@ -251,11 +271,6 @@ class GetCoverageSrcHTML:
             'data_values': CoverageDataValue.objects.filter(id__in=data_ids).values_list('id', 'value')
         })
 
-    def __check_for_function_body_start(self, line: str) -> bool:
-        if "{" in line:
-            return True
-        return False
-
     def __get_source_html(self):
         data = []
         cnt = 1
@@ -265,6 +280,12 @@ class GetCoverageSrcHTML:
         is_function_declaration = False
         declaration_code = ""
         is_covered = False
+
+        def check_for_function_body_start(src_line: str) -> bool:
+            if "{" in src_line:
+                return True
+            return False
+
         for line in lines:
             line = line.replace('\t', ' ' * TAB_LENGTH).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
             if line.startswith("}"):
@@ -273,13 +294,13 @@ class GetCoverageSrcHTML:
                 is_covered = self._func_coverage[cnt]
                 is_hide = True
                 is_function_declaration = True
-                if self.__check_for_function_body_start(line):
+                if check_for_function_body_start(line):
                     if self.hide_function_bodies:
                         line = line.replace("{", "")
                     is_function_declaration = False
                 declaration_code = line
             if is_function_declaration:
-                if self.__check_for_function_body_start(line):
+                if check_for_function_body_start(line):
                     if self.hide_function_bodies:
                         line = line.replace("{", "")
                     is_function_declaration = False
@@ -419,9 +440,10 @@ class GetCoverageSrcHTML:
 
 
 class CoverageStatistics:
-    def __init__(self, cov_arch):
+    def __init__(self, cov_arch, cur_page):
         self.cov_arch = cov_arch
         self.first_file = None
+        self.cur_page = cur_page
         self.table_data = self.__get_table_data()
 
     def __get_table_data(self):
@@ -436,6 +458,9 @@ class CoverageStatistics:
         cnt = 0
         parents = {}
         for fname in coverage:
+            display = False
+            if fname == self.cur_page:
+                display = True
             path = fname.split('/')
             for i in range(len(path)):
                 cnt += 1
@@ -450,12 +475,17 @@ class CoverageStatistics:
                         'title': path[i],
                         'parent': parent,
                         'parent_id': parent_id,
-                        'display': False,
+                        'display': display,
                         'is_dir': (i != len(path) - 1),
                         'path': curr_path,
                         'lines': {'covered': 0, 'total': 0, 'percent': '-'},
                         'funcs': {'covered': 0, 'total': 0, 'percent': '-'}
                     }
+                    if display:
+                        cur_parent = parents[curr_path]
+                        while cur_parent:
+                            cur_parent['display'] = True
+                            cur_parent = parents.get(cur_parent['parent'])
 
         for fname in coverage:
             display = False
@@ -478,7 +508,7 @@ class CoverageStatistics:
         for fname in parents:
             if parents[fname]['lines']['total'] > 0:
                 div = parents[fname]['lines']['covered'] / parents[fname]['lines']['total']
-                parents[fname]['lines']['percent'] = '%s%%' % int(100 * div)
+                parents[fname]['lines']['percent'] = '%s%%' % round(100 * div, 2)
                 color_id = int(div * len(TABLE_STAT_COLOR))
                 if color_id >= len(TABLE_STAT_COLOR):
                     color_id = len(TABLE_STAT_COLOR) - 1
@@ -487,7 +517,7 @@ class CoverageStatistics:
                 parents[fname]['lines']['color'] = TABLE_STAT_COLOR[color_id]
             if parents[fname]['funcs']['total'] > 0:
                 div = parents[fname]['funcs']['covered'] / parents[fname]['funcs']['total']
-                parents[fname]['funcs']['percent'] = '%s%%' % int(100 * div)
+                parents[fname]['funcs']['percent'] = '%s%%' % round(100 * div, 2)
                 color_id = int(div * len(TABLE_STAT_COLOR))
                 if color_id >= len(TABLE_STAT_COLOR):
                     color_id = len(TABLE_STAT_COLOR) - 1
@@ -519,15 +549,13 @@ class CoverageStatistics:
 
         ordered_data = []
         for fd in first_lvl:
-            fd['display'] = True
+            if not fd['title'] == 'generated':
+                fd['display'] = True
             ordered_data.append(fd)
             ordered_data.extend(__get_all_children(fd, 1))
         for fd in ordered_data:
-            if hide_all:
+            if fd['title'] == self.cur_page:
                 fd['display'] = True
-            if not fd['is_dir'] and parents[fd['parent']]['display']:
-                self.first_file = fd['path']
-                break
         return ordered_data
 
     def __is_not_used(self):
@@ -626,7 +654,10 @@ class FillCoverageCache:
             self._cov_arch = cov_arch
             self._files = CreateCoverageFiles(self._cov_arch, self._data).files
             del self._data['line coverage'], self._data['function coverage']
-            self.__fill_data()
+            try:
+                self.__fill_data()
+            except Exception as e:
+                logging.warning("Error during filling cached coverage data: ", str(e), exc_info=True)
 
     def __get_coverage_data(self, report):
         self.__is_not_used()

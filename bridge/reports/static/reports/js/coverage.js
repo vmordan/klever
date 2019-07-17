@@ -28,6 +28,7 @@ $(document).ready(function () {
 
     function show_src_code(filename) {
         src_code_content.empty();
+        $('#show_function_bodies').removeAttr("disabled");
         $.ajax({
             method: 'post',
             url: '/reports/get-coverage-src/' + $('#cov_arch_id').val() + '/',
@@ -150,12 +151,11 @@ $(document).ready(function () {
         });
     }
     $('#identifier_selector').change(function () {
-        if (with_data === '1') {
-            window.location.href = '/reports/coverage/' + $('#report_id').val() + '?archive=' + $(this).val();
+        var args = '?archive=' + $(this).val() + '&cur_page=' + $('#selected_file_name').text();
+        if ($('#show_function_bodies').is(':checked')) {
+            args += '&show_function_bodies=true';
         }
-        else {
-            window.location.href = '/reports/coverage-light/' + $('#report_id').val() + '?archive=' + $(this).val();
-        }
+        window.location.href = '/reports/coverage-light/' + $('#report_id').val() + args;
     });
 
     $('#next_cov_btn').click(function () {

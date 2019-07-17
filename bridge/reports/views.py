@@ -673,7 +673,7 @@ class CoverageView(LoggedCallMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         return {
-            'coverage': GetCoverage(self.object, self.request.GET.get('archive'), False),
+            'coverage': GetCoverage(self.object, self.request.GET, False),
             'SelfAttrsData': reports.utils.report_attributes_with_parents(self.object)
         }
 
@@ -686,7 +686,7 @@ class CoverageLightView(LoggedCallMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         return {
-            'coverage': GetCoverage(self.object, self.request.GET.get('archive'), True),
+            'coverage': GetCoverage(self.object, self.request.GET, True),
             'SelfAttrsData': reports.utils.report_attributes_with_parents(self.object)
         }
 
