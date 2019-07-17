@@ -170,6 +170,8 @@ class CoverageArchive(models.Model):
     report = models.ForeignKey(ReportComponent, models.CASCADE, related_name='coverages')
     identifier = models.CharField(max_length=128, default='')
     archive = models.FileField(upload_to=get_coverage_arch_dir)
+    lines_percent = models.FloatField(default=0.0)
+    functions_percent = models.FloatField(default=0.0)
 
     def save_archive(self, fname, fp):
         self.archive.save(fname, File(fp), True)
