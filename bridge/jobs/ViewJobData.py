@@ -204,7 +204,6 @@ class ViewJobData:
                 .order_by('component__name').values_list('component__name', 'total', 'in_progress'):
             instances[c_name] = str(total)
 
-        res_data = {}
         cpu_time = {}
         memory = {}
         wall_time = {}
@@ -226,7 +225,19 @@ class ViewJobData:
             cpu_time[cr.component.name] = rd[1]
             memory[cr.component.name] = rd[2]
 
-        resource_data = [{'component': x, 'instances': instances[x], 'cpu': cpu_time[x], 'mem': memory[x], 'wall': wall_time[x]} for x in sorted(cpu_time)]
+        def prepare_component_resources(component: str) -> dict:
+            return {
+                'component': component,
+                'instances': instances[component],
+                'cpu': cpu_time[component],
+                'mem': memory[component],
+                'wall': wall_time[component]
+            }
+
+        resource_data = [prepare_component_resources(component) for component in sorted(cpu_time)
+                         if not component == self.report.component.name]
+        if self.report.component.name in cpu_time:
+            resource_data.append(prepare_component_resources(self.report.component.name))
 
         return resource_data
 
