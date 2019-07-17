@@ -941,6 +941,9 @@ class UploadReportsWithoutDecision:
             'id', 'parent id', 'name', 'attrs', 'attr data', 'comp', 'resources',
             'log', 'coverage', 'input files of static verifiers'
         ],
+        'job coverage': [
+            'id', 'parent id', 'name', 'attrs', 'attr data', 'resources', 'coverage'
+        ],
         'verification finish': ['id'],
         'safe': ['id', 'parent id', 'attrs', 'attr data', 'proof'],
         'unsafe': ['id', 'parent id', 'attrs', 'attr data', 'sources', 'error traces'],
@@ -986,6 +989,7 @@ class UploadReportsWithoutDecision:
         actions = {
             'component': self.__upload_component, 'verification': self.__upload_verification,
             'safe': self.__upload_leaf, 'unsafe': self.__upload_leaf, 'unknown': self.__upload_leaf,
+            'job coverage': self.__upload_leaf
         }
         for report in self._data:
             if report['parent id'] == parent_id:
@@ -1021,6 +1025,8 @@ class UploadReportsWithoutDecision:
                     files.append(os.path.join(self._reports_dir, report[f]))
                 elif isinstance(report[f], list):
                     files.extend(list(os.path.join(self._reports_dir, p) for p in report[f]))
+                elif isinstance(report[f], dict):
+                    files.extend(list(os.path.join(self._reports_dir, p) for p in report[f].values()))
 
         # Uploading report
         try:
