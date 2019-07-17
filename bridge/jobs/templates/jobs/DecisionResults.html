@@ -163,7 +163,74 @@
         </div>
     </div>
     {% endif %}
-
+    <div class="ui equal width grid">
+        <div class="column">
+            <h4>
+                <a href="{% url 'reports:coverage_light' reportdata.report.id %}" class="ui yellow button fluid{% if not coverage %} disabled{%endif%}">
+                    {% trans 'Coverage' %}:
+                    {% if coverage %}
+                        {% if coverage.union %}
+                            {{coverage.union.0}}% {% trans 'by functions' %} / {{coverage.union.1}}% {% trans 'by lines' %}
+                        {%elif coverage.max%}
+                            {{coverage.max.0}}% {% trans 'by functions' %} / {{coverage.max.1}}% {% trans 'by lines' %}
+                        {%endif%}
+                    {%else%}
+                        {% trans 'was not computed' %}
+                    {%endif%}
+                </a>
+            </h4>
+            {% if coverage %}
+            <div class="ui styled accordion fluid">
+                <div class="active title brown">
+                    <i class="dropdown icon"></i>{% trans 'Details' %}
+                </div>
+                <div class="content">
+                    <table class="ui celled compact yellow table selectable striped">
+                        <thead style="background-color:lightgray; text-align: center">
+                            <tr>
+                                <td>{% trans 'Coverage type' %}</td>
+                                <td>{% trans 'Function coverage' %}</td>
+                                <td>{% trans 'Line coverage' %}</td>
+                            </tr>
+                        </thead>
+                        <tbody style="text-align: center">
+                            {% if coverage.max %}
+                            <tr>
+                                <td>
+                                    {% trans 'Maximal potential coverage' %}
+                                </td>
+                                <td>{{ coverage.max.0 }}%</td>
+                                <td>{{ coverage.max.1 }}%</td>
+                            </tr>
+                            {%endif%}
+                            {% if coverage.intersection %}
+                            <tr>
+                                <td>
+                                    {% trans 'Covered by all properties' %}
+                                </td>
+                                <td>{{ coverage.intersection.0 }}%</td>
+                                <td>{{ coverage.intersection.1 }}%</td>
+                            </tr>
+                            {%endif%}
+                            {% for identifier, cov_percent  in coverage.items|dictsort:"0.lower" %}
+                                {% if not identifier == 'union' and not identifier == 'intersection' and not identifier == 'max'%}
+                                <tr>
+                                    <td>
+                                        {% trans 'Property' %} '{{identifier}}'
+                                    </td>
+                                    <td>{{ cov_percent.0 }}%</td>
+                                    <td>{{ cov_percent.1 }}%</td>
+                                </tr>
+                                {%endif%}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {%endif%}
+        </div>
+        <div class="column"></div>
+    </div>
     {% if reportdata.data.resources|length %}
     <div class="ui grid">
         {% if reportdata.data.resources|length %}

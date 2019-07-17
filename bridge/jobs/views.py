@@ -16,14 +16,15 @@
 #
 
 import json
-from urllib.parse import unquote
 from difflib import unified_diff
+from urllib.parse import unquote
 from wsgiref.util import FileWrapper
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
+from django.template.defaulttags import register
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _, override
@@ -31,25 +32,31 @@ from django.views.generic.base import TemplateView
 from django.views.generic.detail import SingleObjectMixin, DetailView
 
 import bridge.CustomViews as Bview
-from tools.profiling import LoggedCallMixin
-from bridge.vars import VIEW_TYPES, JOB_STATUS, PRIORITY, JOB_WEIGHT, USER_ROLES
-from bridge.utils import logger, file_get_or_create, extract_archive, BridgeException
-
-from users.models import User
-from reports.models import ReportComponent, ReportAttr
-from reports.UploadReport import UploadReport, CollapseReports
-from reports.comparison import can_compare
-from reports.utils import FilesForCompetitionArchive
-from service.utils import StartJobDecision, StopDecision, GetJobsProgresses
-
 import jobs.utils
+from bridge.utils import logger, file_get_or_create, extract_archive, BridgeException
+from bridge.vars import VIEW_TYPES, JOB_STATUS, PRIORITY, JOB_WEIGHT, USER_ROLES
+from jobs.Download import UploadJob, JobArchiveGenerator, KleverCoreArchiveGen, JobsArchivesGen, \
+    UploadReportsWithoutDecision, JobsTreesGen, UploadTree
+from jobs.JobTableProperties import TableTree
+from jobs.ViewJobData import ViewJobData, update_job_view_attrs
+from jobs.configuration import get_configuration_value, GetConfiguration, StartDecisionData
 from jobs.jobForm import JobForm, role_info, LoadFilesTree, UserRolesForm
 from jobs.models import Job, RunHistory, JobHistory, JobFile, FileSystem
-from jobs.ViewJobData import ViewJobData, update_job_view_attrs
-from jobs.JobTableProperties import TableTree
-from jobs.Download import UploadJob, JobArchiveGenerator, KleverCoreArchiveGen, JobsArchivesGen,\
-    UploadReportsWithoutDecision, JobsTreesGen, UploadTree
-from jobs.configuration import get_configuration_value, GetConfiguration, StartDecisionData
+from reports.UploadReport import UploadReport, CollapseReports
+from reports.comparison import can_compare
+from reports.models import ReportComponent, ReportAttr
+from reports.utils import FilesForCompetitionArchive
+from service.utils import StartJobDecision, StopDecision, GetJobsProgresses
+from tools.profiling import LoggedCallMixin
+from users.models import User
+
+
+@register.filter
+def get(dictionary, key):
+    if dictionary:
+        return dictionary.get(key)
+    else:
+        return None
 
 
 @method_decorator(login_required, name='dispatch')
@@ -80,6 +87,11 @@ class JobPage(LoggedCallMixin, Bview.DataViewMixin, DetailView):
             raise BridgeException()
         report = ReportComponent.objects.filter(root__job=self.object, parent=None).first()
         attrs = {}
+        coverage = dict()
+        if report:
+            for identifier, functions, lines in report.coverages.\
+                    values_list('identifier', 'lines_percent', 'functions_percent'):
+                coverage[identifier] = functions, lines
         for name, val, associate in ReportAttr.objects.filter(report__root__job=self.object).\
                 values_list('attr__name__name', 'attr__value', 'associate'):
             if not associate:
@@ -96,7 +108,7 @@ class JobPage(LoggedCallMixin, Bview.DataViewMixin, DetailView):
             'children': jobs.utils.get_job_children(self.request.user, self.object),
             'progress': GetJobsProgresses(self.request.user, [self.object.id]).data[self.object.id],
             'reportdata': ViewJobData(self.request.user, self.get_view(VIEW_TYPES[2]), report),
-            'attrs': attrs
+            'attrs': attrs, 'coverage': coverage
         }
 
 
