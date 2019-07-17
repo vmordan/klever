@@ -3367,6 +3367,36 @@ msgstr "Показать различающиеся атрибуты"
 msgid "overall speedup"
 msgstr "общее ускорение"
 
+msgid "Overall"
+msgstr "Всего"
+
+msgid "by functions"
+msgstr "по функциям"
+
+msgid "by lines"
+msgstr "по строкам"
+
+msgid "By property"
+msgstr "По требованиям"
+
+msgid "Select source file to see its coverage"
+msgstr "Выберите файл с исходным кодом для отображения его покрытия"
+
+msgid "was not computed"
+msgstr "не было вычислено"
+
+msgid "Coverage type"
+msgstr "Тип покрытия"
+
+msgid "Maximal potential coverage"
+msgstr "Максимально возможное покрытие"
+
+msgid "Covered by all properties"
+msgstr "Покрыто по всем требованиям"
+
+msgid "Property"
+msgstr "Требование"
+
 msgid "average speedup"
 msgstr "среднее ускорение"
 
