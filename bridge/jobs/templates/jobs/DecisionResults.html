@@ -181,7 +181,7 @@
             </h4>
             {% if coverage %}
             <div class="ui styled accordion fluid">
-                <div class="active title brown">
+                <div class="active title">
                     <i class="dropdown icon"></i>{% trans 'Details' %}
                 </div>
                 <div class="content">
@@ -229,54 +229,54 @@
             </div>
             {%endif%}
         </div>
-        <div class="column"></div>
-    </div>
-    {% if reportdata.data.resources|length %}
-    <div class="ui grid">
-        {% if reportdata.data.resources|length %}
         <div class="column">
-            <h3>{% trans 'Consumed resources' %}</h3>
-            <table class="ui celled selectable compact purple table striped">
-                <thead style="background-color:lightgray;">
-                <tr onclick="show_resource_table_body()" title="{% trans 'Show/Hide' %}" style="cursor:pointer;">
-                    <td>{% trans 'Component' %}</td>
-                    <td class="center aligned">{% trans 'Instances' %}</td>
-                    <td class="center aligned">{% trans 'CPU time' %}</td>
-                    <td class="center aligned">{% trans 'Memory' %}</td>
-                    <td class="center aligned">{% trans 'Wall time' %}</td>
-                </tr>
-                </thead>
-                <tbody id="resource_table_body" hidden>
-                    {% for res_data in reportdata.data.resources %}
-                        {% if reportdata.report.component.name != res_data.component %}
-                            <tr>
-                                <td>{{ res_data.component }}</td>
-                                <td class="center aligned"><span style="color: darkblue"> {{ res_data.instances }}</span></td>
-                                <td class="right aligned"><span style="color: darkblue"> <strong>{{ res_data.cpu }}</strong></span></td>
-                                <td class="right aligned"><span style="color: darkblue"> {{ res_data.mem }}</span></td>
-                                <td class="center aligned"><span style="color: darkblue" > {{ res_data.wall }}</span></td>
-                            </tr>
-                        {% endif %}
-                    {% endfor %}
-                </tbody>
-                <tfoot style="background-color:lightgray;">
-                {% for res_data in reportdata.data.resources %}
-                    <tr>
-                    {% if reportdata.report.component.name == res_data.component %}
-                        <td><strong style="color: #86188c;">{% trans 'Overall' %}</strong></td>
-                        <td class="center aligned"><span style="color: darkblue"> {{ res_data.instances }}</span></td>
-                        <td class="right aligned"><span style="color: darkblue"> <strong>{{ res_data.cpu }}</strong></span></td>
-                        <td class="right aligned"><span style="color: darkblue"> {{ res_data.mem }}</span></td>
-                        <td class="center aligned"><span style="color: darkblue" > {{ res_data.wall }}</span></td>
-                    {% endif %}
-                    </tr>
-                {% endfor %}
-                </tfoot>
-            </table>
+            {% if reportdata.data.resources|length %}
+            <h4>
+                <button class="ui purple button fluid">
+                    {% trans 'Consumed resources' %}:
+                    {% with reportdata.data.resources|last as cur_comp %}
+                        {{ cur_comp.cpu }} / {{ cur_comp.mem }}
+                    {% endwith %}
+                </button>
+            </h4>
+            <div class="ui styled accordion fluid">
+                <div class="active title">
+                    <i class="dropdown icon"></i>{% trans 'Details' %}
+                </div>
+                <div class="content">
+                    <table class="ui celled selectable compact purple table striped" id="resource_table_body">
+                        <thead style="background-color:lightgray;" class="center aligned">
+                        <tr>
+                            <td>{% trans 'Component' %}</td>
+                            <td>{% trans 'Instances' %}</td>
+                            <td>{% trans 'CPU time' %}</td>
+                            <td>{% trans 'Memory' %}</td>
+                            <td>{% trans 'Wall time' %}</td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            {% for res_data in reportdata.data.resources %}
+                                <tr>
+                                    <td>
+                                        {% if reportdata.report.component.name == res_data.component %}
+                                            <div class="purple-title">{% trans 'Overall' %}</div>
+                                        {%else%}
+                                            {{ res_data.component }}
+                                        {%endif%}
+                                    </td>
+                                    <td class="center aligned"><span style="color: darkblue"> {{ res_data.instances }}</span></td>
+                                    <td class="right aligned"><span style="color: darkblue"> <strong>{{ res_data.cpu }}</strong></span></td>
+                                    <td class="right aligned"><span style="color: darkblue"> {{ res_data.mem }}</span></td>
+                                    <td class="center aligned"><span style="color: darkblue" > {{ res_data.wall }}</span></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
-    {% endif %}
 {% else %}
 <h1 class="ui divider horizontal header">{% trans 'Report is empty' %}</h1>
 {% endif %}
