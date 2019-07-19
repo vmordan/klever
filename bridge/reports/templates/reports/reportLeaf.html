@@ -64,7 +64,7 @@
         </div>
         <div class="four wide column right floated right aligned">
             {% if resources %}
-                <i class="ui tiny inverted violet button parent-popup" data-variation="very wide">{% trans 'Consumed resources' %}</i>
+                <i class="ui tiny inverted purple button parent-popup" data-variation="very wide">{% trans 'Consumed resources' %}</i>
                 <div class="ui special popup">
                     <table class="ui celled compact purple table">
                         <tbody>
@@ -84,7 +84,7 @@
                     </table>
                 </div>
             {% endif %}
-            <i class="ui tiny inverted violet button parent-popup" data-variation="very wide">{% trans 'Attributes' %}</i>
+            <i class="ui tiny inverted purple button parent-popup" data-variation="very wide">{% trans 'Attributes' %}</i>
             <div class="ui special popup">
                 <table class="ui celled compact purple table">
                     <tbody>
@@ -105,7 +105,7 @@
             </div>
             {% with parents|last as parent %}
                 {% if parent.has_coverage %}
-                    <a href="{% url 'reports:coverage_light' report.parent_id %}" class="ui tiny pink button">{% trans 'Coverage' %}</a>
+                    <a href="{% url 'reports:coverage_light' report.parent_id %}" class="ui tiny yellow button">{% trans 'Coverage' %}</a>
                 {% endif %}
             {% endwith %}
         </div>

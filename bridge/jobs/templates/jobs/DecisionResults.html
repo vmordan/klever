@@ -166,18 +166,24 @@
     <div class="ui equal width grid">
         <div class="column">
             <h4>
-                <a href="{% url 'reports:coverage_light' reportdata.report.id %}" class="ui yellow button fluid{% if not coverage %} disabled{%endif%}">
+                {% if coverage %}
+                <a href="{% url 'reports:coverage_light' reportdata.report.id %}" class="ui yellow button fluid">
                     {% trans 'Coverage' %}:
-                    {% if coverage %}
-                        {% if coverage.union %}
-                            {{coverage.union.0}}% {% trans 'by functions' %} / {{coverage.union.1}}% {% trans 'by lines' %}
-                        {%elif coverage.max%}
-                            {{coverage.max.0}}% {% trans 'by functions' %} / {{coverage.max.1}}% {% trans 'by lines' %}
-                        {%endif%}
+                    {% if coverage.union %}
+                        {{coverage.union.0}}% {% trans 'by functions' %} / {{coverage.union.1}}% {% trans 'by lines' %}
+                    {%elif coverage.max%}
+                        {{coverage.max.0}}% {% trans 'by functions' %} / {{coverage.max.1}}% {% trans 'by lines' %}
                     {%else%}
-                        {% trans 'was not computed' %}
+                        {{coverage}}
                     {%endif%}
                 </a>
+                {% elif report and report.covnum %}
+                <a href="{% url 'reports:coverage_light' report.id %}" class="ui yellow button fluid">
+                    {% trans 'Coverage' %}
+                </a>
+                {% else %}
+                <a class="ui yellow button fluid disabled">{% trans 'Coverage' %} {% trans 'was not computed' %}</a>
+                {% endif %}
             </h4>
             {% if coverage %}
             <div class="ui styled accordion fluid">

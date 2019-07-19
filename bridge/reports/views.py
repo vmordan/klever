@@ -166,6 +166,11 @@ class ReportComponentView(LoggedCallMixin, Bview.DataViewMixin, DetailView):
         job = self.object.root.job
         if not JobAccess(self.request.user, job).can_view():
             raise BridgeException(code=400)
+        coverage = {}
+        for identifier, functions, lines in self.object.coverages.\
+                values_list('identifier', 'lines_percent', 'functions_percent'):
+            if identifier:
+                coverage[identifier] = functions, lines
         return {
             'report': self.object,
             'status': reports.utils.ReportStatus(self.object),
@@ -173,7 +178,7 @@ class ReportComponentView(LoggedCallMixin, Bview.DataViewMixin, DetailView):
             'resources': reports.utils.report_resources(self.object, self.request.user),
             'computer': reports.utils.computer_description(self.object.computer.description),
             'SelfAttrsData': reports.utils.ReportAttrsTable(self.object).table_data,
-            'parents': reports.utils.get_parents(self.object),
+            'parents': reports.utils.get_parents(self.object), 'coverage': coverage,
             'reportdata': ViewJobData(self.request.user, self.get_view(VIEW_TYPES[2]), self.object),
             'TableData': reports.utils.ReportChildrenTable(self.request.user, self.object, self.get_view(VIEW_TYPES[3]))
         }

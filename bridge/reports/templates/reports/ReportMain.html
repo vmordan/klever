@@ -207,9 +207,6 @@
             {% if report.verifier_input %}
                 <a href="{% url 'reports:download_files' report.pk %}" class="ui violet button">{% trans 'Download input files of static verifiers' %}</a>
             {% endif %}
-            {% if report.covnum > 0 %}
-                <a href="{% url 'reports:coverage_light' report.id %}" class="ui tiny pink button">{% trans 'Coverage' %}</a>
-            {% endif %}
         </div>
     </div>
 </div>
