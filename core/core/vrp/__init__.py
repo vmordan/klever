@@ -326,7 +326,7 @@ class RP(core.components.Component):
 
         self.logger.info('Write processed witness to "{0}"'.format(error_trace_file))
         with open(error_trace_file, 'w', encoding='utf8') as fp:
-            json.dump(error_trace, fp, ensure_ascii=False, sort_keys=True, indent=4)
+            json.dump(error_trace, fp, ensure_ascii=False, sort_keys=True, indent="\t")
 
         return sources, error_trace_file
 

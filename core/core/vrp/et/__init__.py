@@ -61,4 +61,4 @@ if __name__ == '__main__':
     et = import_error_trace(gl_logger, 'witness.0.graphml')
 
     with open('error trace.json', 'w', encoding='utf8') as fp:
-        json.dump(et, fp, ensure_ascii=False, sort_keys=True, indent=4)
+        json.dump(et, fp, ensure_ascii=False, sort_keys=True, indent="\t")
