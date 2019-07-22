@@ -761,6 +761,11 @@ def remove_jobs_by_id(user, job_ids):
         del all_jobs[j_id]
 
     for job_id in job_ids:
+        job_id = int(job_id)
+        if job_id in job_struct:
+            raise BridgeException(_("Cannot remove none-leaf element from the jobs tree with children. "
+                                    "Please remove all element children first."))
+    for job_id in job_ids:
         remove_job_with_children(job_id)
 
 
