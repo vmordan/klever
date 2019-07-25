@@ -27,6 +27,7 @@ import sys
 import zipfile
 
 PROMPT = 'Password: '
+MAX_RETRIES = 32
 
 
 class UnexpectedStatusCode(IOError):
@@ -52,6 +53,9 @@ class Session:
 
     def __enter__(self):
         self.session = requests.Session()
+        adapter = requests.adapters.HTTPAdapter(max_retries=MAX_RETRIES)
+        self.session.mount('https://', adapter)
+        self.session.mount('http://', adapter)
         # Get initial value of CSRF token via useless GET request
         self.__request('/users/service_signin/')
 
