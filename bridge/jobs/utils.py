@@ -201,9 +201,8 @@ class JobAccess:
         return self._is_manager or self._is_service
 
     def can_decide(self):
-        if self.job is None or self.job.status in [JOB_STATUS[1][0], JOB_STATUS[2][0], JOB_STATUS[6][0]]:
-            return False
-        return self._is_manager or self._is_author or self._job_role in [JOB_ROLES[3][0], JOB_ROLES[4][0]]
+        return self._is_manager or self._is_service or \
+               self._is_author or self._job_role in [JOB_ROLES[3][0], JOB_ROLES[4][0]]
 
     def can_upload_reports(self):
         if self.job is None or self.job.status in [JOB_STATUS[1][0], JOB_STATUS[2][0], JOB_STATUS[6][0]]:
