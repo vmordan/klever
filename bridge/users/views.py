@@ -55,11 +55,13 @@ def user_signin(request):
         return render(request, 'users/login.html', {'login_errors': _("Incorrect username or password")})
     if not user.is_active:
         return render(request, 'users/login.html', {'login_errors': _("Account has been disabled")})
-    login(request, user)
     try:
-        Extended.objects.get(user=user)
+        extended_user = Extended.objects.get(user=user)
+        if extended_user.role == '4':
+            return render(request, 'users/login.html', {'login_errors': _("Cannot login as a service user")})
     except ObjectDoesNotExist:
         extend_user(user)
+    login(request, user)
     next_url = request.POST.get('next_url')
     if next_url is not None and next_url != '':
         return HttpResponseRedirect(next_url)
