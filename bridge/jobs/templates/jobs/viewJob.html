@@ -72,6 +72,12 @@
                     <a id="remove_job_btn" class="item{% if not job_access.can_delete %} disabled{% endif %}" style="">{% trans 'Delete' %}</a>
                     <a href="{% url 'jobs:form' job.id 'copy' %}" class="menu-link item{% if not job_access.can_create %} disabled{% endif %}">{% trans 'Copy' %}</a>
                     <a id="upload_reports_btn" class="item{% if not job_access.can_upload_reports %} disabled{% endif %}">{% trans 'Upload' %}</a>
+                    {% if job.status == '1' or job.status == '2' %}
+                    <a id="stop_job_btn" class="item">{% trans 'Stop' %}</a>
+                    {% endif %}
+                    {% if job.status == '0' %}
+                    <a href="{% url 'service:launcher' job.id %}" class="item">{% trans 'Launch' %}</a>
+                    {% endif %}
                 </div>
             </div>
         {% endif %}

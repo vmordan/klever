@@ -15,27 +15,40 @@
 # limitations under the License.
 #
 
-import os
+import datetime
+import glob
 import json
+import os
+import shutil
+import subprocess
+import time
 import zipfile
 from io import BytesIO
+from typing import Optional
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File as NewFile
-from django.db.models import F
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+from django.db.models import F, Q
+from django.http import HttpRequest
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
-from bridge.vars import JOB_STATUS, PRIORITY, SCHEDULER_STATUS, SCHEDULER_TYPE, TASK_STATUS
-from bridge.utils import file_checksum, logger, BridgeException
+from bridge.utils import file_checksum, BridgeException, logger
+from bridge.vars import SCHEDULER_STATUS, SCHEDULER_TYPE, TASK_STATUS, PRIORITY, JOB_STATUS, DEFAULT_LAUNCHER_DIR, \
+    GENERIC_LAUNCHER_COMMAND, MAX_PROCESSING_JOBS, USER_ROLES, DEFAULT_CONFIGS_DIR, JSON_EXTENSION, PID_FILE, \
+    VERIFIER_CONFIGURATIONS
+from jobs.models import Job, RunHistory, JobFile, FileSystem
+from jobs.utils import JobAccess, get_user_time, change_job_status, create_job
+from reports.models import ReportRoot, ReportUnknown, ReportComponent
+from service.models import Scheduler, SolvingProgress, Task, VerificationTool, NodesConfiguration, SchedulerUser, \
+    Workload, Solution, Node, JobProgress
 
-from jobs.models import RunHistory, JobFile, FileSystem, Job
-from reports.models import ReportRoot, ReportUnknown, ReportComponent, ComponentInstances
-from service.models import Scheduler, SolvingProgress, Task, Solution, VerificationTool, Node, NodesConfiguration,\
-    SchedulerUser, Workload, JobProgress
 
-from jobs.utils import JobAccess, change_job_status, get_user_time
+def get_launcher_dir() -> str:
+    return os.path.normpath(os.path.join(settings.BASE_DIR, os.pardir, DEFAULT_LAUNCHER_DIR))
 
 
 class ServiceError(Exception):
@@ -185,6 +198,130 @@ class CancelTask:
         self.task.delete()
 
 
+class LaunchTask:
+    def __init__(self, request: HttpRequest):
+        timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S')
+        self.launcher_dir = os.path.join(get_launcher_dir(), "results_{}".format(timestamp))
+        self.specific_config = None
+        self.verifiers = {}
+        self.cur_dir = os.getcwd()
+        self.error = None
+        self.new_job = None
+        self.user = request.user
+        if not self.__is_good():
+            return
+        data = dict(request.POST)
+        for key, val in data.items():
+            data[key] = data[key][0]
+        self.new_job = self.__create_job(data)
+        if not self.new_job:
+            return
+        self.__schedule_job()
+        os.makedirs(self.launcher_dir)
+        self.__process_files(request)
+        self.__solve_job(data)
+
+    def __process_files(self, request):
+        if request.FILES:
+            files_dir = os.path.join(self.launcher_dir, "files")
+            os.makedirs(files_dir)
+            for file_id in request.FILES:
+                for file in request.FILES.getlist(file_id):
+                    path = default_storage.save('tmp', ContentFile(file.read()))
+                    tmp_file = os.path.join(settings.MEDIA_ROOT, path)
+                    if file_id == "upload_config":
+                        stored_file = os.path.join(files_dir, "config.json")
+                        self.specific_config = stored_file
+                    elif file_id == "upload_aux":
+                        stored_file = os.path.join(files_dir, file.name)
+                    elif str(file_id).startswith('upload_verifier_'):
+                        verifier_type = file_id[len('upload_verifier_'):]
+                        stored_file = os.path.join(files_dir, verifier_type + ".zip")
+                        self.verifiers[verifier_type] = stored_file
+                    else:
+                        logger.warning("Unknown type of uploaded file {}".format(file_id))
+                        os.remove(tmp_file)
+                        stored_file = None
+                    if stored_file:
+                        shutil.move(tmp_file, stored_file)
+
+    def __is_good(self) -> bool:
+        # check for maximal processed tasks
+        number_of_processing_jobs = Job.objects.filter(status=JOB_STATUS[2][0]).count()
+        if number_of_processing_jobs > MAX_PROCESSING_JOBS:
+            self.error = _('Exceeded max number of processed jobs')
+            return False
+        # check for user permissions
+        if self.user.extended.role not in [USER_ROLES[1][0], USER_ROLES[2][0], USER_ROLES[4][0]]:
+            self.error = _('No access')
+            return False
+        return True
+
+    def __create_job(self, data: dict) -> Optional[Job]:
+        parent_job_id = data['parent_job_id']
+        new_job_name = data['new_job_name']
+        job_desc = data['job_desc']
+        try:
+            if parent_job_id.isdigit():
+                parent_job = Job.objects.get(pk=parent_job_id)
+            else:
+                parent_job = Job.objects.get(Q(identifier=parent_job_id) | Q(name=parent_job_id))
+        except ObjectDoesNotExist:
+            self.error = _('Job with specified identifier does not exist')
+            return None
+        if not JobAccess(self.user, parent_job).can_decide():
+            self.error = _('No access')
+            return None
+        timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+        new_job_name += ' {}'.format(timestamp)
+        return create_job({'name': new_job_name, 'author': self.user, 'parent': parent_job, 'description': job_desc,
+                           'comment': self.launcher_dir})
+
+    def __schedule_job(self):
+        # TODO: Add to pending jobs in case of MAX_PROCESSING_JOBS violated.
+        change_job_status(self.new_job, JOB_STATUS[2][0])
+
+    def __solve_job(self, data):
+        try:
+            os.chdir(self.launcher_dir)
+            launcher_env = os.environ.copy()
+            launcher_env["job_id"] = self.new_job.identifier
+            if self.specific_config:
+                launcher_env["specific_config"] = self.specific_config
+            for verifier_type, arch in self.verifiers.items():
+                launcher_env["{}_{}".format("verifier", verifier_type)] = arch
+            for key, val in data.items():
+                if key:
+                    if key == "reuse_tools" and self.verifiers:
+                        val = "false"
+                    launcher_env[key] = val
+            subprocess.run(GENERIC_LAUNCHER_COMMAND, shell=True, check=True, env=launcher_env)
+            os.chdir(self.cur_dir)
+        except Exception as e:
+            logger.exception(e)
+            self.error = str(e)
+
+
+class LauncherData:
+    def __init__(self, is_full=False):
+        self.preset_configs = dict()
+        launcher_dir = get_launcher_dir()
+        configs_dir = os.path.join(launcher_dir, DEFAULT_CONFIGS_DIR)
+        for file in glob.glob(os.path.join(configs_dir, "*{}".format(JSON_EXTENSION))):
+            file_short = os.path.basename(file)[:-len(JSON_EXTENSION)]
+            self.preset_configs[file_short] = ""
+            if is_full:
+                with open(file) as fd:
+                    self.preset_configs[file_short] = fd.read()
+        verifier_config = os.path.join(launcher_dir, VERIFIER_CONFIGURATIONS)
+        self.verification_tools = list()
+        if os.path.exists(verifier_config):
+            with open(verifier_config) as fd:
+                for line in fd.readlines():
+                    property_type, tool, branch, revision = line.rstrip().split(';')
+                    self.verification_tools.append((property_type, tool, branch, revision))
+
+
 class FinishJobDecision:
     def __init__(self, inst, status, error=None):
         if isinstance(inst, SolvingProgress):
@@ -313,24 +450,16 @@ class StopDecision:
         if job.status not in [JOB_STATUS[1][0], JOB_STATUS[2][0]]:
             raise BridgeException(_("Only pending and processing jobs can be stopped"))
         try:
-            self.progress = SolvingProgress.objects.get(job=job)
-        except ObjectDoesNotExist:
-            raise BridgeException(_('The job solving progress does not exist'))
+            work_dir = job.versions.last().comment
+            with open(os.path.join(work_dir, PID_FILE)) as fd:
+                pid = fd.read()
+            subprocess.run("pkill -P {}".format(pid), shell=True)
+            time.sleep(1)
+            subprocess.run("kill -9 {}".format(pid), shell=True)
+        except Exception as e:
+            logger.exception(str(e))
 
-        change_job_status(job, JOB_STATUS[6][0])
-        self.__clear_tasks()
-
-    def __clear_tasks(self):
-        pending_num = self.progress.task_set.filter(status=TASK_STATUS[0][0]).count()
-        processing_num = self.progress.task_set.filter(status=TASK_STATUS[1][0]).count()
-        self.progress.tasks_processing = self.progress.tasks_pending = 0
-        self.progress.tasks_cancelled += processing_num + pending_num
-        self.progress.finish_date = now()
-        self.progress.error = "The job was cancelled"
-        self.progress.save()
-        # If there are a lot of tasks that are not still deleted it could be too long
-        # as there is request to DB for each task here (pre_delete signal)
-        self.progress.task_set.all().delete()
+        change_job_status(job, JOB_STATUS[7][0])
 
 
 class GetTasks:

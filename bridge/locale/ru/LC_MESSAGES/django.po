@@ -298,7 +298,7 @@ msgstr "Отключенный"
 
 #: bridge/vars.py:358
 msgid "Urgent"
-msgstr "Срочный"
+msgstr "Наибольший"
 
 #: bridge/vars.py:359
 msgid "High"
@@ -310,7 +310,7 @@ msgstr "Низкий"
 
 #: bridge/vars.py:361
 msgid "Idle"
-msgstr "Незанятый"
+msgstr "Наименьший"
 
 #: bridge/vars.py:365
 msgid "User occupied"
@@ -4685,3 +4685,95 @@ msgstr "Покрытие строк"
 msgid "Function coverage"
 msgstr "Покрытие функций"
 
+msgid "Launcher"
+msgstr "Запуск заданий"
+
+msgid "Launch"
+msgstr "Запустить"
+
+msgid "Stop"
+msgstr "Остановить"
+
+msgid "Job settings"
+msgstr "Ностройки задачи"
+
+msgid "Job name"
+msgstr "Название задачи"
+
+msgid "Job configuration"
+msgstr "Конфигурация задачи"
+
+msgid "Select"
+msgstr "Выберите"
+
+msgid "Specific configuration file"
+msgstr "Заданный конфигурационный файл"
+
+msgid "Job description"
+msgstr "Описание задачи"
+
+msgid "Launch settings"
+msgstr "Настройки запуска"
+
+msgid "CPU time per one verification task (in seconds)"
+msgstr "Процессорное время (в с.)"
+
+msgid "Memory limit per one verification task (in GB)"
+msgstr "Ограничение по памяти (в Гб)"
+
+msgid "Launch priority"
+msgstr "Приоритет запуска"
+
+msgid "CPU time for printing statistics (in seconds)"
+msgstr "Процессорное время на статистику (в с.)"
+
+msgid "This time will be taken from the main CPU time limit for auxiliary tasks (such as printing coverage)"
+msgstr "Данное время будет вычтено из основного ограничения на процессорное время для вспомогательных операций (таких как вывод покрытия)"
+
+msgid "CPU cores per one verification task"
+msgstr "Ограничение на число ядер"
+
+msgid "Sources commit"
+msgstr "Коммит репозитория исходников"
+
+msgid "Other"
+msgstr "Другая"
+
+msgid "Parent job identifier or name"
+msgstr "Идентификатор родительского задания"
+
+msgid "Developer settings"
+msgstr "Настройки разработчика"
+
+msgid "Property type"
+msgstr "Тип проверяемого свойства"
+
+msgid "Tool"
+msgstr "Инструмент"
+
+msgid "Reuse source directory"
+msgstr "Переиспользовать исходники"
+
+msgid "Reuse installed tools"
+msgstr "Переиспользовать установленные инструменты"
+
+msgid "Preset configuration file"
+msgstr "Заданный конфигурационный файл"
+
+msgid "Exceeded max number of processed jobs"
+msgstr "Превышено максимальное количество запущенных заданий"
+
+msgid "Job with specified identifier does not exist"
+msgstr "Задание с указанным идентификатором не существует"
+
+msgid "Job name was not specified"
+msgstr "Название задания не указано"
+
+msgid "Parent id was not specified"
+msgstr "Идентификатор родительского задания не указан"
+
+msgid "Job configuration was not selected"
+msgstr "Конфигурация задания не выбрана"
+
+msgid "You need to choose file with specific configuration"
+msgstr "Необходимо выбрать файл с конфигурацией"

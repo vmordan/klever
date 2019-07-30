@@ -1,0 +1,219 @@
+{% extends 'service/base.html' %}
+{% comment "License" %}
+% Copyright (c) 2018 ISP RAS (http://www.ispras.ru)
+% Ivannikov Institute for System Programming of the Russian Academy of Sciences
+%
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
+%
+%    http://www.apache.org/licenses/LICENSE-2.0
+%
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License.
+{% endcomment %}
+
+{% load i18n %}
+
+{% block head_block %}
+    <script src="/static/service/js/launcher.js"></script>
+{% endblock %}
+
+{% block title %}{% trans 'Launcher' %}{% endblock %}
+
+{% block body_block %}
+<div class="ui grid">
+    <div class="eight wide column">
+        <div class="ui segment purple">
+            <h4 class="title black-link">
+                <i class="cogs icon"></i><i>{% trans 'Job settings' %}</i>
+            </h4>
+            <div class="ui form">
+                <div class="fields">
+                    <div class="field sixteen wide required">
+                        <label for="parent_job_id">
+                            {% trans 'Job name' %}
+                        </label>
+                        <input type="text" id="new_job_name" placeholder="{% trans 'Input new job name' %}">
+                    </div>
+                </div>
+                <div class="three fields">
+                    <div class="field required">
+                        <label for="parent_job_id">{% trans 'Parent job identifier or name' %}</label>
+                        <input type="text" id="parent_job_id" placeholder="{% trans 'Input parent job id' %}" value="{{ pk }}">
+                    </div>
+                    <div class="field required">
+                        <label for="job_type">
+                            {% trans 'Job configuration' %}
+                            <i class="ui icon red eye outline" onclick="show_config()" style="cursor:pointer;" title="{% trans 'Show' %}"></i>
+                        </label>
+                        <select id="job_type" class="ui fluid dropdown">
+                            <option value="">{% trans 'Select' %}</option>
+                            {% for config, content in data.preset_configs.items|dictsort:"0.lower" %}
+                                <option value="{{config}}">{{config}}</option>
+                            {% endfor %}
+                            <option value="other">{% trans 'Other' %}...</option>
+                        </select>
+                    </div>
+                    <div id="job_type_other" class="field" hidden>
+                        <label for="upload_config">{% trans 'Specific configuration file' %}</label>
+                        <span class="ui button basic btn-file">
+                            <span id="upload_config_filename">{% trans 'Browse' %}</span>
+                            <input id="upload_config" type="file">
+                        </span>
+                    </div>
+                </div>
+                <div class="fields">
+                    <div class="sixteen wide field">
+                        <label for="job_desc">{% trans 'Job description' %}</label>
+                        <textarea rows="3" id="job_desc"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="eight wide column">
+        <div class="ui segment blue">
+            <h4 class="title black-link">
+                <i class="cogs icon"></i><i>{% trans 'Launch settings' %}</i>
+            </h4>
+            <div class="ui form">
+                <div class="three fields">
+                    <div class="field">
+                        <label for="limit_cpu_time">{% trans 'CPU time per one verification task (in seconds)' %}</label>
+                        <input type="number" id="limit_cpu_time" value="1000" max="10800" min="1">
+                    </div>
+                    <div class="field">
+                        <label for="limit_memory">{% trans 'Memory limit per one verification task (in GB)' %}</label>
+                        <input type="number" id="limit_memory" value="15" max="64" min="1">
+                    </div>
+                    <div class="field">
+                        <label for="priority">{% trans 'Launch priority' %}</label>
+                        <select id="priority" class="ui fluid dropdown">
+                            <option value="IDLE" selected>{% trans 'Idle' %}</option>
+                            <option value="LOW">{% trans 'Low' %}</option>
+                            <option value="HIGH">{% trans 'High' %}</option>
+                            <option value="URGENT">{% trans 'Urgent' %}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="three fields">
+                    <div class="field">
+                        <label for="limit_cpu_time_stats">
+                            {% trans 'CPU time for printing statistics (in seconds)' %}
+                            <b><i class="red question outline icon"
+                                  title="{% trans 'This time will be taken from the main CPU time limit for auxiliary tasks (such as printing coverage)' %}">
+                            </i></b>
+                        </label>
+                        <input type="number" id="limit_cpu_time_stats" value="100" max="10000" min="0">
+                    </div>
+                    <div class="field">
+                        <label for="limit_cpu_cores">{% trans 'CPU cores per one verification task' %}</label>
+                        <input type="number" id="limit_cpu_cores" value="2" max="8" min="1">
+                    </div>
+                    <div class="field">
+                        <label for="commit">{% trans 'Sources commit' %}</label>
+                        <input type="text" id="commit" placeholder="{% trans 'Full verification' %}">
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="ui segment violet">
+            <div class="ui styled accordion fluid">
+                <h4 class="title black-link">
+                    <i class="cogs icon"></i><i>{% trans 'Developer settings' %}</i>
+                </h4>
+                <div class="content">
+                    <div class="ui form">
+                        <!--<div class="four fields">
+                            <div class="field">
+                                <label for="upload_aux">{% trans 'Auxiliary files' %}</label>
+                                <span class="ui violet button basic btn-file">{% trans 'Browse' %}<input id="upload_aux" type="file" multiple></span>
+                            </div>
+                            <div class="field">
+                                <span id="upload_aux_filename"></span>
+                            </div>
+                        </div>-->
+                        <div class="ui divider horizontal header">{% trans 'Verification tools' %}</div>
+                        <table class="ui selectable attached compact table celled striped violet">
+                            <thead class="center aligned" style="background-color:lightgray;">
+                                <tr>
+                                    <td>{% trans 'Property type' %}</td>
+                                    <td>{% trans 'Tool' %}</td>
+                                    <td>{% trans 'Version' %}</td>
+                                    <td>{% trans 'Change' %}</td>
+                                </tr>
+                            </thead>
+                            <tbody class="center aligned">
+                            {% for property_type, tool, branch, revision in data.verification_tools %}
+                                <tr>
+                                    <td>{{property_type}}</td>
+                                    <td>{{tool}}</td>
+                                    <td>{{branch}}@{{revision}}</td>
+                                    <td>
+                                       <div class="field">
+                                            <span class="ui button basic btn-file">
+                                                <span id="upload_verifier_{{property_type}}_filename">{% trans 'Browse' %}</span>
+                                                <input id="upload_verifier_{{property_type}}" type="file">
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {%endfor%}
+                            </tbody>
+                        </table>
+                        <br>
+                        <div class="four fields">
+                            <div class="field">
+                                <div class="ui toggle checkbox">
+                                    <input type="checkbox" id="reuse_sources">
+                                    <label for="reuse_sources">{% trans 'Reuse source directory' %}</label>
+                                </div>
+                            </div>
+                            <div class="field">
+                                <div class="ui toggle checkbox">
+                                    <input type="checkbox" id="reuse_tools" checked>
+                                    <label for="reuse_tools">{% trans 'Reuse installed tools' %}</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="upload_verifier_filename"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="ui grid">
+    <div class="eight wide column">
+        <button class="ui button red right floated" id="launch_button"><i class="rocket icon"></i>{% trans 'Launch' %}</button>
+    </div>
+    <div class="eight wide column">
+        <a class="ui button green left floated" href="{% url 'jobs:tree' %}"><i class="arrow alternate circle left outline icon"></i>{% trans 'Cancel' %}</a>
+    </div>
+</div>
+<span id="trans__err_job_name" hidden>{% trans 'Job name was not specified' %}</span>
+<span id="trans__err_parent" hidden>{% trans 'Parent id was not specified' %}</span>
+<span id="trans__err_config" hidden>{% trans 'Job configuration was not selected' %}</span>
+<span id="trans__err_specific_config" hidden>{% trans 'You need to choose file with specific configuration' %}</span>
+
+<div id="show_config" class="ui dynamic modal fullscreen">
+    <div class="ui header">{% trans 'Preset configuration file' %}</div>
+    <div class="content">
+        <div class="ui form">
+            <textarea id="config_text" rows="30" style="font-family: monospace"></textarea>
+        </div>
+    </div>
+    <div class="actions">
+        <div class="ui grid">
+            <div class="sixteen wide column right aligned">
+                <button id="cancel_show_config" type="button" class="ui blue button small">{% trans 'Cancel' %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

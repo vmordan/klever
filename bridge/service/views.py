@@ -15,9 +15,9 @@
 # limitations under the License.
 #
 
-import os
 import json
 import mimetypes
+import os
 from wsgiref.util import FileWrapper
 
 from django.contrib.auth.decorators import login_required
@@ -27,17 +27,15 @@ from django.http import JsonResponse, StreamingHttpResponse
 from django.shortcuts import render
 from django.utils.translation import activate
 
-from tools.profiling import unparallel_group
-from bridge.vars import USER_ROLES, UNKNOWN_ERROR, TASK_STATUS, PRIORITY, JOB_STATUS
-from bridge.utils import logger
-
-from jobs.models import Job
-from service.models import Scheduler, SolvingProgress, Task, VerificationTool, NodesConfiguration, SchedulerUser,\
-    Workload
-
 import service.utils
+from bridge.utils import logger
+from bridge.vars import USER_ROLES, UNKNOWN_ERROR, TASK_STATUS, PRIORITY, JOB_STATUS
+from jobs.models import Job
 from jobs.utils import change_job_status
+from service.models import Scheduler, SolvingProgress, Task, VerificationTool, NodesConfiguration, SchedulerUser, \
+    Workload
 from service.test import TEST_NODES_DATA, TEST_TOOLS_DATA, TEST_JSON
+from tools.profiling import unparallel_group
 
 
 @unparallel_group([SolvingProgress])
@@ -305,6 +303,24 @@ def schedulers_info(request):
 
 
 @login_required
+@unparallel_group([NodesConfiguration, Workload])
+def launcher_view(request, pk=""):
+    if request.user.extended.role not in [USER_ROLES[1][0], USER_ROLES[2][0], USER_ROLES[4][0]]:
+        return JsonResponse({'error': 'No access'})
+    activate(request.user.extended.language)
+    return render(request, 'service/launcher.html', {'data': service.utils.LauncherData(), 'pk': pk})
+
+
+@login_required
+@unparallel_group([NodesConfiguration, Workload])
+def get_config(request, file):
+    if request.user.extended.role not in [USER_ROLES[1][0], USER_ROLES[2][0], USER_ROLES[4][0]]:
+        return JsonResponse({'error': 'No access'})
+    data = service.utils.LauncherData(True).preset_configs.get(file)
+    return JsonResponse({'config': data})
+
+
+@login_required
 def test(request):
     return render(request, 'service/test.html', {
         'priorities': PRIORITY,
@@ -350,6 +366,18 @@ def process_job(request):
         return JsonResponse({'error': 'Job is not PENDING'})
     change_job_status(job, JOB_STATUS[2][0])
     return JsonResponse({})
+
+
+@login_required
+@unparallel_group([Job])
+def launch_job(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST requests are supported'})
+    launcher = service.utils.LaunchTask(request)
+    if launcher.new_job:
+        return JsonResponse({'new_job_id': launcher.new_job.id})
+    else:
+        return JsonResponse({'error': launcher.error})
 
 
 @login_required

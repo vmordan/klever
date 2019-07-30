@@ -7,4 +7,4 @@ dist/
 addons
 build bases
 deploys/conf/*.json
-
+launcher/

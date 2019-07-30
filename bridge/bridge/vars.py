@@ -251,3 +251,12 @@ COMPARISON_FUNCTIONS_DESCRIPTION = [
     _("All elements of the edited error trace are included into compared error trace in the same order."),
     _("Skip error traces comparison (therefore mark will be applied based on attributes comparison only).")
 ]
+
+# Launcher setups.
+DEFAULT_LAUNCHER_DIR = 'launcher'
+DEFAULT_CONFIGS_DIR = 'configs'
+JSON_EXTENSION = '.json'
+GENERIC_LAUNCHER_COMMAND = '../generic.sh'
+MAX_PROCESSING_JOBS = 4
+PID_FILE = "pid"
+VERIFIER_CONFIGURATIONS = "verifiers.config"
