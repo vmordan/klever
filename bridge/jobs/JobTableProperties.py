@@ -507,7 +507,10 @@ class TableTree:
             if j.change_author is not None:
                 self._values_data[j.id]['author'] = (j.change_author.get_full_name(),
                                                      reverse('users:show_profile', args=[j.change_author_id]))
-            desc = JobHistory.objects.get(job_id=j.id, version=F('job__version')).description
+            try:
+                desc = JobHistory.objects.get(job_id=j.id, version=F('job__version')).description
+            except:
+                desc = None
             if desc:
                 self._values_data[j.id]['desc'] = desc
 
