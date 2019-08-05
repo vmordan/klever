@@ -53,25 +53,6 @@ THREAD_COLORS = [
 ]
 
 
-def get_error_trace_nodes(data):
-    err_path = []
-    must_have_thread = False
-    curr_node = data['violation nodes'][0]
-    if not isinstance(data['nodes'][curr_node][0], int):
-        raise ValueError('Error traces with one path are supported')
-    while curr_node != data['entry node']:
-        if not isinstance(data['nodes'][curr_node][0], int):
-            raise ValueError('Error traces with one path are supported')
-        curr_in_edge = data['edges'][data['nodes'][curr_node][0]]
-        if 'thread' in curr_in_edge:
-            must_have_thread = True
-        elif must_have_thread:
-            raise ValueError("All error trace edges must have thread identifier ('0' or '1')")
-        err_path.insert(0, data['nodes'][curr_node][0])
-        curr_node = curr_in_edge['source node']
-    return err_path
-
-
 class ScopeInfo:
     def __init__(self, cnt, thread_id):
         self.initialised = False
@@ -490,7 +471,7 @@ class GetETV:
             self.include_assumptions = False
             self.triangles = False
         self.data = json.loads(error_trace)
-        self.err_trace_nodes = get_error_trace_nodes(self.data)
+        self.err_trace_nodes = len(self.data['edges'])
         self.threads = []
         self._has_global = True
         self.html_trace, self.assumes = self.__html_trace()
@@ -501,7 +482,7 @@ class GetETV:
         pass
 
     def __html_trace(self):
-        for n in self.err_trace_nodes:
+        for n in range(self.err_trace_nodes):
             if 'thread' not in self.data['edges'][n]:
                 raise ValueError('All error trace edges should have thread')
             if self.data['edges'][n]['thread'] not in self.threads:
@@ -517,8 +498,8 @@ class GetETV:
             parsed_trace.scope.initialised = True
         trace_assumes = []
         j = start_index
-        while j < len(self.err_trace_nodes):
-            edge_data = self.data['edges'][self.err_trace_nodes[j]]
+        while j < self.err_trace_nodes:
+            edge_data = self.data['edges'][j]
             curr_t = self.threads.index(edge_data['thread'])
             if curr_t > i:
                 (new_lines, new_assumes, j) = self.__add_thread_lines(curr_t, j)
