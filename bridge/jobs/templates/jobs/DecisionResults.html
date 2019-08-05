@@ -205,8 +205,8 @@
                                 <td>
                                     {% trans 'Maximal potential coverage' %}
                                 </td>
-                                <td>{{ coverage.max.0 }}%</td>
-                                <td>{{ coverage.max.1 }}%</td>
+                                <td style="color: darkblue">{{ coverage.max.0 }}%</td>
+                                <td style="color: darkblue">{{ coverage.max.1 }}%</td>
                             </tr>
                             {%endif%}
                             {% if coverage.intersection %}
@@ -214,8 +214,8 @@
                                 <td>
                                     {% trans 'Covered by all properties' %}
                                 </td>
-                                <td>{{ coverage.intersection.0 }}%</td>
-                                <td>{{ coverage.intersection.1 }}%</td>
+                                <td style="color: darkblue">{{ coverage.intersection.0 }}%</td>
+                                <td style="color: darkblue">{{ coverage.intersection.1 }}%</td>
                             </tr>
                             {%endif%}
                             {% for identifier, cov_percent  in coverage.items|dictsort:"0.lower" %}
@@ -224,8 +224,8 @@
                                     <td>
                                         {% trans 'Property' %} '{{identifier}}'
                                     </td>
-                                    <td>{{ cov_percent.0 }}%</td>
-                                    <td>{{ cov_percent.1 }}%</td>
+                                    <td style="color: darkblue">{{ cov_percent.0 }}%</td>
+                                    <td style="color: darkblue">{{ cov_percent.1 }}%</td>
                                 </tr>
                                 {%endif%}
                             {% endfor %}
@@ -270,10 +270,10 @@
                                             {{ res_data.component }}
                                         {%endif%}
                                     </td>
-                                    <td class="center aligned"><span style="color: darkblue"> {{ res_data.instances }}</span></td>
-                                    <td class="right aligned"><span style="color: darkblue"> <strong>{{ res_data.cpu }}</strong></span></td>
-                                    <td class="right aligned"><span style="color: darkblue"> {{ res_data.mem }}</span></td>
-                                    <td class="center aligned"><span style="color: darkblue" > {{ res_data.wall }}</span></td>
+                                    <td class="center aligned" style="color: darkblue">{{ res_data.instances }}</td>
+                                    <td class="right aligned" style="color: darkblue"><strong>{{ res_data.cpu }}</strong></td>
+                                    <td class="right aligned" style="color: darkblue">{{ res_data.mem }}</td>
+                                    <td class="center aligned" style="color: darkblue">{{ res_data.wall }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
