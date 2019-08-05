@@ -171,9 +171,10 @@ class ParseErrorTrace:
         line = str(edge['start line']) if 'start line' in edge else None
         code = edge['source'] if 'source' in edge and len(edge['source']) > 0 else None
         if 'file' in edge:
-            self.curr_file = self.files[edge['file']]
-        if self.curr_file is None:
-            line = None
+            try:
+                self.curr_file = self.files[edge['file']]
+            except Exception as e:
+                print("Warning: cannot find source file with id {} due to: {}".format(edge['file'], e))
         if line is not None and len(line) > self.max_line_length:
             self.max_line_length = len(line)
         line_data = {
