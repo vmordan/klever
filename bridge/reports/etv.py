@@ -355,7 +355,7 @@ class ParseErrorTrace:
 
     def __get_condition_code(self, code):
         self.__is_not_used()
-        m = re.match('^\s*\[(.*)\]\s*$', code)
+        m = re.match('^\s*\[(.*)\]\s*$', str(code))
         if m is not None:
             code = m.group(1)
         return '<span class="ETV_CondAss">assume(</span>' + str(code) + '<span class="ETV_CondAss">);</span>'
