@@ -81,7 +81,8 @@ class ScopeInfo:
 
     def remove(self):
         curr_scope = self.current()
-        self._stack.pop()
+        if self._stack:
+            self._stack.pop()
         return curr_scope
 
     def show_current_scope(self, comment_type):
