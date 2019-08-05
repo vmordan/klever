@@ -297,14 +297,7 @@ class ParseErrorTrace:
             # Return from action first
             self.lines.append(self.__triangle_line(self.scope.remove()))
         if not self.scope.is_return_correct(func_id):
-            if if_possible:
-                return
-            func_name = 'NONE'
-            if func_id is not None:
-                func_name = self.functions[func_id]
-            raise ValueError('Return from function "%s" without entering it (current scope is %s)' % (
-                func_name, self.scope.current()
-            ))
+            return
         return_scope = self.scope.remove()
         self.lines.append(self.__triangle_line(return_scope))
         if return_scope in self.double_return:
