@@ -88,7 +88,7 @@ class ScopeInfo:
     def show_current_scope(self, comment_type):
         if not self.initialised:
             return
-        if comment_type == 'note':
+        if comment_type in {'note', 'env'}:
             if all(ss not in self._hidden for ss in self._stack):
                 for ss in self._stack:
                     if ss not in self._shown:
@@ -192,7 +192,7 @@ class ParseErrorTrace:
             if 'enter' in edge:
                 raise ValueError("Global initialization edge can't contain enter")
             if line_data['code'] is not None:
-                line_data.update(self.__get_comment(edge.get('note'), edge.get('warn')))
+                line_data.update(self.__get_comment(edge.get('note'), edge.get('warn'), edge.get('env')))
                 self.global_lines.append(line_data)
             return
 
@@ -216,13 +216,13 @@ class ParseErrorTrace:
                 action_file = self.files[edge['original file']]
             line_data.update(self.__enter_action(new_action, action_line, action_file))
 
-        line_data.update(self.__get_comment(edge.get('note'), edge.get('warn')))
+        line_data.update(self.__get_comment(edge.get('note'), edge.get('warn'), edge.get('env')))
 
         if 'enter' in edge:
             line_data.update(self.__enter_function(
                 edge['enter'], code=line_data['code'], comment=edge.get('entry_point')
             ))
-            if any(x in edge for x in ['note', 'warn']):
+            if any(x in edge for x in ['note', 'warn', 'env']):
                 self.scope.hide_current_scope()
             if 'return' in edge:
                 if edge['enter'] == edge['return']:
@@ -308,7 +308,7 @@ class ParseErrorTrace:
         while self.scope.can_return():
             self.__return(if_possible=True)
 
-    def __get_comment(self, note, warn):
+    def __get_comment(self, note, warn, env):
         new_data = {}
         if warn is not None:
             self.scope.show_current_scope('warning')
@@ -316,6 +316,9 @@ class ParseErrorTrace:
         elif note is not None:
             self.scope.show_current_scope('note')
             new_data['note'] = note
+        elif env is not None:
+            self.scope.show_current_scope('env')
+            new_data['env'] = env
         return new_data
 
     def __add_assumptions(self, assumption):
@@ -385,7 +388,7 @@ class ParseErrorTrace:
                         del self.lines[i]['comment']
                     if 'comment_class' in self.lines[i]:
                         del self.lines[i]['comment_class']
-            a = 'warning' in self.lines[i]
+            a = 'warning' in self.lines[i] or 'env' in self.lines[i]
             b = 'note' in self.lines[i]
             c = not self.scope.is_shown(self.lines[i]['scope'])
             d = 'hide_id' not in self.lines[i]
