@@ -22,49 +22,50 @@ def generic_simplifications(logger, trace):
     logger.info('Simplify error trace')
     _basic_simplification(logger, trace)
     _remove_switch_cases(logger, trace)
-    _remove_tmp_vars(logger, trace)
-    _remove_aux_functions(logger, trace)
-    trace.sanity_checks()
+    # tmp vars are not removed as intended anyway, yet removing them could be useful.
+    # _remove_tmp_vars(logger, trace)
+    # Aux functions are not currently used.
+    # _remove_aux_functions(logger, trace)
+    trace.prune()
 
 
 def _basic_simplification(logger, error_trace):
     # Remove all edges without source attribute. Otherwise visualization will be very poor.
-    for edge in (e for e in error_trace.trace_iterator() if 'source' not in e):
-        # Now we do need source code to be presented with all edges.
-        logger.warning('Do not expect edges without source attribute')
-        error_trace.remove_edge_and_target_node(edge)
+    for edge in error_trace.get_edges():
+        source_line = edge.get('source', "")
+        if not source_line:
+            # Now we do need source code to be presented with all edges.
+            edge['sink'] = True
 
-    # Simple transformations.
-    for edge in error_trace.trace_iterator():
         # Make source code more human readable.
         # Remove all broken indentations - error traces visualizer will add its own ones but will do this in much
         # more attractive way.
-        edge['source'] = re.sub(r'[ \t]*\n[ \t]*', ' ', edge['source'])
+        source_line = re.sub(r'[ \t]*\n[ \t]*', ' ', source_line)
 
         # Remove "[...]" around conditions.
         if 'condition' in edge:
-            edge['source'] = edge['source'].strip('[]')
+            source_line = source_line.strip('[]')
 
         # Get rid of continues whitespaces.
-        edge['source'] = re.sub(r'[ \t]+', ' ', edge['source'])
+        source_line = re.sub(r'[ \t]+', ' ', source_line)
 
         # Remove space before trailing ";".
-        edge['source'] = re.sub(r' ;$', ';', edge['source'])
+        source_line = re.sub(r' ;$', ';', source_line)
 
         # Remove space before "," and ")".
-        edge['source'] = re.sub(r' (,|\))', '\g<1>', edge['source'])
+        source_line = re.sub(r' (,|\))', '\g<1>', source_line)
 
         # Replace "!(... ==/!=/<=/>=/</> ...)" with "... !=/==/>/</>=/<= ...".
         cond_replacements = {'==': '!=', '!=': '==', '<=': '>', '>=': '<', '<': '>=', '>': '<='}
         for orig_cond, replacement_cond in cond_replacements.items():
-            m = re.match(r'^!\((.+) {0} (.+)\)$'.format(orig_cond), edge['source'])
+            m = re.match(r'^!\((.+) {0} (.+)\)$'.format(orig_cond), source_line)
             if m:
-                edge['source'] = '{0} {1} {2}'.format(m.group(1), replacement_cond, m.group(2))
+                source_line = '{0} {1} {2}'.format(m.group(1), replacement_cond, m.group(2))
                 # Do not proceed after some replacement is applied - others won't be done.
                 break
 
         # Remove unnessary "(...)" around returned values/expressions.
-        edge['source'] = re.sub(r'^return \((.*)\);$', 'return \g<1>;', edge['source'])
+        source_line = re.sub(r'^return \((.*)\);$', 'return \g<1>;', source_line)
 
         # Make source code and assumptions more human readable (common improvements).
         for source_kind in ('source', 'assumption'):
@@ -74,8 +75,12 @@ def _basic_simplification(logger, error_trace):
 
                 # Replace "& " with "&".
                 edge[source_kind] = re.sub(r'& ', '&', edge[source_kind])
+        if source_line == "1" or source_line == "\"\"":
+            edge['sink'] = True
+        edge['source'] = source_line
 
 
+'''
 def _remove_tmp_vars(logger, error_trace):
     # Get rid of temporary variables. Replace:
     #   ... tmp...;
@@ -386,6 +391,7 @@ def _remove_aux_functions(logger, error_trace):
 
     if removed_aux_funcs_num:
         logger.debug('{0} auxiliary functions were removed'.format(removed_aux_funcs_num))
+'''
 
 
 def _remove_switch_cases(logger, error_trace):
@@ -397,14 +403,14 @@ def _remove_switch_cases(logger, error_trace):
     # with:
     #   assume(x == Z)
     removed_switch_cases_num = 0
-    for edge in error_trace.trace_iterator():
+    for edge in error_trace.get_edges():
         # Begin to match pattern just for edges that represent conditions.
         if 'condition' not in edge:
             continue
 
         # Get all continues conditions.
         cond_edges = []
-        for cond_edge in error_trace.trace_iterator(begin=edge):
+        for cond_edge in error_trace.get_edges(start=edge):
             if 'condition' not in cond_edge:
                 break
             cond_edges.append(cond_edge)
@@ -445,8 +451,9 @@ def _remove_switch_cases(logger, error_trace):
                 continue
 
         for cond_edge in reversed(cond_edges_to_remove):
-            error_trace.remove_edge_and_target_node(cond_edge)
-            removed_switch_cases_num += 1
+            if not cond_edge.get('sink'):
+                cond_edge['sink'] = True
+                removed_switch_cases_num += 1
 
     if removed_switch_cases_num:
         logger.debug('{0} switch cases were removed'.format(removed_switch_cases_num))

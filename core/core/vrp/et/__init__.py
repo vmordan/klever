@@ -15,10 +15,9 @@
 # limitations under the License.
 #
 
+from core.vrp.et.envmodel import envmodel_simplifications
 from core.vrp.et.parser import ErrorTraceParser
 from core.vrp.et.tmpvars import generic_simplifications
-
-from core.vrp.et.envmodel import envmodel_simplifications
 
 
 def import_error_trace(logger, witness):
@@ -26,17 +25,15 @@ def import_error_trace(logger, witness):
     po = ErrorTraceParser(logger, witness)
     trace = po.error_trace
 
-    # Parse comments from sources
-    trace.parse_model_comments()
-
     # Remove ugly code
     generic_simplifications(logger, trace)
 
-    # Find violation
-    trace.find_violation_path()
+    # Process ntes (such as property checks, property violations and environment comments)
+    trace.process_verifier_notes()
 
     # Make more difficult transformations
-    envmodel_simplifications(logger, trace)
+    # Not supported anymore:
+    # envmodel_simplifications(logger, trace)
 
     # Do final checks
     trace.final_checks()
@@ -54,7 +51,8 @@ if __name__ == '__main__':
     gl_logger.setLevel(logging.DEBUG)
     handler = logging.StreamHandler(sys.stdout)
     handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)s (%(filename)s:%(lineno)03d) %(levelname)5s> %(message)s', '%Y-%m-%d %H:%M:%S')
+    formatter = logging.Formatter('%(asctime)s (%(filename)s:%(lineno)03d) %(levelname)5s> %(message)s',
+                                  '%Y-%m-%d %H:%M:%S')
     handler.setFormatter(formatter)
     gl_logger.addHandler(handler)
 
