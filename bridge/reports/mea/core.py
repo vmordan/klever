@@ -123,6 +123,8 @@ def __convert_call_tree_filter(error_trace: dict, args: dict = {}) -> list:
     # TODO: check this in core (one node for call and return edges).
     double_funcs = {}
     for edge in error_trace['edges']:
+        if 'env' in edge:
+            continue
         if 'enter' in edge and 'return' in edge:
             double_funcs[edge['enter']] = edge['return']
         if 'enter' in edge:
