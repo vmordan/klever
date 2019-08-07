@@ -24,6 +24,7 @@ import core.utils
 
 class ErrorTrace:
     MODEL_COMMENT_TYPES = 'AUX_FUNC|AUX_FUNC_CALLBACK|MODEL_FUNC|NOTE|ASSERT|ENVIRONMENT_MODEL'
+    MAX_COMMENT_LENGTH = 128
 
     def __init__(self, logger):
         self._attrs = list()
@@ -152,6 +153,11 @@ class ErrorTrace:
     def resolve_action_id(self, comment):
         return self._actions.index(comment)
 
+    def process_comment(self, comment: str) -> str:
+        if len(comment) > self.MAX_COMMENT_LENGTH:
+            comment = comment[:self.MAX_COMMENT_LENGTH] + "..."
+        return comment
+
     def process_verifier_notes(self):
         # Get information from sources.
         self.parse_model_comments()
@@ -175,27 +181,27 @@ class ErrorTrace:
                     note = self._model_funcs[func_id]
                     self._logger.debug("Add note {!r} for model function '{}'".
                                        format(note,self.resolve_function(func_id)))
-                    edge['note'] = note
+                    edge['note'] = self.process_comment(note)
                 if func_id in self._env_models:
                     env_note = self._env_models[func_id]
                     self._logger.debug("Add note {!r} for environment function '{}'".
                                        format(env_note,self.resolve_function(func_id)))
-                    edge['env'] = env_note
+                    edge['env'] = self.process_comment(env_note)
 
             if file_id in self._notes and start_line in self._notes[file_id]:
                 note = self._notes[file_id][start_line]
                 self._logger.debug("Add note {!r} for statement from '{}:{}'".format(note, file, start_line))
-                edge['note'] = note
+                edge['note'] = self.process_comment(note)
             elif file_id in self._asserts and start_line in self._asserts[file_id]:
                 warn = self._asserts[file_id][start_line]
                 self._logger.debug("Add warning {!r} for statement from '{}:{}'".format(warn, file, start_line))
-                edge['warn'] = warn
+                edge['warn'] = self.process_comment(warn)
                 warn_edges.append(warn)
         if not warn_edges:
             if self._edges:
                 last_edge = self._edges[-1]
                 if 'note' in last_edge:
-                    last_edge['warn'] = "Violation of '{}'".format(last_edge['note'])
+                    last_edge['warn'] = "Violation of '{}'".format(self.process_comment(last_edge['note']))
                     del last_edge['note']
                 else:
                     last_edge['warn'] = 'Property violation'
