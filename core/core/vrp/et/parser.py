@@ -26,26 +26,37 @@ class ErrorTraceParser:
 
     def __init__(self, logger, witness):
         self._logger = logger
-        self.global_program_file = None
+        self.default_program_file = None  # default source file
+        self.global_program_file = None  # ~CIL file
         self.error_trace = ErrorTrace(logger)
         self._parse_witness(witness)
         self._check_given_files()
+
+    def __check_for_default_file(self, name: str, edge: dict):
+        try:
+            identifier = self.error_trace.add_file(name)
+            last_used_file = identifier
+            edge['file'] = last_used_file
+            return last_used_file
+        except FileNotFoundError:
+            # File is missing, warning already was generated, parser should continue its work.
+            return None
 
     def _check_given_files(self):
         last_used_file = None
         for edge in self.error_trace.get_edges():
             if 'file' in edge and edge['file'] is not None:
                 last_used_file = edge['file']
+            elif self.default_program_file:
+                tmp_file = self.__check_for_default_file(self.default_program_file, edge)
+                if tmp_file:
+                    last_used_file = tmp_file
             elif last_used_file is not None:
                 edge['file'] = last_used_file
             elif self.global_program_file:
-                try:
-                    identifier = self.error_trace.add_file(self.global_program_file)
-                    last_used_file = identifier
-                    edge['file'] = last_used_file
-                except FileNotFoundError:
-                    # File is missing, warning already was generated, parser should continue its work.
-                    pass
+                tmp_file = self.__check_for_default_file(self.global_program_file, edge)
+                if tmp_file:
+                    last_used_file = tmp_file
             else:
                 self._logger.warning("There is no source file for edge {}".format(edge))
 
@@ -55,12 +66,20 @@ class ErrorTraceParser:
             tree = ET.parse(fp)
         root = tree.getroot()
         graph = root.find('graphml:graph', self.WITNESS_NS)
+        for data in root.findall('graphml:key', self.WITNESS_NS):
+            name = data.attrib.get('attr.name')
+            if name == "originFileName":
+                for def_data in data.findall('graphml:default', self.WITNESS_NS):
+                    new_name = def_data.text
+                    if os.path.exists(new_name):
+                        self.default_program_file = new_name
         for data in graph.findall('graphml:data', self.WITNESS_NS):
             key = data.attrib.get('key')
             if key == 'programfile':
                 new_name = data.text
                 if os.path.exists(new_name):
                     self.global_program_file = new_name
+                    break
         self.__parse_witness_data(graph)
         sink_nodes_map = self.__parse_witness_nodes(graph)
         self.__parse_witness_edges(graph, sink_nodes_map)
@@ -164,33 +183,31 @@ class ErrorTraceParser:
                     self._logger.warning('Edge data key {!r} is not supported'.format(data_key))
                     unsupported_edge_data_keys[data_key] = None
 
-            if "source" not in _edge and not is_source_file:
+            if "source" not in _edge:
+                _edge['source'] = ""
                 if 'enter' in _edge:
                     _edge['source'] = self.error_trace.get_func_name(_edge['enter'])
                 elif 'return' in _edge:
                     _edge['source'] = 'return'
-                elif 'assumption' in _edge:
-                    _edge['source'] = _edge['assumption']
-                elif 'start line' in _edge:
-                    if _edge.get('file'):
-                        src_file = self.error_trace.get_file_name(_edge['file'])
-                    elif self.global_program_file:
-                        src_file = self.global_program_file
-                    else:
-                        src_file = None
-                    if src_file:
-                        with open(src_file) as fd:
-                            counter = 1
-                            for line in fd.readlines():
-                                if counter == _edge['start line']:
-                                    line = line.rstrip().lstrip()
-                                    _edge['source'] = line
-                                    break
-                                counter += 1
-                    else:
-                        _edge['source'] = ""
-                else:
-                    _edge['source'] = ""
+                elif not is_source_file:
+                    if 'assumption' in _edge:
+                        _edge['source'] = _edge['assumption']
+                    elif 'start line' in _edge:
+                        if _edge.get('file'):
+                            src_file = self.error_trace.get_file_name(_edge['file'])
+                        elif self.global_program_file:
+                            src_file = self.global_program_file
+                        else:
+                            src_file = None
+                        if src_file:
+                            with open(src_file) as fd:
+                                counter = 1
+                                for line in fd.readlines():
+                                    if counter == _edge['start line']:
+                                        line = line.rstrip().lstrip()
+                                        _edge['source'] = line
+                                        break
+                                    counter += 1
 
             if 'thread' not in _edge:
                 _edge['thread'] = "0"
