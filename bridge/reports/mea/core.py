@@ -113,6 +113,7 @@ def compare_error_traces(edited_error_trace: list, compared_error_trace: list, c
     if comparison_function not in functions.keys():
         comparison_function = DEFAULT_COMPARISON_FUNCTION
     equal_threads = functions[comparison_function](et1_threaded, et2_threaded)
+    equal_threads = min(equal_threads, len(et1_threaded), len(et2_threaded))
     return __get_similarity_coefficient(et1_threaded, et2_threaded, equal_threads)
 
 
