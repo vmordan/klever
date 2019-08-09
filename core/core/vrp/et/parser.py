@@ -16,6 +16,7 @@
 #
 
 import os
+import re
 import xml.etree.ElementTree as ET
 
 from core.vrp.et.error_trace import ErrorTrace
@@ -79,7 +80,23 @@ class ErrorTraceParser:
                 new_name = data.text
                 if os.path.exists(new_name):
                     self.global_program_file = new_name
-                    break
+            elif key == 'specification':
+                automaton = data.text
+                for line in automaton.split('\n'):
+                    note = None
+                    match = re.search(r'ERROR\(\"(.+)"\)', line)
+                    if match:
+                        note = match.group(1)
+                    match = re.search(r'MATCH\s*{\S+\s*=(\S+)\(.*\)}', line)
+                    if match:
+                        func_name = match.group(1)
+                        self.error_trace.add_model_function(func_name, note)
+                        continue
+                    match = re.search(r'MATCH\s*{(\S+)\(.*\)}', line)
+                    if match:
+                        func_name = match.group(1)
+                        self.error_trace.add_model_function(func_name, note)
+                        continue
         self.__parse_witness_data(graph)
         sink_nodes_map = self.__parse_witness_nodes(graph)
         self.__parse_witness_edges(graph, sink_nodes_map)

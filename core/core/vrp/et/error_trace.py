@@ -34,6 +34,7 @@ class ErrorTrace:
         self._logger = logger
         self._entry_node_id = None
         self._model_funcs = dict()
+        self._spec_funcs = dict()
         self._env_models = dict()
         self._notes = dict()
         self._asserts = dict()
@@ -158,6 +159,13 @@ class ErrorTrace:
             comment = comment[:self.MAX_COMMENT_LENGTH] + "..."
         return comment
 
+    def add_model_function(self, func_name: str, comment: str = None):
+        if not comment:
+            comment = func_name
+        func_id = self.add_function(func_name)
+        self._model_funcs[func_id] = comment
+        self._spec_funcs[func_name] = comment
+
     def process_verifier_notes(self):
         # Get information from sources.
         self.parse_model_comments()
@@ -197,6 +205,13 @@ class ErrorTrace:
                 self._logger.debug("Add warning {!r} for statement from '{}:{}'".format(warn, file, start_line))
                 edge['warn'] = self.process_comment(warn)
                 warn_edges.append(warn)
+            else:
+                if 'source' in edge:
+                    for spec_func, note in self._spec_funcs.items():
+                        if spec_func in edge['source']:
+                            edge['note'] = self.process_comment(note)
+                            break
+
         if not warn_edges:
             if self._edges:
                 last_edge = self._edges[-1]
