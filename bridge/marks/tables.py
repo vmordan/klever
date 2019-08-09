@@ -92,7 +92,7 @@ def result_color(result):
         return '#CC7A29', "orange-pale-link"
     elif 0.66 < result <= 1:
         return '#00CC66', "green-pale-link"
-    return None
+    return '#E60000', "red-link"
 
 
 class MarkChangesTable:
