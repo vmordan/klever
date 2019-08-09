@@ -16,10 +16,10 @@
 #
 
 import json
-import os
-import shutil
-import re
 import multiprocessing
+import os
+import re
+import shutil
 
 import core.components
 import core.utils
@@ -306,7 +306,8 @@ class LCOV:
     PARIALLY_ALLOWED_EXT = ('.c', '.i', '.c.aux')
 
     def __init__(self, logger, coverage_file, clade_dir, source_dirs, search_dirs, main_work_dir, completeness,
-                 coverage_id=None, coverage_info_dir=None, collect_functions=True, ignore_files=set()):
+                 coverage_id=None, coverage_info_dir=None, collect_functions=True, ignore_files=set(),
+                 default_file=None):
         # Public
         self.logger = logger
         self.coverage_file = coverage_file
@@ -319,6 +320,7 @@ class LCOV:
         self.arcnames = {}
         self.collect_functions = collect_functions
         self.ignore_files = ignore_files
+        self.default_file = default_file
 
         # Sanity checks
         if self.completeness not in ('full', 'partial', 'lightweight', 'none', None):
@@ -413,6 +415,13 @@ class LCOV:
                     # Get file name, determine his directory and determine, should we ignore this
                     real_file_name = line[len(self.FILENAME_PREFIX):]
                     real_file_name = os.path.normpath(real_file_name)
+                    if self.default_file:
+                        real_file_name = self.default_file
+                        for source_dir in self.source_dirs:
+                            tmp_file_name = os.path.join(source_dir, self.default_file)
+                            if os.path.exists(tmp_file_name):
+                                real_file_name = tmp_file_name
+                                break
                     file_name = os.path.join(os.path.sep,
                                              core.utils.make_relative_path([self.clade_dir], real_file_name))
                     if os.path.isfile(real_file_name) and \
