@@ -61,6 +61,15 @@ class ErrorTraceParser:
             else:
                 self._logger.warning("There is no source file for edge {}".format(edge))
 
+    def __check_file_name(self, name: str):
+        if os.path.exists(name):
+            return name
+        # TODO: workaround for some tools.
+        name = re.sub(r'^/tmp/vcloud-\S+/worker/working_dir_[^/]+/', '', name)
+        if os.path.exists(name):
+            return name
+        return None
+
     def _parse_witness(self, witness):
         self._logger.info('Parse witness {!r}'.format(witness))
         with open(witness, encoding='utf8') as fp:
@@ -69,16 +78,17 @@ class ErrorTraceParser:
         graph = root.find('graphml:graph', self.WITNESS_NS)
         for data in root.findall('graphml:key', self.WITNESS_NS):
             name = data.attrib.get('attr.name')
-            if name == "originFileName":
+            if name == "originFileName" or name == "originfile":
                 for def_data in data.findall('graphml:default', self.WITNESS_NS):
-                    new_name = def_data.text
-                    if os.path.exists(new_name):
+                    new_name = self.__check_file_name(def_data.text)
+                    if new_name:
                         self.default_program_file = new_name
+                        break
         for data in graph.findall('graphml:data', self.WITNESS_NS):
             key = data.attrib.get('key')
             if key == 'programfile':
-                new_name = data.text
-                if os.path.exists(new_name):
+                new_name = self.__check_file_name(data.text)
+                if new_name:
                     self.global_program_file = new_name
             elif key == 'specification':
                 automaton = data.text
