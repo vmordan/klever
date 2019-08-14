@@ -217,7 +217,8 @@ def __filter_functions(converted_error_trace: list, filtered_functions: set) -> 
                 filtered_stack.append(name)
                 cur_thread = thread
             elif op == CET_OP_RETURN:
-                filtered_stack.pop()
+                if filtered_stack:
+                    filtered_stack.pop()
         elif not filtered_stack:
             converted_error_trace_with_filter.append(item)
 
@@ -334,7 +335,8 @@ def __get_model_functions(error_trace: dict, additional_model_functions: set) ->
             stack.append(func)
         if 'return' in edge:
             # func = error_trace['funcs'][edge['return']]
-            stack.pop()
+            if stack:
+                stack.pop()
         if 'warn' in edge or 'note' in edge:
             if len(stack) > 0:
                 model_functions.add(stack[len(stack) - 1])
