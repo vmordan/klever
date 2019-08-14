@@ -72,6 +72,8 @@ class ErrorTraceParser:
 
     def _parse_witness(self, witness):
         self._logger.info('Parse witness {!r}'.format(witness))
+        if os.stat(witness).st_size == 0:
+            raise ET.ParseError("Witness is empty")
         with open(witness, encoding='utf8') as fp:
             tree = ET.parse(fp)
         root = tree.getroot()
