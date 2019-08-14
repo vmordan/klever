@@ -43,6 +43,7 @@ class ErrorTrace:
         self.aux_funcs = dict()
         self.emg_comments = dict()
         self._threads = list()
+        self.witness_type = None
 
     @property
     def functions(self):
@@ -81,7 +82,8 @@ class ErrorTrace:
             'files': self._files,
             'funcs': self._funcs,
             'actions': self._actions,
-            'callback actions': self._callback_actions
+            'callback actions': self._callback_actions,
+            'type': self.witness_type
         }
         return data
 

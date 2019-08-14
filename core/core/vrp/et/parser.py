@@ -92,6 +92,14 @@ class ErrorTraceParser:
                 new_name = self.__check_file_name(data.text)
                 if new_name:
                     self.global_program_file = new_name
+            elif key == 'witness-type':
+                witness_type = data.text
+                if witness_type == 'correctness_witness':
+                    self.error_trace.witness_type = 'correctness'
+                elif witness_type == 'violation_witness':
+                    self.error_trace.witness_type = 'violation'
+                else:
+                    self._logger.warning("Unsupported witness type: {}".format(witness_type))
             elif key == 'specification':
                 automaton = data.text
                 for line in automaton.split('\n'):
