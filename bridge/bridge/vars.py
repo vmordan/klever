@@ -260,3 +260,7 @@ GENERIC_LAUNCHER_COMMAND = '../generic.sh'
 MAX_PROCESSING_JOBS = 4
 PID_FILE = "pid"
 VERIFIER_CONFIGURATIONS = "verifiers.config"
+
+RESOURCE_CPU_TIME = _("CPU time (s)")
+RESOURCE_WALL_TIME = _("Wall time (s)")
+RESOURCE_MEMORY_USAGE = _("Memory usage (Mb)")

@@ -238,12 +238,12 @@
         <div class="column">
             {% if reportdata.data.resources|length %}
             <h4>
-                <button class="ui purple button fluid">
+                <a {% if job.id %}href="{% url 'jobs:quantile' job.id %}"{% endif %} class="ui purple button fluid">
                     {% trans 'Consumed resources' %}:
                     {% with reportdata.data.resources|last as cur_comp %}
                         {{ cur_comp.cpu }} / {{ cur_comp.mem }}
                     {% endwith %}
-                </button>
+                </a>
             </h4>
             <div class="ui styled accordion fluid">
                 <div class="title">

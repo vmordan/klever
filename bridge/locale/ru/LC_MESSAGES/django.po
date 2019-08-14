@@ -4777,3 +4777,24 @@ msgstr "Конфигурация задания не выбрана"
 
 msgid "You need to choose file with specific configuration"
 msgstr "Необходимо выбрать файл с конфигурацией"
+
+msgid "CPU time (s)"
+msgstr "Процессорное время (с)"
+
+msgid "Wall time (s)"
+msgstr "Астрономическое время (с)"
+
+msgid "Memory usage (Mb)"
+msgstr "Память (Мб)"
+
+msgid "Compared resources"
+msgstr "Сравниваемые ресурсы"
+
+msgid "Quantile plot"
+msgstr "Квантиль"
+
+msgid "Number of solved tasks with the given value"
+msgstr "Число решенных задач при заданном ограничении"
+
+msgid "N-th fastest tasks"
+msgstr "N наиболее быстрых задач"

@@ -23,6 +23,8 @@ urlpatterns = [
     # Main pages
     path('', views.JobsTree.as_view(), name='tree'),
     path('<int:pk>/', views.JobPage.as_view(), name='job'),
+    path('quantile/<int:pk>/', views.JobQuantilePage.as_view(), name='quantile'),
+    path('quantile/', views.JobQuantileSeveralPage.as_view()),
     path('decision_results/<int:pk>/', views.DecisionResults.as_view()),
     path('progress/<int:pk>/', views.JobProgress.as_view()),
     path('status/<int:pk>/', views.JobStatus.as_view()),

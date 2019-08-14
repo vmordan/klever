@@ -112,6 +112,52 @@ class JobPage(LoggedCallMixin, Bview.DataViewMixin, DetailView):
         }
 
 
+
+@method_decorator(login_required, name='dispatch')
+class JobQuantilePage(LoggedCallMixin, Bview.DataViewMixin, DetailView):
+    model = Job
+    template_name = 'jobs/quantile.html'
+
+    def get_context_data(self, **kwargs):
+        args = json.loads(self.request.GET.get('args', '{}'))
+        job_access = jobs.utils.JobAccess(self.request.user, self.object)
+        if not job_access.can_view():
+            raise BridgeException(code=400)
+        plot, res_names = jobs.utils.get_quantile_plot([self.object.id], args)
+        return {
+            'job': self.object,
+            'job_ids': [(self.object.id, self.object.name)],
+            'res_names': res_names,
+            'resources': plot,
+            'args': args
+        }
+
+
+@method_decorator(login_required, name='dispatch')
+class JobQuantileSeveralPage(LoggedCallMixin, TemplateView):
+    template_name = 'jobs/quantile.html'
+
+    def get_context_data(self, **kwargs):
+        args = json.loads(self.request.GET.get('args', '{}'))
+        job_ids = json.loads(str(self.request.GET['jobs']).replace('{', '[').replace('}', ']'))
+        selected_jobs = list()
+        for job_id in job_ids:
+            try:
+                job = Job.objects.get(id=job_id)
+                selected_jobs.append((job.id, job.name))
+            except ObjectDoesNotExist:
+                raise BridgeException(code=405)
+            if not jobs.utils.JobAccess(self.request.user, job).can_view():
+                raise BridgeException(code=401)
+        plot, res_names = jobs.utils.get_quantile_plot(job_ids, args)
+        return {
+            'job_ids': selected_jobs,
+            'res_names': res_names,
+            'resources': plot,
+            'args': args
+        }
+
+
 class DecisionResults(LoggedCallMixin, Bview.DataViewMixin, Bview.DetailPostView):
     model = Job
     template_name = 'jobs/DecisionResults.html'

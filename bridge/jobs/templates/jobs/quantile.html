@@ -1,0 +1,115 @@
+{% extends 'jobs/base.html' %}
+{% comment "License" %}
+% Copyright (c) 2018 ISP RAS (http://www.ispras.ru)
+% Ivannikov Institute for System Programming of the Russian Academy of Sciences
+%
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
+%
+%    http://www.apache.org/licenses/LICENSE-2.0
+%
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License.
+{% endcomment %}
+
+{% load i18n %}
+
+{% load humanize %}
+{% load tz %}
+{% load staticfiles %}
+
+{% block jobs_head_block %}
+    <script src="/static/js/google-charts.min.js"></script>
+    <script src="{% static 'jobs/js/quantile.js' %}"></script>
+{% endblock %}
+
+{% block title %}{% trans 'Quantile plot' %}{% endblock %}
+
+{% block body_block %}
+
+{% if job %}
+<div class="ui grid">
+    <div class="column left aligned">
+        <div class="ui breadcrumb">
+            <h3><a class="blue-link" href="{% url 'jobs:tree' %}">{% trans 'Reports tree' %}</a>
+            {% if parents.0 %}
+                {% for parent in parents|slice:"0:" %}
+                     <i class="icon arrow right divider"></i> <a class="blue-link" href="{% url 'jobs:job' parent.pk %}">{{ parent.name }}</a>
+                {% endfor %}
+            {% endif %}
+            <i class="icon arrow right divider"></i> <a class="blue-link" href="{% url 'jobs:job' job.id %}">{{ job.name }}</a>
+            </h3>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% for job_id, job_name in job_ids %}
+<span class="job_id" id="{{job_id}}" hidden>{{job_name}}</span>
+{% endfor %}
+
+{% for job_id, job_name in job_ids %}
+    <table id="table-{{job_id}}" hidden>
+    {% for cur_job_id, r_name, data in resources %}
+    {% if cur_job_id == job_id %}
+        {% for report_id, attrs, value in data %}
+            <tr class="resources {{r_name}}">
+                <td>{{attrs}}</td>
+                <td>{{value}}</td>
+                <td>{{report_id}}</td>
+            </tr>
+        {% endfor %}
+    {% endif %}
+    {% endfor %}
+    </table>
+{% endfor %}
+
+<h3 class="ui header center aligned">{% trans 'Quantile plot' %}</h3>
+<div id="chart"></div>
+
+<div class="ui form">
+    <div class="fields">
+        <div class="field">
+            <label for="compared_resources">{% trans 'Compared resources' %}</label>
+            <select id="compared_resources" class="ui dropdown" onchange="draw_quantile(this.value)">
+                {% for r_name in res_names %}
+                    <option value="{{ r_name }}">{{ r_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="field">
+            <div class="inline field">
+                <div class="ui toggle checkbox">
+                    <input type="checkbox" id="compare_safes" {% if not args|get:'ignore_safes' %}checked{% endif %}>
+                    <label for="compare_safes">{% trans 'Safes' %}</label>
+                </div>
+            </div>
+            <div class="inline field">
+                <div class="ui toggle checkbox">
+                    <input type="checkbox" id="compare_unsafes" {% if not args|get:'ignore_unsafes' %}checked{% endif %}>
+                    <label for="compare_unsafes">{% trans 'Unsafes' %}</label>
+                </div>
+            </div>
+            <div class="inline field">
+                <div class="ui toggle checkbox">
+                    <input type="checkbox" id="compare_unknowns" {% if not args|get:'ignore_unknowns' %}checked{% endif %}>
+                    <label for="compare_unknowns">{% trans 'Unknowns' %}</label>
+                </div>
+            </div>
+        </div>
+        <div class="field">
+            <button id="apply_attributes" class="ui tiny red button basic"><b><i class="ui icon crosshairs"></i>{% trans 'Apply' %}</b></button>
+        </div>
+    </div>
+</div>
+
+<span id="trans__quantile_x_axis" hidden>{% trans 'N-th fastest tasks' %}</span>
+<span id="trans__number_of_tasks" hidden>{% trans 'Number of solved tasks with the given value' %}</span>
+<span id="trans__report" hidden>{% trans 'Report' %}</span>
+<span id="trans__job" hidden>{% trans 'Job' %}</span>
+
+{% endblock %}
