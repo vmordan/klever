@@ -1181,6 +1181,7 @@ class ReadJobFile:
     def lines(self):
         return self._file.file.read().decode('utf8').split('\n')
 
+
 def get_key_by_val(dictionary: dict, val: str) -> str:
     for cur_key, cur_val in dictionary.items():
         if cur_val == val:
@@ -1200,31 +1201,7 @@ def get_quantile_plot(job_ids: list, args: dict) -> tuple:
     result = list()
     res_names = DEFAULT_RESOURCES
     for job_id in job_ids:
-        attributes = dict()
-        resources = dict()
-
-        reports = ReportComponent.objects.filter(root__job_id=job_id, verification=True)
-        if args.get(TAG_IGNORE_UNKNOWNS):
-            reports = reports.filter(leaves__unknown=None)
-        if args.get(TAG_IGNORE_UNSAFES):
-            reports = reports.filter(leaves__unsafe=None)
-        if args.get(TAG_IGNORE_UNKNOWNS) and args.get(TAG_IGNORE_UNSAFES):
-            reports = reports.filter(leaves__unsafe=None, leaves__unknown=None)
-        if args.get(TAG_IGNORE_SAFES):
-            reports = reports.filter(leaves__safe=None)
-        for report_id, a_name, a_val, a_cmp, cpu_time, wall_time, memory in reports.values_list(
-                'id', 'attrs__attr__name__name', 'attrs__attr__value', 'attrs__associate',
-                'cpu_time', 'wall_time', 'memory'):
-            if report_id not in attributes:
-                attributes[report_id] = dict()
-            if a_cmp:
-                attributes[report_id][a_name] = a_val
-            if report_id not in resources:
-                resources[report_id] = {RESOURCE_CPU_TIME: cpu_time / 1000.0, RESOURCE_WALL_TIME: wall_time / 1000.0,
-                                        RESOURCE_MEMORY_USAGE: memory / 1000000.0}
-        for report_id, attrs in attributes.items():
-            attrs_str = "/".join([attrs[x] for x in sorted(attrs)])
-            attributes[report_id] = attrs_str
+        resources, attributes = __get_resources(job_id, args)
         tmp_result = dict()
         for res_name in DEFAULT_RESOURCES:
             tmp_result[res_name] = [
@@ -1235,3 +1212,47 @@ def get_quantile_plot(job_ids: list, args: dict) -> tuple:
             ]
         result.extend([(job_id, res_name, data) for res_name, data in sorted(tmp_result.items())])
     return result, res_names
+
+
+def __get_resources(job_id: int, args: dict):
+    attributes = dict()
+    resources = dict()
+
+    reports = ReportComponent.objects.filter(root__job_id=job_id, verification=True)
+    if args.get(TAG_IGNORE_UNKNOWNS):
+        reports = reports.filter(leaves__unknown=None)
+    if args.get(TAG_IGNORE_UNSAFES):
+        reports = reports.filter(leaves__unsafe=None)
+    if args.get(TAG_IGNORE_UNKNOWNS) and args.get(TAG_IGNORE_UNSAFES):
+        reports = reports.filter(leaves__unsafe=None, leaves__unknown=None)
+    if args.get(TAG_IGNORE_SAFES):
+        reports = reports.filter(leaves__safe=None)
+    for report_id, a_name, a_val, a_cmp, cpu_time, wall_time, memory in reports.values_list(
+            'id', 'attrs__attr__name__name', 'attrs__attr__value', 'attrs__associate',
+            'cpu_time', 'wall_time', 'memory'):
+        if report_id not in attributes:
+            attributes[report_id] = dict()
+        if a_cmp:
+            attributes[report_id][a_name] = a_val
+        if report_id not in resources:
+            resources[report_id] = {RESOURCE_CPU_TIME: cpu_time / 1000.0, RESOURCE_WALL_TIME: wall_time / 1000.0,
+                                    RESOURCE_MEMORY_USAGE: memory / 1000000.0}
+    for report_id, attrs in attributes.items():
+        attrs_str = "/".join([attrs[x] for x in sorted(attrs)])
+        attributes[report_id] = attrs_str
+    return resources, attributes
+
+
+def get_scatter_plot(job1_id: int, job2_id: int, args: dict) -> tuple:
+    result = dict()
+    res_names = DEFAULT_RESOURCES
+    res1, attr1 = __get_resources(job1_id, args)
+    res2, attr2 = __get_resources(job2_id, args)
+    for res_name in DEFAULT_RESOURCES:
+        result[res_name] = list()
+        for common_attr in set(attr1.values()).intersection(set(attr2.values())):
+            report_1 = get_key_by_val(attr1, common_attr)
+            report_2 = get_key_by_val(attr2, common_attr)
+            result[res_name].append((common_attr, report_1, report_2, res1[report_1][res_name],
+                                     res2[report_2][res_name]))
+    return result, res_names, len(set(attr1.values()).intersection(set(attr2.values())))

@@ -112,6 +112,30 @@ class JobPage(LoggedCallMixin, Bview.DataViewMixin, DetailView):
         }
 
 
+@method_decorator(login_required, name='dispatch')
+class JobsScatterPage(LoggedCallMixin, TemplateView):
+    template_name = 'jobs/scatter.html'
+
+    def get_context_data(self, **kwargs):
+        args = json.loads(self.request.GET.get('args', '{}'))
+        try:
+            job1 = Job.objects.get(id=self.kwargs['job1_id'])
+            job2 = Job.objects.get(id=self.kwargs['job2_id'])
+        except ObjectDoesNotExist:
+            raise BridgeException(code=405)
+        if not jobs.utils.JobAccess(self.request.user, job1).can_view() \
+                or not jobs.utils.JobAccess(self.request.user, job2).can_view():
+            raise BridgeException(code=401)
+        plot, res_names, tasks = jobs.utils.get_scatter_plot(job1.id, job2.id, args)
+        return {
+            'job1': job1,
+            'job2': job2,
+            'resources': plot,
+            'res_names': res_names,
+            'args': args,
+            'tasks': tasks
+        }
+
 
 @method_decorator(login_required, name='dispatch')
 class JobQuantilePage(LoggedCallMixin, Bview.DataViewMixin, DetailView):

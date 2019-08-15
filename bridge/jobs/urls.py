@@ -29,6 +29,7 @@ urlpatterns = [
     path('progress/<int:pk>/', views.JobProgress.as_view()),
     path('status/<int:pk>/', views.JobStatus.as_view()),
     path('comparison/<int:job1_id>/<int:job2_id>/', views.JobsFilesComparison.as_view(), name='comparison'),
+    path('scatter/<int:job1_id>/<int:job2_id>/', views.JobsScatterPage.as_view(), name='scatter'),
 
     # Main actions with jobs
     path('remove/', views.RemoveJobsView.as_view()),
