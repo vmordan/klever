@@ -65,7 +65,7 @@ class ErrorTraceParser:
         if os.path.exists(name):
             return name
         # TODO: workaround for some tools.
-        name = re.sub(r'^/tmp/vcloud-\S+/worker/working_dir_[^/]+/', '', name)
+        name = re.sub(r'.+/vcloud-\S+/worker/working_dir_[^/]+/', '', name)
         if os.path.exists(name):
             return name
         return None
