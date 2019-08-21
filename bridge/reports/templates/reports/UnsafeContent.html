@@ -26,18 +26,56 @@
     </style>
 {% endif %}
 
-<div id="etv" class="ui orange segment {% if fullscreen %} fullscreen{% endif %}">
+<div id="etv" class="ui {% if etv.type == 'correctness' %}green{% else %}red{% endif %} segment {% if fullscreen %} fullscreen{% endif %}">
     <div id="etv-trace">
         <div>
             <div class="ui grid equal width columns">
                 <div class="column" style="margin: 2px;">
-                    {% include 'reports/ETVButtons.html' %}
+                    {% if etv.type == 'correctness' %}
+                    <div class="ui buttons icon tiny green">
+                        <button class="ui tiny button icon note-popup" id="toggle_eyes" data-content="{% trans 'Toggle top level elements' %}">
+                            <i class="ui eye icon"></i>
+                        </button>
+                        <button class="ui tiny button icon note-popup" id="toggle_functions" data-content="{% trans 'Toggle all elements' %}">
+                            <i class="ui sitemap icon"></i>
+                        </button>
+                    </div>
+                    {% else %}
+                    <div class="ui buttons icon tiny red">
+                        <button class="ui tiny button icon note-popup" id="toggle_eyes" data-content="{% trans 'Toggle functions from call stack' %}">
+                            <i class="ui eye icon"></i>
+                        </button>
+                        <button class="ui tiny button icon note-popup" id="toggle_functions" data-content="{% trans 'Toggle all functions' %}">
+                            <i class="ui sitemap icon"></i>
+                        </button>
+                        <button class="ui tiny button icon note-popup" id="toggle_notes" data-content="{% trans 'Toggle notes code' %}">
+                            <i class="ui comments outline icon"></i>
+                        </button>
+                        <button class="ui tiny button icon note-popup" id="toggle_hidden_notes" data-content="{% trans 'Toggle hidden notes' %}">
+                            <i class="ui comment outline icon"></i>
+                        </button>
+                    </div>
+                    {% endif %}
                 </div>
                 <div class="column center aligned" style="margin: 10px;">
-                    <h3 id="error_trace_options">{% trans 'Error trace' %}</h3>
+                    {% if etv.type == 'correctness' %}
+                    <h3>{% trans 'Correctness witness' %}</h3>
+                    {% else %}
+                    <h3>{% trans 'Error trace' %}</h3>
+                    {% endif %}
                 </div>
                 <div class="column right aligned" style="margin: 2px;">
                     {% if not standalone_html %}
+                    {% if etv.type == 'correctness' %}
+                    <div class="ui buttons icon tiny">
+                        <a class="ui tiny button violet note-popup" href="{% url 'reports:download_proof_html' report.pk %}" data-content="{% trans 'Download standalone proof' %}">
+                            <i class="ui download icon"></i>
+                        </a>
+                        <a class="ui tiny button violet note-popup" href="{% url 'reports:download_proof' report.pk %}" data-content="{% trans 'Download proof internal representation' %}">
+                            <i class="ui save outline icon"></i>
+                        </a>
+                    </div>
+                    {% else %}
                     <div class="ui buttons icon tiny">
                         <a class="ui tiny button violet note-popup" href="{% url 'reports:download_error_trace_html' report.pk %}" data-content="{% trans 'Download standalone trace' %}">
                             <i class="ui download icon"></i>
@@ -77,6 +115,7 @@
                         {% endif %}
                     </div>
                     {% endif %}
+                    {% endif %}
                 </div>
             </div>
             {% if etv %}
@@ -95,13 +134,13 @@
                     <p id="ETVSourceTitleFull"></p>
                 </div>
             </div>
-            <div class="filecontent ETV_source_code" id="ETV_source_code"></div>
+            <div class="filecontent ETV_source_code" id="ETV_source_code" {% if etv.type == 'correctness' %}style="border-top: 1px solid green;"{% endif %}></div>
             {% for filename, content in src.items %}
                 <div class="filecontent ETV_source_code" style="display: none" id="src_files{{filename}}">{{ content }}</div>
             {%endfor%}
         </div>
     </div>
-    <div id="etv-divider"></div>
+    <div id="{% if etv.type == 'correctness' %}etv-divider-safe{% else %}etv-divider{% endif %}"></div>
     {% if include_assumptions %}
         <div id="etv-assumes">
             <div id="ETV_assumes">
@@ -144,5 +183,5 @@
 
     <span id="error___line_not_found" hidden>{% trans 'Could not find the specified line' %}</span>
     <span id="error___no_selected_line" hidden>{% trans 'Please, select the line first' %}</span>
-    <span id="play_finished" hidden>{% trans 'Play of the error trace was completed' %}</span>
+    <span id="witness_type" hidden>{{etv.type}}</span>
 {% endif %}

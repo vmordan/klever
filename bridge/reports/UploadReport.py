@@ -212,6 +212,10 @@ class UploadReport:
                 self.data['proof'] = data['proof']
                 if self.data['proof'] not in self.archives:
                     raise ValueError("Proof archive wasn't found in the archives list")
+                if 'sources' in data:
+                    self.data['sources'] = data['sources']
+                    if self.data['sources'] not in self.archives:
+                        raise ValueError("Correctness proof sources archive wasn't found in the archives list")
         elif data['type'] == 'unknown':
             try:
                 self.data.update({
@@ -615,13 +619,24 @@ class UploadReport:
                 identifier=identifier, parent=self.parent, root=self.root, cpu_time=self.parent.cpu_time,
                 wall_time=self.parent.wall_time, memory=self.parent.memory
             )
+
+        if 'sources' in self.data:
+            # Those sources are shared with error traces.
+            source = ErrorTraceSource(root=self.root)
+            if self.data['sources'] not in self.source_archives.keys():
+                # Copy source archive into media directory.
+                source.add_sources(REPORT_ARCHIVE['sources'], self.archives[self.data['sources']], True)
+                self.source_archives[self.data['sources']] = source
+            else:
+                # Get cached source archive.
+                source = self.source_archives[self.data['sources']]
+            report.source = source
         if 'proof' in self.data:
             report.add_proof(REPORT_ARCHIVE['proof'], self.archives[self.data['proof']], True)
             if not os.path.exists(os.path.join(settings.MEDIA_ROOT, report.proof.name)):
                 report.delete()
                 raise CheckArchiveError('Report archive "proof" was not saved')
-        else:
-            report.save()
+        report.save()
         self.__create_leaf_attrs(report)
         self.__fill_leaf_cache(report)
 

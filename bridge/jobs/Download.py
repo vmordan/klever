@@ -945,7 +945,7 @@ class UploadReportsWithoutDecision:
             'id', 'parent id', 'name', 'attrs', 'attr data', 'resources', 'coverage'
         ],
         'verification finish': ['id'],
-        'safe': ['id', 'parent id', 'attrs', 'attr data', 'proof'],
+        'safe': ['id', 'parent id', 'attrs', 'attr data', 'proof', 'sources'],
         'unsafe': ['id', 'parent id', 'attrs', 'attr data', 'sources', 'error traces'],
         'unknown': ['id', 'parent id', 'attrs', 'attr data', 'problem desc']
     }

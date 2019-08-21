@@ -23,7 +23,7 @@
     bottom: 0;
     line-height: normal;
     font-size: 12px;
-    border-top: 1px solid #ca8f1d;
+    border-top: 1px solid #red;
 }
 #ETV_error_trace {
     width: 100%;
@@ -35,7 +35,7 @@
     font-family: monospace;
     overflow: auto;
     white-space: nowrap;
-    border-top: 1px solid #ca8f1d;
+    border-top: 1px solid red;
     top: 35px;
 }
 
@@ -79,7 +79,16 @@
     bottom: 0;
     left: 45%;
     width: 0.3%;
-    background-color: #f2711c;
+    background-color: red;
+    cursor: move;
+}
+#etv-divider-safe {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 45%;
+    width: 0.3%;
+    background-color: green;
     cursor: move;
 }
 #etv-divider-2 {
@@ -150,7 +159,7 @@
 }
 
 .ETVSelectedLine {
-    background-color: #ffd4ed;
+    background-color: #ffa46d;
 }
 
 .ETV_CondAss {

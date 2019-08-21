@@ -19,7 +19,7 @@
 {% load i18n %}
 {% load staticfiles %}
 
-{% block title %}{% trans 'Error Trace Fullscreen' %}{% endblock %}
+{% block title %}{% if etv.type == 'correctness' %}{% trans 'Correctness witness' %}{% else %}{% trans 'Error Trace' %}{% endif %}{% endblock %}
 
 {% block head_block %}
     <script type="text/javascript" src="{% static 'reports/js/ETV.js' %}"></script>

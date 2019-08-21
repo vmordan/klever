@@ -152,19 +152,30 @@ def get_attr_vals(ids: str) -> dict:
     return result
 
 
-def get_edited_error_trace(unsafe_report: ReportUnsafe) -> str:
-    original_error_trace_arch = os.path.join(settings.MEDIA_ROOT, unsafe_report.error_trace.name)
+def get_edited_error_trace(report) -> str:
+    if isinstance(report, ReportUnsafe):
+        original_error_trace_arch = os.path.join(settings.MEDIA_ROOT, report.error_trace.name)
+    elif isinstance(report, ReportSafe):
+        original_error_trace_arch = os.path.join(settings.MEDIA_ROOT, report.proof.name)
+    else:
+        raise ValueError('Unsupported report type: {}'.format(type(report)))
     edited_error_trace = original_error_trace_arch[:-4] + EDITED_ERROR_TRACE_SUFFIX
     return edited_error_trace
 
 
-def get_error_trace_content(unsafe_report: ReportUnsafe) -> str:
-    edited_error_trace = get_edited_error_trace(unsafe_report)
+def get_error_trace_content(report) -> str:
+    edited_error_trace = get_edited_error_trace(report)
     if os.path.exists(edited_error_trace):
         with open(edited_error_trace) as fd:
             error_trace = fd.read()
     else:
-        error_trace = ArchiveFileContent(unsafe_report, 'error_trace', ERROR_TRACE_FILE).content.decode('utf8')
+        if isinstance(report, ReportUnsafe):
+            error_trace = ArchiveFileContent(report, 'error_trace', ERROR_TRACE_FILE).content.decode('utf8')
+        elif isinstance(report, ReportSafe):
+            error_trace = ArchiveFileContent(report, 'proof', ERROR_TRACE_FILE).content.decode('utf8')
+        else:
+            raise ValueError('Unsupported report type: {}'.format(type(report)))
+
     return error_trace
 
 

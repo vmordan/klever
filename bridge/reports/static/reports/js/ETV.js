@@ -18,18 +18,6 @@
 $(document).ready(function () {
     var ready_for_next_string = false, etv_window = $('#ETV_error_trace'), etv_attrs = $('#etv-attributes');
 
-    if (etv_attrs.length) {
-        $('#error_trace_options').popup({
-            popup: etv_attrs,
-            position: 'right center',
-            hoverable: true,
-            lastResort: true,
-            delay: {
-                show: 100,
-                hide: 100
-            }
-        });
-    }
     if (!etv_window.length) {
         return false;
     }
@@ -56,7 +44,7 @@ $(document).ready(function () {
             $.ajax({
                 url: '/reports/get_source/' + $('#report_pk').val() + '/',
                 type: 'POST',
-                data: {file_name: filename},
+                data: {file_name: filename, witness_type: $('#witness_type').text()},
                 success: function (data) {
                     if (data.error) {
                         $('#ETVSourceTitle').empty();
@@ -671,4 +659,7 @@ $(document).ready(function () {
             });
         }
     });
+    if ($('#witness_type').text() == 'correctness') {
+        $('#toggle_eyes').click();
+    }
 });

@@ -155,6 +155,7 @@ class ParseErrorTrace:
         self.actions = list(data['actions']) if 'actions' in data else []
         self.callback_actions = list(data['callback actions']) if 'callback actions' in data else []
         self.functions = list(data['funcs']) if 'funcs' in data else []
+        self.type = data.get('type')
         self.include_assumptions = include_assumptions
         self.triangles = triangles
         self.thread_id = thread_id
@@ -197,7 +198,9 @@ class ParseErrorTrace:
             return
 
         if 'condition' in edge:
-            line_data['code'] = self.__get_condition_code(line_data['code'])
+            line_data['code'] = self.__get_condition_code(line_data['code'], edge['condition'])
+        if 'invariant' in edge:
+            line_data['code'] = self.__get_invariants_code(edge['invariant'])
 
         curr_action = self.scope.current_action()
         new_action = edge.get('action')
@@ -351,12 +354,25 @@ class ParseErrorTrace:
                 assumptions.append(assume_id)
         return {'assumptions': ';'.join(reversed(assumptions)), 'current_assumptions': ';'.join(current_assumptions)}
 
-    def __get_condition_code(self, code):
+    def __get_condition_code(self, code, condition: bool):
         self.__is_not_used()
         m = re.match('^\s*\[(.*)\]\s*$', str(code))
         if m is not None:
             code = m.group(1)
+        if self.type == 'correctness':
+            if condition:
+                color = 'green'
+            else:
+                color = 'red'
+        else:
+            color = 'black'
+
+        code = '<span style="color:{}">{}</span>'.format(color, code)
         return '<span class="ETV_CondAss">assume(</span>' + str(code) + '<span class="ETV_CondAss">);</span>'
+
+    def __get_invariants_code(self, code):
+        self.__is_not_used()
+        return '<span class="ETV_CondAss">invariant(</span>' + str(code) + '<span class="ETV_CondAss">);</span>'
 
     def finish_error_lines(self, thread, thread_id):
         self.__return_all()
@@ -469,11 +485,182 @@ class GetETV:
             self.include_assumptions = False
             self.triangles = False
         self.data = json.loads(error_trace)
+
+        self.type = self.data.get('type')
+        self.lines = dict()
+        if self.type == "correctness":
+            self.__process_correctness_witness()
         self.err_trace_nodes = len(self.data['edges'])
         self.threads = []
         self._has_global = True
         self.html_trace, self.assumes = self.__html_trace()
         self.attributes = []
+
+    def __process_correctness_witness(self):
+        edges = dict()
+        start_edge = dict()
+        invariants = dict()
+        global_invariants = set()
+        for elem in self.data['edges']:
+            start_line = elem['start line']
+            if 'warn' in elem:
+                del elem['warn']
+            if start_line not in self.lines:
+                self.lines[start_line] = {"aux"}
+            if 'enter' in elem and (elem['enter'] == 0 or not start_edge):
+                start_edge = elem
+            if 'condition' in elem:
+                condition = elem['condition']
+                self.lines[start_line].add(condition)
+                if start_line not in edges:
+                    edges[start_line] = list()
+                edges[start_line].append(elem)
+            elif 'invariants' in elem:
+                for inv in elem['invariants']:
+                    if 'file' in elem and 'thread' in elem and 'start line' in elem:
+                        pos = (elem['start line'], elem['file'], elem['thread'])
+                    else:
+                        continue
+                    if pos not in invariants:
+                        invariants[pos] = set()
+                    invariants[pos].add(inv)
+                if not global_invariants:
+                    global_invariants = set(elem['invariants'])
+                else:
+                    global_invariants = global_invariants.intersection(set(elem['invariants']))
+        if not start_edge and self.data['edges']:
+            start_edge = self.data['edges'][0]
+        if not start_edge:
+            # Witness is empty
+            return
+        for start_line, selected_edges in edges.items():
+            if len(selected_edges) == 1:
+                edges[start_line] = selected_edges[0]
+                edges[start_line]['condition'] = False
+            else:
+                source_code = set()
+                for edge in selected_edges:
+                    source_code.add(edge['source'])
+                if len(source_code) == 2:
+                    cond_1, cond_2 = list(source_code)
+                    type_1, type_2 = selected_edges[0]['condition'], selected_edges[1]['condition']
+                    is_covered = type_1 != type_2
+                    if cond_1 == "!({})".format(cond_2):
+                        edges[start_line] = selected_edges[0]
+                        edges[start_line]['source'] = cond_2
+                        edges[start_line]['condition'] = is_covered
+                        continue
+                    if cond_2 == "!({})".format(cond_1):
+                        edges[start_line] = selected_edges[0]
+                        edges[start_line]['source'] = cond_1
+                        edges[start_line]['condition'] = is_covered
+                        continue
+                    if ('==' in cond_1 and '!=' in cond_2 or '==' in cond_2 and '!=' in cond_1) or \
+                            ('<' in cond_1 and '>=' in cond_2 or '<' in cond_2 and '>=' in cond_1) or \
+                            ('<=' in cond_1 and '>' in cond_2 or '<=' in cond_2 and '>' in cond_1) or \
+                            ('>' in cond_1 and '<=' in cond_2 or '>' in cond_2 and '<=' in cond_1) or \
+                            ('>=' in cond_1 and '<' in cond_2 or '>=' in cond_2 and '<' in cond_1):
+                        edges[start_line] = selected_edges[0]
+                        edges[start_line]['source'] = cond_1
+                        edges[start_line]['condition'] = is_covered
+                        continue
+
+        start_edge['source'] = 'assumes'
+        start_edge['enter'] = self.__add_new_func('assumes')
+        self.data['edges'] = [start_edge]
+        for start_line, edge in sorted(edges.items()):
+            if isinstance(edge, dict):
+                self.data['edges'].append(edge)
+            elif isinstance(edge, list):
+                first_edge = edge[0]
+                if 'condition' in first_edge:
+                    enter_edge = dict(first_edge)
+                    del enter_edge['condition']
+                    return_edge = dict(enter_edge)
+                    enter_edge['enter'] = self.__add_new_func("multiple assumes")
+                    enter_edge['source'] = "multiple assumes"
+                    return_edge['return'] = self.__add_new_func("multiple assumes")
+                    return_edge['source'] = ""
+                    self.data['edges'].append(enter_edge)
+                    for single_edge in edge:
+                        single_edge['condition'] = False
+                        self.data['edges'].append(single_edge)
+                    self.data['edges'].append(return_edge)
+
+        return_edge = dict(start_edge)
+        return_edge['return'] = self.__add_new_func('assumes')
+        del return_edge['enter']
+        del return_edge['start line']
+        return_edge['source'] = ""
+        self.data['edges'].append(return_edge)
+        if global_invariants:
+            start_edge = dict(start_edge)
+            del start_edge['start line']
+            start_edge['source'] = 'global invariants'
+            start_edge['enter'] = self.__add_new_func('global invariants')
+            self.data['edges'].append(start_edge)
+            new_elem = dict(start_edge)
+            del new_elem['enter']
+            for inv in sorted(global_invariants):
+                elem = dict(new_elem)
+                elem['invariant'] = inv
+                self.data['edges'].append(elem)
+            return_edge = dict(return_edge)
+            return_edge['return'] = self.__add_new_func('global invariants')
+            self.data['edges'].append(return_edge)
+        if invariants:
+            start_edge = dict(start_edge)
+            start_edge['source'] = 'invariants'
+            start_edge['enter'] = self.__add_new_func('invariants')
+            self.data['edges'].append(start_edge)
+            is_added_invariants = False
+            for pos, selected_invariants in sorted(invariants.items()):
+                sorted_invariants = sorted(selected_invariants)
+                special_invariants_num = len(sorted_invariants) - len(global_invariants)
+                if special_invariants_num == 0:
+                    # Only global invariants here
+                    continue
+                if not is_added_invariants:
+                    is_added_invariants = True
+                new_name = "{} invariants".format(special_invariants_num)
+                start_elem = {
+                    'enter': self.__add_new_func(new_name),
+                    'source': new_name,
+                    'start line': pos[0],
+                    'file': pos[1],
+                    'thread': pos[2]
+                }
+                self.data['edges'].append(start_elem)
+                for inv in sorted_invariants:
+                    if inv in global_invariants:
+                        continue
+                    elem = {
+                        'invariant': inv,
+                        'start line': pos[0],
+                        'file': pos[1],
+                        'thread': pos[2]
+                    }
+                    self.data['edges'].append(elem)
+                return_elem = {
+                    'return': self.__add_new_func(new_name),
+                    'source': '',
+                    'file': pos[1],
+                    'thread': pos[2]
+                }
+                self.data['edges'].append(return_elem)
+            if is_added_invariants:
+                return_edge = dict(return_edge)
+                return_edge['return'] = self.__add_new_func('invariants')
+                self.data['edges'].append(return_edge)
+            else:
+                del self.data['edges'][-1]
+
+    def __add_new_func(self, name: str) -> int:
+        functions = self.data['funcs']
+        if name in functions:
+            return functions.index(name)
+        functions.append(name)
+        return len(functions) - 1
 
     def __get_attributes(self):
         # TODO: return list of error trace attributes like [<attr name>, <attr value>]. Ignore 'programfile'.
@@ -524,7 +711,7 @@ class GetETV:
 
 
 class GetSource:
-    def __init__(self, report, file_name):
+    def __init__(self, report, file_name, lines=dict()):
         if report:
             self.report = report
         else:
@@ -532,6 +719,7 @@ class GetSource:
         self.is_comment = False
         self.is_text = False
         self.text_quote = None
+        self.__lines = lines
         self.data = self.__get_source(file_name)
 
     def __get_source(self, file_name):
@@ -554,9 +742,16 @@ class GetSource:
         for line in lines:
             line = line.replace('\t', ' ' * TAB_LENGTH).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
             line_num = ' ' * (len(str(len(lines))) - len(str(cnt))) + str(cnt)
-            data += '<span>%s %s</span><br>' % (
-                self.__wrap_line(line_num, 'line', 'ETVSrcL_%s' % cnt), self.__parse_line(line)
-            )
+            parsed_line = self.__parse_line(line)
+            if cnt in self.__lines:
+                val = self.__lines[cnt]
+                if len(val) == 1:
+                    color = '#adebadaa'
+                else:
+                    color = '#adffadaa'
+                parsed_line = "<span style=\"background-color: {}\">{}</span>".format(color, parsed_line)
+            src_line = '%s %s' % (self.__wrap_line(line_num, 'line', 'ETVSrcL_%s' % cnt), parsed_line)
+            data += '<span>%s</span><br>' % src_line
             cnt += 1
         return data
 
@@ -688,7 +883,7 @@ def convert_json_trace_to_html(json_trace: str, result_trace_name: str):
     etv = GetETV(json_trace)
     for file in etv.data['files']:
         file_prep = str(file).replace('/', '_').replace('.', '_')
-        cnt = GetSource(None, file).data
+        cnt = GetSource(None, file, etv.lines).data
         src[file_prep] = cnt
     save_zip_trace(result_trace_name, etv, src, False)
 

@@ -24,7 +24,7 @@
 {% block title %}{% if report_type == 'safe' %}{% trans 'Safe' %}{% elif report_type == 'unsafe' %}{% trans 'Unsafe' %}{% else %}{% trans 'Unknown' %}{% endif %}{% endblock %}
 
 {% block head_block %}
-    {% if report_type == 'unsafe' %}<link href="{% static 'reports/css/ETV.css' %}" rel="stylesheet">{% endif %}
+    {% if etv %}<link href="{% static 'reports/css/ETV.css' %}" rel="stylesheet">{% endif %}
     {% if report_type != 'unknown' %}<link href="{% static 'marks/css/tagsmap.css' %}" rel="stylesheet">{% endif %}
     <link href="{% static 'reports/css/reportLeaf.css' %}" rel="stylesheet">
     {% if report_type != 'unknown' %}
@@ -33,7 +33,7 @@
     {% endif %}
     <script type="text/javascript" src="{% static 'marks/js/commonMarkForm.js' %}"></script>
     <script type="text/javascript" src="{% static 'marks/js/inlineMarkForm.js' %}"></script>
-    {% if report_type == 'unsafe' %}
+    {% if etv %}
         <script type="text/javascript" src="{% static 'reports/js/ETV.js' %}"></script>
         <script type="text/javascript" src="{% static 'reports/js/ETV-windows.js' %}"></script>
     {% endif %}
@@ -113,8 +113,8 @@
 
     {# Specific content of the report #}
     {% if report_type == 'safe' %}
-        {% if main_content %}
-            <div class="ui green segment filecontent" style="min-height:300px;max-height: 70vh;">{{ main_content }}</div>
+        {% if etv %}
+            {% include 'reports/UnsafeContent.html' %}
         {% else %}
             <h3 class="ui red header">{% trans 'There is no proof description for this safe' %}</h3>
         {% endif %}
@@ -136,7 +136,7 @@
 
     <div class="ui horizontal buttons">
         {% if MarkTable.can_mark %}
-            <a id="create_light_mark_btn" class="ui red button inverted right aligned"><i class="star icon"></i> {% trans 'Create default mark' %}</a>
+            <a id="create_light_mark_btn" class="ui red button right aligned basic"><i class="star icon"></i> {% trans 'Create default mark' %}</a>
             <a href="{% url 'marks:mark_form' report_type report.pk 'create' %}" class="ui red button"><i class="empty star icon"></i> {% trans 'Create extended mark' %}</a>
         {% endif %}
     </div>

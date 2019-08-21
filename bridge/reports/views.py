@@ -366,15 +366,25 @@ class ReportSafeView(LoggedCallMixin, Bview.DataViewMixin, DetailView):
         if not JobAccess(self.request.user, self.object.root.job).can_view():
             raise BridgeException(code=400)
 
-        proof_content = None
+        proof = None
+        is_modifiable = False
         if self.object.proof:
-            proof_content = ArchiveFileContent(self.object, 'proof', PROOF_FILE).content.decode('utf8')
+            try:
+                proof = GetETV(get_error_trace_content(self.object), self.request.user)
+                if not proof.data.get('edges'):
+                    proof = None
+                if proof:
+                    is_manager = self.request.user.extended.role == '2'
+                    is_modifiable = bool(is_manager or bool(proof.data.get('is_modifiable', True)))
+            except Exception as e:
+                logger.exception(e, stack_info=True)
+
         return {
             'report': self.object, 'report_type': 'safe',
             'parents': reports.utils.get_parents(self.object),
             'resources': reports.utils.get_leaf_resources(self.request.user, self.object),
             'SelfAttrsData': reports.utils.report_attibutes(self.object),
-            'main_content': proof_content,
+            'etv': proof, 'is_modifiable': is_modifiable,
             'MarkTable': ReportMarkTable(self.request.user, self.object, self.get_view(VIEW_TYPES[11]))
         }
 
@@ -521,14 +531,26 @@ class UnsafeCancelView(LoggedCallMixin, Bview.JsonDetailPostView):
         return {}
 
 
-class SourceCodeView(LoggedCallMixin, Bview.JsonDetailPostView):
-    model = ReportUnsafe
-    pk_url_kwarg = 'unsafe_id'
+class SourceCodeView(LoggedCallMixin, Bview.JsonView):
 
     def get_context_data(self, **kwargs):
+        witness_type = self.request.POST.get('witness_type', 'violation')
+        report_id = self.kwargs['id']
+        try:
+            if witness_type == 'violation':
+                report = ReportUnsafe.objects.get(id=report_id)
+                lines = {}
+            elif witness_type == 'correctness':
+                report = ReportSafe.objects.get(id=report_id)
+                proof = GetETV(get_error_trace_content(report), self.request.user)
+                lines = proof.lines
+            else:
+                raise BridgeException('Unsupported witness type {}'.format(witness_type))
+        except ObjectDoesNotExist:
+            raise BridgeException(code=406)
         return {
             'name': self.request.POST['file_name'],
-            'content': GetSource(self.object, self.request.POST['file_name']).data
+            'content': GetSource(report, self.request.POST['file_name'], lines).data
         }
 
 
@@ -558,6 +580,36 @@ class DownloadErrorTraceHtml(LoggedCallMixin, SingleObjectMixin, Bview.Streaming
         for file in etv.data['files']:
             file_prep = str(file).replace('/', '_').replace('.', '_')
             cnt = GetSource(self.object, file).data
+            src[file_prep] = cnt
+        return get_html_error_trace(etv, src, self.request.user.extended.assumptions)
+
+
+@method_decorator(login_required, name='dispatch')
+class DownloadProof(LoggedCallMixin, SingleObjectMixin, Bview.StreamingResponseView):
+    model = ReportSafe
+    pk_url_kwarg = 'safe_id'
+    file_name = 'proof.json'
+
+    def get_generator(self):
+        self.object = self.get_object()
+        content = get_error_trace_content(self.object).encode('utf8')
+        self.file_size = len(content)
+        return FileWrapper(BytesIO(content), 8192)
+
+
+@method_decorator(login_required, name='dispatch')
+class DownloadProofHtml(LoggedCallMixin, SingleObjectMixin, Bview.StreamingResponseView):
+    model = ReportSafe
+    pk_url_kwarg = 'safe_id'
+    file_name = 'proof.zip'
+
+    def get_generator(self):
+        self.object = self.get_object()
+        src = dict()
+        etv = GetETV(get_error_trace_content(self.object), self.request.user)
+        for file in etv.data['files']:
+            file_prep = str(file).replace('/', '_').replace('.', '_')
+            cnt = GetSource(self.object, file, etv.lines).data
             src[file_prep] = cnt
         return get_html_error_trace(etv, src, self.request.user.extended.assumptions)
 

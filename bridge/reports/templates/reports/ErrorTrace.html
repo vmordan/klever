@@ -17,7 +17,7 @@
 
 {% load i18n %}
 
-<div id="ETV_error_trace">
+<div id="ETV_error_trace" {% if etv.type == 'correctness' %}style="border-top: 1px solid green;"{% endif %}>
     {% for l in etv.html_trace %}
         {% if l.hide_id == 'global' %}
             <span data-thread="{{ l.thread_id }}">
@@ -25,7 +25,7 @@
                 <span class="ETV_LC">{{ l.offset }}<a class="ETV_GlobalExpanderLink"><i class="mini icon {% if l.collapsed %}unhide{% else %}hide{% endif %}"></i> <span class="ETV_GlobalExpander">{% trans 'Global variable declarations' %}</span></a></span>
                 <br>
             </span>
-        {% else %}
+        {% elif l.code %}
             {% if l.note %}
                 <span class="{{ l.scope }}"{% if l.note_hidden %} style="display: none"{% endif %} data-thread="{{ l.thread_id }}" data-type="comment">
                     <span class="ETV_LN ETV_LN_Note"><span class="ETV_HIDDEN_NOTE" hidden>{{ l.note_hidden }}</span><span class="ETV_ID" hidden>{{l.id}}</span><span class="ETV_THREAD">{{ l.thread|safe }}</span>{{ l.line_offset }}{% if l.line %}{{ l.line }}{% endif %}</span>

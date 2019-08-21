@@ -228,6 +228,7 @@ def unsafe_delete_signal(**kwargs):
 
 class ReportSafe(Report):
     proof = models.FileField(upload_to='Safes/%Y/%m', null=True)
+    source = models.ForeignKey(ErrorTraceSource, models.CASCADE, null=True)
     verdict = models.CharField(max_length=1, choices=SAFE_VERDICTS, default='4')
     memory = models.BigIntegerField()
     cpu_time = models.BigIntegerField()
