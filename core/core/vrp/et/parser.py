@@ -136,14 +136,15 @@ class ErrorTraceParser:
         for node in graph.findall('graphml:node', self.WITNESS_NS):
             is_sink = False
 
+            node_id = node.attrib['id']
             for data in node.findall('graphml:data', self.WITNESS_NS):
                 data_key = data.attrib.get('key')
                 if data_key == 'entry':
-                    self.error_trace.add_entry_node_id(node.attrib['id'])
-                    self._logger.debug('Parse entry node {!r}'.format(node.attrib['id']))
+                    self.error_trace.add_entry_node_id(node_id)
+                    self._logger.debug('Parse entry node {!r}'.format(node_id))
                 elif data_key == 'sink':
                     is_sink = True
-                    self._logger.debug('Parse sink node {!r}'.format(node.attrib['id']))
+                    self._logger.debug('Parse sink node {!r}'.format(node_id))
                 elif data_key == 'violation':
                     pass
                 elif data_key not in unsupported_node_data_keys:
@@ -152,7 +153,7 @@ class ErrorTraceParser:
 
             # Do not track sink nodes as all other nodes. All edges leading to sink nodes will be excluded as well.
             if is_sink:
-                sink_nodes_map[node.attrib['id']] = None
+                sink_nodes_map[node_id] = None
             else:
                 nodes_number += 1
 
@@ -183,6 +184,7 @@ class ErrorTraceParser:
 
             start_offset = 0
             end_offset = 0
+            condition = None
             for data in edge.findall('graphml:data', self.WITNESS_NS):
                 data_key = data.attrib.get('key')
                 if data_key == 'originfile':
@@ -208,7 +210,12 @@ class ErrorTraceParser:
                     else:
                         _edge['assumption scope'] = self.error_trace.resolve_function_id(data.text)
                 elif data_key == 'control':
-                    _edge['condition'] = True
+                    val = data.text
+                    condition = val
+                    if val == 'condition-true':
+                        _edge['condition'] = True
+                    elif val == 'condition-false':
+                        _edge['condition'] = False
                 elif data_key == 'assumption':
                     _edge['assumption'] = data.text
                 elif data_key == 'threadId':
@@ -260,6 +267,8 @@ class ErrorTraceParser:
                                             _edge['source'] = line
                                             break
                                         counter += 1
+                                if condition == 'condition-false':
+                                    _edge['source'] = "!({})".format(_edge['source'])
 
             if 'thread' not in _edge:
                 _edge['thread'] = "0"
