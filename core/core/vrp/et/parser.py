@@ -181,6 +181,8 @@ class ErrorTraceParser:
             # Update lists of input and output edges for source and target nodes.
             _edge = self.error_trace.add_edge(source_node_id, target_node_id)
 
+            start_offset = 0
+            end_offset = 0
             for data in edge.findall('graphml:data', self.WITNESS_NS):
                 data_key = data.attrib.get('key')
                 if data_key == 'originfile':
@@ -212,8 +214,10 @@ class ErrorTraceParser:
                 elif data_key == 'threadId':
                     _edge['thread'] = data.text
                     self.error_trace.add_thread(data.text)
-                elif data_key in ('startoffset', 'endoffset'):
-                    pass
+                elif data_key == 'startoffset':
+                    start_offset = int(data.text)
+                elif data_key == 'endoffset':
+                    end_offset = int(data.text)
                 elif data_key in ('note', 'warning'):
                     _edge[data_key if data_key == 'note' else 'warn'] = self.error_trace.process_comment(data.text)
                 elif data_key not in unsupported_edge_data_keys:
@@ -238,13 +242,24 @@ class ErrorTraceParser:
                             src_file = None
                         if src_file:
                             with open(src_file) as fd:
-                                counter = 1
-                                for line in fd.readlines():
-                                    if counter == _edge['start line']:
-                                        line = line.rstrip().lstrip()
-                                        _edge['source'] = line
-                                        break
-                                    counter += 1
+                                if start_offset:
+                                    offset = 1
+                                    if end_offset:
+                                        offset += end_offset - start_offset
+                                    fd.seek(start_offset)
+                                    _edge['source'] = fd.read(offset)
+                                else:
+                                    counter = 1
+                                    for line in fd.readlines():
+                                        if counter == _edge['start line']:
+                                            line = line.rstrip().lstrip()
+                                            if 'condition' in _edge:
+                                                res = re.match(r'[^(]*\((.+)\)[^)]*', line)
+                                                if res:
+                                                    line = res.group(1)
+                                            _edge['source'] = line
+                                            break
+                                        counter += 1
 
             if 'thread' not in _edge:
                 _edge['thread'] = "0"
