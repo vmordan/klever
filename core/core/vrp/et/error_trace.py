@@ -44,6 +44,7 @@ class ErrorTrace:
         self.emg_comments = dict()
         self._threads = list()
         self.witness_type = None
+        self.invariants = dict()
 
     @property
     def functions(self):
@@ -102,6 +103,20 @@ class ErrorTrace:
         # TODO: check coherence of source and target.
         edge = {}
         self._edges.append(edge)
+        if target in self.invariants:
+            invariants = list()
+            for inv in self.invariants[target].split(') && ('):
+                while str(inv).startswith('('):
+                    inv = inv[1:]
+                while str(inv).endswith(')'):
+                    inv = inv[:-1]
+                inv = inv.replace(')) || ((', ' || ')
+                if str(inv).startswith('('):
+                    inv = inv[1:]
+                if str(inv).endswith(')'):
+                    inv = inv[:-1]
+                invariants.append(inv)
+            edge['invariants'] = invariants
         return edge
 
     def add_file(self, file_name):
@@ -149,6 +164,9 @@ class ErrorTrace:
 
     def resolve_function_id(self, name):
         return self._funcs.index(name)
+
+    def add_invariant(self, invariant, node_id):
+        self.invariants[node_id] = invariant
 
     def resolve_function(self, identifier):
         return self._funcs[identifier]

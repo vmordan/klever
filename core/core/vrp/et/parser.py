@@ -147,6 +147,8 @@ class ErrorTraceParser:
                     self._logger.debug('Parse sink node {!r}'.format(node_id))
                 elif data_key == 'violation':
                     pass
+                elif data_key == 'invariant':
+                    self.error_trace.add_invariant(data.text, node_id)
                 elif data_key not in unsupported_node_data_keys:
                     self._logger.warning('Node data key {!r} is not supported'.format(data_key))
                     unsupported_node_data_keys[data_key] = None
@@ -185,6 +187,8 @@ class ErrorTraceParser:
             start_offset = 0
             end_offset = 0
             condition = None
+            invariant = None
+            invariant_scope = None
             for data in edge.findall('graphml:data', self.WITNESS_NS):
                 data_key = data.attrib.get('key')
                 if data_key == 'originfile':
@@ -230,6 +234,9 @@ class ErrorTraceParser:
                 elif data_key not in unsupported_edge_data_keys:
                     self._logger.warning('Edge data key {!r} is not supported'.format(data_key))
                     unsupported_edge_data_keys[data_key] = None
+
+            if invariant and invariant_scope:
+                self.error_trace.add_invariant(invariant, invariant_scope)
 
             if "source" not in _edge:
                 _edge['source'] = ""
