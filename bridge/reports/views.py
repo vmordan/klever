@@ -537,15 +537,14 @@ class SourceCodeView(LoggedCallMixin, Bview.JsonView):
         witness_type = self.request.POST.get('witness_type', 'violation')
         report_id = self.kwargs['id']
         try:
-            if witness_type == 'violation':
-                report = ReportUnsafe.objects.get(id=report_id)
-                lines = {}
-            elif witness_type == 'correctness':
+            if witness_type == 'correctness':
                 report = ReportSafe.objects.get(id=report_id)
                 proof = GetETV(get_error_trace_content(report), self.request.user)
                 lines = proof.lines
             else:
-                raise BridgeException('Unsupported witness type {}'.format(witness_type))
+                # Violation
+                report = ReportUnsafe.objects.get(id=report_id)
+                lines = {}
         except ObjectDoesNotExist:
             raise BridgeException(code=406)
         return {
