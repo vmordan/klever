@@ -92,7 +92,6 @@
                 <a class="item" href="/admin/">{% trans 'Admin Tools' %}</a>
             {% endif %}
             {% if user.extended and user.extended.role == '2' %}
-                <a class="item" href="{% url 'population' %}">{% trans 'Population' %}</a>
                 <a class="item" href="{% url 'tools:manager' %}">{% trans 'Manager Tools' %}</a>
             {% endif %}
         {% endif %}
