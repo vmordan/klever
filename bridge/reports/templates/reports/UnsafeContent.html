@@ -16,6 +16,9 @@
 {% endcomment %}
 
 {% load i18n %}
+{% load staticfiles %}
+
+<script type="text/javascript" src="{% static "js/jquery-ui.min.js" %}"></script>
 
 {% if standalone_html %}
     <span id="standalone" hidden>true</span>

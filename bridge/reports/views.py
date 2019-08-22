@@ -429,7 +429,7 @@ class ReportUnsafeViewById(LoggedCallMixin, Bview.DataViewMixin, DetailView):
             'report': self.object, 'report_type': 'unsafe', 'parents': reports.utils.get_parents(self.object),
             'SelfAttrsData': reports.utils.report_attibutes(self.object),
             'MarkTable': ReportMarkTable(self.request.user, self.object, self.get_view(VIEW_TYPES[10])),
-            'etv': etv, 'include_assumptions': self.request.user.extended.assumptions, 'include_jquery_ui': True,
+            'etv': etv, 'include_assumptions': self.request.user.extended.assumptions,
             'resources': reports.utils.get_leaf_resources(self.request.user, self.object),
             'is_modifiable': is_modifiable
         }
@@ -457,7 +457,7 @@ class ReportUnsafeView(LoggedCallMixin, Bview.DataViewMixin, DetailView):
             'report': self.object, 'report_type': 'unsafe', 'parents': reports.utils.get_parents(self.object),
             'SelfAttrsData': reports.utils.report_attibutes(self.object),
             'MarkTable': ReportMarkTable(self.request.user, self.object, self.get_view(VIEW_TYPES[10])),
-            'etv': etv, 'include_assumptions': self.request.user.extended.assumptions, 'include_jquery_ui': True,
+            'etv': etv, 'include_assumptions': self.request.user.extended.assumptions,
             'resources': reports.utils.get_leaf_resources(self.request.user, self.object),
             'is_modifiable': is_modifiable
         }
