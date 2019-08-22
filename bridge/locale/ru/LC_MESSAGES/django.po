@@ -4804,3 +4804,18 @@ msgstr "Точечная диаграмма"
 
 msgid "Number of tasks"
 msgstr "Число задач"
+
+msgid "Correctness witness"
+msgstr "Доказательство корректности"
+
+msgid "Toggle top level elements"
+msgstr "Отобразить/скрыть содержимое элементов верхнего уровня"
+
+msgid "Toggle all elements"
+msgstr "Отобразить/скрыть содержимое всех элементов"
+
+msgid "Download standalone proof"
+msgstr "Сохранить доказательство в автономном режиме"
+
+msgid "Download proof internal representation"
+msgstr "Сохранить внутреннее представление доказательства"
