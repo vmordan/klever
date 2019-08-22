@@ -43,7 +43,7 @@
 {% block body_block %}
     <input id="tags_type" type="hidden" value="{{ report_type }}">
     <div class="ui grid">
-        <div class="twelve wide column">
+        <div class="eleven wide column">
             <div class="ui breadcrumb">
                 {% if report.root.job.name %}
                     {% trans 'Report' %} <a href="{% url 'jobs:job' report.root.job.pk %}">{{ report.root.job.name }}</a>
@@ -62,7 +62,7 @@
                 {% endif %}
             </div>
         </div>
-        <div class="four wide column right floated right aligned">
+        <div class="five wide column right floated right aligned">
             {% if resources %}
                 <i class="ui tiny inverted purple button parent-popup" data-variation="very wide">{% trans 'Consumed resources' %}</i>
                 <div class="ui special popup">
