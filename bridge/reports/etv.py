@@ -862,6 +862,7 @@ def save_zip_trace(zip_trace_name: str, etv, src, assumptions):
             fd.write(data.replace("/static", "static"))
         resource_dirs = [
             os.path.join(os.path.dirname(__file__), os.pardir, 'static', 'js'),
+            os.path.join(os.path.dirname(__file__), os.pardir, 'static', 'images'),
             os.path.join(os.path.dirname(__file__), os.pardir, 'static', 'css'),
             os.path.join(os.path.dirname(__file__), os.pardir, 'static', 'semantic'),
             os.path.join(os.path.dirname(__file__), os.pardir, 'static', 'data_tables'),
