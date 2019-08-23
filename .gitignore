@@ -8,3 +8,4 @@ addons
 build bases
 deploys/conf/*.json
 launcher/
+deploys/current.*
