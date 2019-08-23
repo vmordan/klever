@@ -20,8 +20,9 @@ import json
 from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 
-from users.models import View
+import bridge.settings
 from users.auto_save import start_auto_save
+from users.models import View
 
 DEF_NUMBER_OF_ELEMENTS = 100
 
@@ -399,7 +400,5 @@ class ViewData:
         self._view = DEFAULT_VIEW[self._type]
 
 
-PERFORM_AUTO_SAVE = True
-
-if PERFORM_AUTO_SAVE:
+if hasattr(bridge.settings, 'PERFORM_AUTO_SAVE') and bridge.settings.PERFORM_AUTO_SAVE:
     start_auto_save()
