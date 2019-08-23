@@ -39,7 +39,7 @@
 
 
 <div class="ui grid">
-    <div class="column left aligned">
+    <div class="twelve wide column left aligned">
         <div class="ui breadcrumb">
             <h3><a class="blue-link" href="{% url 'jobs:tree' %}">{% trans 'Reports tree' %}</a>
             {% if parents.0 %}
@@ -51,22 +51,12 @@
             </h3>
         </div>
     </div>
-</div>
-
-
-<div class="ui grid">
-    {% if job %}
-        <div class="ten wide column">
-        {% include 'jobs/DecisionResults.html' %}
-        </div>
-    {% endif %}
-
-    <div class="six wide column right floated right aligned">
+    <div class="four wide column right aligned">
         {% if user.extended.role == '2' %}
-            {# Job menu #}
-            <div class="ui menu top attached secondary" style="background: #baedef">
-                <a class="browse item">{% trans 'Menu' %}<i class="dropdown icon"></i></a>
-                <div class="ui popup bottom left hidden transition">
+        <div class="ui text menu compact">
+            <div class="ui dropdown right icon item">
+                <div class="ui teal tiny basic button">{% trans 'Actions' %}</div>
+                <div class="menu">
                     <!--<a id="download_job_btn" href="{% url 'jobs:download' job.id %}" class="item{% if not job_access.can_download %} disabled{% endif %}">{% trans 'Download' %}</a>-->
                     <a href="{% url 'jobs:form' job.id 'edit' %}" class="menu-link item{% if not job_access.can_edit %} disabled{% endif %}">{% trans 'Edit' %}</a>
                     <a id="remove_job_btn" class="item{% if not job_access.can_delete %} disabled{% endif %}" style="">{% trans 'Delete' %}</a>
@@ -80,7 +70,21 @@
                     {% endif %}
                 </div>
             </div>
+        </div>
         {% endif %}
+    </div>
+</div>
+
+{% if reportdata.totals.unsafes.number > 0 or reportdata.totals.safes.number > 0 or reportdata.totals.unknowns.number > 0 or reportdata.data.resources|length %}
+
+<div class="ui grid">
+    {% if job %}
+        <div class="ten wide column">
+        {% include 'jobs/DecisionResults.html' %}
+        </div>
+    {% endif %}
+
+    <div class="six wide column right floated right aligned">
         {# Job data table #}
         <table class="ui selectable attached compact table celled striped" style="background: #cafdff">
             <thead>
@@ -164,6 +168,7 @@
         <input id="job_status_value" type="hidden" value="{{ job.status }}">
     </div>
 </div>
+{% endif %}
 
 {% if children %}
     <h3 class="ui horizontal divider header">{% trans 'Children' %}</h3>
