@@ -4819,3 +4819,6 @@ msgstr "Сохранить доказательство в автономном 
 
 msgid "Download proof internal representation"
 msgstr "Сохранить внутреннее представление доказательства"
+
+msgid "Reports tree"
+msgstr "Дерево отчетов"
