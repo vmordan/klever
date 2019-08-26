@@ -879,7 +879,11 @@ def save_zip_trace(zip_trace_name: str, etv, src, assumptions):
                     filename = os.path.join(cur_dir, filename)
                     fd_zip.write(filename, os.path.relpath(filename, os.path.join(resource_dir, os.pardir, os.pardir)))
 
-        fd_zip.write(html_trace_tmp, arcname='error-trace.html')
+        if etv.type == 'correctness':
+            name = 'proof'
+        else:
+            name = 'error_trace'
+        fd_zip.write(html_trace_tmp, arcname='{}-{}.html'.format(name, os.path.basename(zip_trace_name)[:-4]))
         os.remove(html_trace_tmp)
 
 
