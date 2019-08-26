@@ -26,7 +26,8 @@ def import_error_trace(logger, witness):
     trace = po.error_trace
 
     # Remove ugly code
-    generic_simplifications(logger, trace)
+    if trace.witness_type != "correctness":
+        generic_simplifications(logger, trace)
 
     # Process ntes (such as property checks, property violations and environment comments)
     trace.process_verifier_notes()
