@@ -540,7 +540,11 @@ class GetETV:
             else:
                 source_code = set()
                 for edge in selected_edges:
-                    source_code.add(edge['source'])
+                    src_edge = edge['source']
+                    m = re.match('^\s*\[(.*)\]\s*$', str(src_edge))
+                    if m is not None:
+                        src_edge = m.group(1)
+                    source_code.add(src_edge)
                 if len(source_code) == 2:
                     cond_1, cond_2 = list(source_code)
                     type_1, type_2 = selected_edges[0]['condition'], selected_edges[1]['condition']
