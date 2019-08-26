@@ -36,7 +36,8 @@ with Session(args) as session:
     if args.copy:
         job_id_or_name = session.copy_job(args.job, name=args.name)
 
-    session.upload_reports(job_id_or_name, args.archive)
+    job_id = session.upload_reports(job_id_or_name, args.archive)
 
-print('ZIP archive with reports "{0}" was successfully uploaded for verificaiton job "{1}"'
-      .format(args.archive, job_id_or_name))
+    print('ZIP archive with reports "{}" was successfully uploaded on "{}/jobs/{}"'
+          .format(args.archive, args.host, job_id))
+

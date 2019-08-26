@@ -319,7 +319,10 @@ def get_job_by_identifier(identifier):
 
 def get_job_by_name_or_id(name_or_id):
     try:
-        return Job.objects.get(name=name_or_id)
+        if name_or_id.isdigit():
+            return Job.objects.get(id=name_or_id)
+        else:
+            return Job.objects.get(name=name_or_id)
     except ObjectDoesNotExist:
         found_jobs = Job.objects.filter(identifier__startswith=name_or_id)
         if len(found_jobs) == 0:

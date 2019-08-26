@@ -129,8 +129,6 @@ class Session:
         return archive
 
     def __get_job_id(self, job):
-        if len(job) == 0:
-            raise ValueError('The job identifier or its name is not set')
         resp = self.__request('/jobs/get_job_field/', {'job': job, 'field': 'id'})
         return resp.json()['id']
 
@@ -151,10 +149,12 @@ class Session:
             raise BridgeError('Got error "{0}" while uploading job'.format(error))
 
     def upload_reports(self, job, archive):
+        job_id = self.__get_job_id(job)
         self.__request(
-            '/jobs/upload_reports/{0}/'.format(self.__get_job_id(job)), {},
-            files=[('archive', open(archive, 'rb', buffering=0))], stream=True
+            '/jobs/upload_reports/{0}/'.format(job_id), {},
+            files=[('archive', open(archive, 'rb', buffering=(1024*1024)))], stream=True
         )
+        return job_id
 
     def job_progress(self, job, filename):
         resp = self.__request('/jobs/get_job_progress_json/{0}/'.format(self.__get_job_id(job)))
@@ -167,11 +167,21 @@ class Session:
             fp.write(resp.json()['data'])
 
     def copy_job(self, job, name=None):
-        if isinstance(name, str) and len(name) > 0:
-            resp = self.__request('/jobs/save_job_copy/{0}/'.format(self.__get_job_id(job)), {'name': name})
-        else:
-            resp = self.__request('/jobs/save_job_copy/{0}/'.format(self.__get_job_id(job)), {})
-        return resp.json()['identifier']
+        while True:
+            try:
+                if isinstance(name, str) and len(name) > 0:
+                    resp = self.__request('/jobs/save_job_copy/{0}/'.format(self.__get_job_id(job)), {'name': name})
+                else:
+                    resp = self.__request('/jobs/save_job_copy/{0}/'.format(self.__get_job_id(job)), {})
+                break
+            except BridgeError as e:
+                res = re.search(r'-(\d+)$', name)
+                if res:
+                    number = int(res.group(1))
+                    name = re.sub("-{}".format(number), "-{}".format(number + 1), name)
+                else:
+                    name = "{}-1".format(name)
+        return resp.json()['id']
 
     def copy_job_version(self, job):
         self.__request('/jobs/copy_job_version/{0}/'.format(self.__get_job_id(job)), {})
