@@ -254,7 +254,7 @@
                         <thead style="background-color:lightgray;" class="center aligned">
                         <tr>
                             <td>{% trans 'Component' %}</td>
-                            <td>{% trans 'Instances' %}</td>
+                            <!--<td>{% trans 'Instances' %}</td>-->
                             <td>{% trans 'CPU time' %}</td>
                             <td>{% trans 'Memory' %}</td>
                             <td>{% trans 'Wall time' %}</td>
@@ -270,7 +270,7 @@
                                             {{ res_data.component }}
                                         {%endif%}
                                     </td>
-                                    <td class="center aligned" style="color: darkblue">{{ res_data.instances }}</td>
+                                    <!--<td class="center aligned" style="color: darkblue">{{ res_data.instances }}</td>-->
                                     <td class="right aligned" style="color: darkblue"><strong>{{ res_data.cpu }}</strong></td>
                                     <td class="right aligned" style="color: darkblue">{{ res_data.mem }}</td>
                                     <td class="center aligned" style="color: darkblue">{{ res_data.wall }}</td>
