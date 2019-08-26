@@ -248,7 +248,9 @@ class ErrorTraceParser:
                     if 'assumption' in _edge:
                         _edge['source'] = _edge['assumption']
                     elif 'start line' in _edge:
-                        if _edge.get('file'):
+                        if start_offset and self.global_program_file:
+                            src_file = self.global_program_file
+                        elif 'file' in _edge:
                             src_file = self.error_trace.get_file_name(_edge['file'])
                         elif self.global_program_file:
                             src_file = self.global_program_file
