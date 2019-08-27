@@ -23,11 +23,13 @@ import uuid
 import zipfile
 
 from django.template.loader import render_to_string
+from django.utils.html import escape
 from django.utils.translation import ugettext_lazy as _
 
 from bridge.utils import ArchiveFileContent, BridgeException
 
 TAB_LENGTH = 4
+MAX_CODE_LINE = 256
 SOURCE_CLASSES = {
     'comment': "ETVComment",
     'number': "ETVNumber",
@@ -178,6 +180,11 @@ class ParseErrorTrace:
                 print("Warning: cannot find source file with id {} due to: {}".format(edge['file'], e))
         if line is not None and len(line) > self.max_line_length:
             self.max_line_length = len(line)
+        if code:
+            code = re.sub(r'\s+', ' ', code)
+            if len(code) > MAX_CODE_LINE:
+                code = code[:MAX_CODE_LINE - 3] + "..."
+            code = escape(code)
         line_data = {
             'line': line,
             'file': self.curr_file,
@@ -372,7 +379,7 @@ class ParseErrorTrace:
 
     def __get_invariants_code(self, code):
         self.__is_not_used()
-        return '<span class="ETV_CondAss">invariant(</span>' + str(code) + '<span class="ETV_CondAss">);</span>'
+        return '<span class="ETV_CondAss">invariant(</span>' + str(escape(code)) + '<span class="ETV_CondAss">);</span>'
 
     def finish_error_lines(self, thread, thread_id):
         self.__return_all()
@@ -426,8 +433,6 @@ class ParseErrorTrace:
         return code
 
     def __parse_code(self, code):
-        if len(code) > 512:
-            return '<span style="color: red;">The line is too long to visualize</span>'
         m = re.match('^(.*?)(<span.*?</span>)(.*)$', code)
         if m is not None:
             return "%s%s%s" % (
