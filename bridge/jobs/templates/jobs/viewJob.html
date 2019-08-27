@@ -97,7 +97,6 @@
                 </tr>
             </thead>
             <tbody>
-                <tr><td class="right aligned">{% trans 'Identifier' %}</td><td>{{ job.identifier }}</td></tr>
                 {% if last_version.description|length %}
                 <tr><td class="right aligned">{% trans 'Description' %}</td><td><span style="white-space: pre-wrap;">{{ last_version.description|safe }}</span></td></tr>
                 {% endif %}

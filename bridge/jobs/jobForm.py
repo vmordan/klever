@@ -30,7 +30,7 @@ from bridge.utils import BridgeException, file_get_or_create
 from users.models import User
 from jobs.models import Job, JobHistory, FileSystem, JobFile, UserRole
 
-from jobs.utils import get_job_by_identifier, JobAccess
+from jobs.utils import get_job_by_name_or_id, JobAccess
 
 
 def role_info(job, user):
@@ -130,10 +130,10 @@ class JobForm:
             data['versions'].append({'version': j_version.version, 'title': title})
 
         if self._copy:
-            data['parent'] = self._job.identifier
+            data['parent'] = self._job.name
         else:
             if self._job.parent:
-                data['parent'] = self._job.parent.identifier
+                data['parent'] = self._job.parent.name
         return data
 
     def job_version(self):
@@ -153,7 +153,7 @@ class JobForm:
     def __get_parent(self, identifier):
         parent = None
         if len(identifier) > 0:
-            parent = get_job_by_identifier(identifier)
+            parent = get_job_by_name_or_id(identifier)
             if not self.__is_parent_valid(parent):
                 raise BridgeException(_("The specified parent can't be set for this job"))
         elif self._user.extended.role != USER_ROLES[2][0]:
