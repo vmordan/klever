@@ -404,3 +404,9 @@ class JobViewAttrs(models.Model):
 
     class Meta:
         db_table = 'job_view_attrs'
+
+
+class Resources(models.Model):
+    report = models.ForeignKey(Report, models.CASCADE, related_name='resources')
+    name = models.CharField(max_length=128)
+    value = models.BigIntegerField()

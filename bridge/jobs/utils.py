@@ -32,7 +32,8 @@ from bridge.vars import JOB_STATUS, USER_ROLES, JOB_ROLES, JOB_WEIGHT, SAFE_VERD
     ASSOCIATION_TYPE, RESOURCE_CPU_TIME, RESOURCE_MEMORY_USAGE, RESOURCE_WALL_TIME
 from jobs.models import Job, JobHistory, FileSystem, UserRole, JobFile
 from marks.models import MarkSafeReport, MarkSafeTag, MarkUnsafeReport, MarkUnsafeTag, MarkUnknownReport
-from reports.models import ComponentResource, ReportComponent, ReportSafe, ReportUnsafe, ReportUnknown, ReportAttr
+from reports.models import ComponentResource, ReportComponent, ReportSafe, ReportUnsafe, ReportUnknown, ReportAttr, \
+    Resources
 from users.notifications import Notify
 
 # List of available types of 'safe' column class.
@@ -1202,14 +1203,14 @@ DEFAULT_RESOURCES = [RESOURCE_CPU_TIME, RESOURCE_WALL_TIME, RESOURCE_MEMORY_USAG
 
 def get_quantile_plot(job_ids: list, args: dict) -> tuple:
     result = list()
-    res_names = DEFAULT_RESOURCES
+    res_names = list(DEFAULT_RESOURCES)
     for job_id in job_ids:
-        resources, attributes = __get_resources(job_id, args)
+        resources, attributes = __get_resources(job_id, args, res_names)
         tmp_result = dict()
-        for res_name in DEFAULT_RESOURCES:
+        for res_name in res_names:
             tmp_result[res_name] = [
                 (get_key_by_val(attributes, attrs), attrs, val) for attrs, val in sorted(
-                    {attributes[r_id]: res[res_name] for r_id, res in resources.items()}.items(),
+                    {attributes[r_id]: res.get(res_name, 0) for r_id, res in resources.items()}.items(),
                     key=operator.itemgetter(1)
                 )
             ]
@@ -1217,7 +1218,7 @@ def get_quantile_plot(job_ids: list, args: dict) -> tuple:
     return result, res_names
 
 
-def __get_resources(job_id: int, args: dict):
+def __get_resources(job_id: int, args: dict, res_names: list) -> tuple:
     attributes = dict()
     resources = dict()
 
@@ -1240,6 +1241,11 @@ def __get_resources(job_id: int, args: dict):
         if report_id not in resources:
             resources[report_id] = {RESOURCE_CPU_TIME: cpu_time / 1000.0, RESOURCE_WALL_TIME: wall_time / 1000.0,
                                     RESOURCE_MEMORY_USAGE: memory / 1000000.0}
+    for report_id, r_name, r_val in Resources.objects.filter(report__in=reports).\
+            values_list('report__id', 'name', 'value'):
+        resources[report_id][r_name] = r_val
+        if r_name not in res_names:
+            res_names.append(r_name)
     for report_id, attrs in attributes.items():
         attrs_str = "/".join([attrs[x] for x in sorted(attrs)])
         attributes[report_id] = attrs_str
@@ -1248,14 +1254,14 @@ def __get_resources(job_id: int, args: dict):
 
 def get_scatter_plot(job1_id: int, job2_id: int, args: dict) -> tuple:
     result = dict()
-    res_names = DEFAULT_RESOURCES
-    res1, attr1 = __get_resources(job1_id, args)
-    res2, attr2 = __get_resources(job2_id, args)
-    for res_name in DEFAULT_RESOURCES:
+    res_names = list(DEFAULT_RESOURCES)
+    res1, attr1 = __get_resources(job1_id, args, res_names)
+    res2, attr2 = __get_resources(job2_id, args, res_names)
+    for res_name in res_names:
         result[res_name] = list()
         for common_attr in set(attr1.values()).intersection(set(attr2.values())):
             report_1 = get_key_by_val(attr1, common_attr)
             report_2 = get_key_by_val(attr2, common_attr)
-            result[res_name].append((common_attr, report_1, report_2, res1[report_1][res_name],
-                                     res2[report_2][res_name]))
+            result[res_name].append((common_attr, report_1, report_2, res1[report_1].get(res_name, 0),
+                                     res2[report_2].get(res_name, 0)))
     return result, res_names, len(set(attr1.values()).intersection(set(attr2.values())))

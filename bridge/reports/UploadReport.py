@@ -36,7 +36,7 @@ from reports.etv import GetETV
 from reports.mea.wrapper import dump_converted_error_trace
 from reports.models import Report, ReportRoot, ReportComponent, ReportSafe, ReportUnsafe, ReportUnknown, \
     Component, ComponentResource, ReportAttr, ReportComponentLeaf, Computer, ComponentInstances, \
-    CoverageArchive, ErrorTraceSource
+    CoverageArchive, ErrorTraceSource, Resources
 from reports.utils import AttrData
 from service.models import Task
 from service.utils import FinishJobDecision, KleverCoreStartDecision
@@ -423,6 +423,12 @@ class UploadReport:
             report.add_verifier_input(REPORT_ARCHIVE['verifier input'], self.archives[self.data['verifier input']])
 
         report.save()
+        additional_resources = list()
+        for r_name, r_val in self.data['resources'].items():
+            if r_name not in ['CPU time', 'memory size', 'wall time']:
+                additional_resources.append(Resources(report=report, name=r_name, value=r_val))
+        if additional_resources:
+            Resources.objects.bulk_create(additional_resources)
 
         if 'coverage' in self.data:
             carch = CoverageArchive(report=report)
