@@ -27,7 +27,7 @@ from bridge.vars import SAFE_VERDICTS, UNSAFE_VERDICTS, ASSOCIATION_TYPE
 from jobs.utils import SAFES, UNSAFES, TITLES, get_resource_data
 from marks.models import MarkUnknownReport
 from marks.utils import UNSAFE_LINK_CLASS, SAFE_LINK_CLASS
-from reports.models import Attr, JobViewAttrs, ReportAttr, ComponentInstances, ReportUnknown
+from reports.models import Attr, JobViewAttrs, ReportAttr, ComponentInstances, ReportUnknown, VerifierConfig
 
 COLORS = {
     'red': '#C70646',
@@ -76,6 +76,13 @@ class ViewJobData:
         self.totals = self.__get_totals()
         self.problems = self.__get_problems()
         self.data = self.__get_view_data()
+        self.config = self.__get_config()
+
+    def __get_config(self) -> dict:
+        res = dict()
+        for name, val in VerifierConfig.objects.filter(report=self.report).values_list('name', 'value'):
+            res[name] = val
+        return res
 
     def __get_attrs(self) -> dict:
         result = dict()

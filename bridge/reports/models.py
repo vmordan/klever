@@ -410,3 +410,9 @@ class Resources(models.Model):
     report = models.ForeignKey(Report, models.CASCADE, related_name='resources')
     name = models.CharField(max_length=128)
     value = models.BigIntegerField()
+
+
+class VerifierConfig(models.Model):
+    report = models.ForeignKey(Report, models.CASCADE, related_name='config')
+    name = models.CharField(max_length=128)
+    value = models.TextField()

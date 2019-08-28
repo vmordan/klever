@@ -36,7 +36,7 @@ from reports.etv import GetETV
 from reports.mea.wrapper import dump_converted_error_trace
 from reports.models import Report, ReportRoot, ReportComponent, ReportSafe, ReportUnsafe, ReportUnknown, \
     Component, ComponentResource, ReportAttr, ReportComponentLeaf, Computer, ComponentInstances, \
-    CoverageArchive, ErrorTraceSource, Resources
+    CoverageArchive, ErrorTraceSource, Resources, VerifierConfig
 from reports.utils import AttrData
 from service.models import Task
 from service.utils import FinishJobDecision, KleverCoreStartDecision
@@ -106,6 +106,8 @@ class UploadReport:
 
         if data['type'] == 'start':
             if data['id'] == '/':
+                if 'config' in data:
+                    self.data['config'] = data['config']
                 if self.attempt == 0:
                     KleverCoreStartDecision(self.job)
                 try:
@@ -367,6 +369,12 @@ class UploadReport:
             report.computer = self.parent.computer
 
         report.save()
+        if 'config' in self.data:
+            verifier_configs = list()
+            for c_name, c_val in self.data['config'].items():
+                verifier_configs.append(VerifierConfig(report=report, name=c_name, value=c_val))
+            if verifier_configs:
+                VerifierConfig.objects.bulk_create(verifier_configs)
 
         if 'attrs' in self.data:
             self.ordered_attrs = self.__save_attrs(report.id, self.data['attrs'])

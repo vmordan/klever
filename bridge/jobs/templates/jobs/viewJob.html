@@ -164,6 +164,28 @@
                     </tr>
                     {% endfor %}
                 {% endif %}
+                {% if reportdata.config %}
+                    <tr>
+                        <td class="ui header center aligned" colspan="2" style="background: #baedef">
+                            {% trans 'Configuration' %}
+                        </td>
+                    </tr>
+                    {% for name, val in reportdata.config.items|dictsort:"0.lower" %}
+                    <tr>
+                        <td class="right aligned">{{ name }}</td>
+                        <td>
+                            {% if val|length < 64 %}
+                                {{val}}
+                            {% else %}
+                                <div class="ui accordion">
+                                <div class="title"><i class="dropdown icon"></i>{% trans 'Long line' %}</div>
+                                <div class="content">{{val}}</div>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% endif %}
             </tbody>
         </table>
         <input id="job_status_value" type="hidden" value="{{ job.status }}">

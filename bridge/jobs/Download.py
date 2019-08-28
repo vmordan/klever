@@ -935,11 +935,11 @@ class UploadReports:
 class UploadReportsWithoutDecision:
     reports_file = 'reports.json'
     fields = {
-        'start': ['id', 'parent id', 'name', 'attrs', 'attr data', 'comp'],
+        'start': ['id', 'parent id', 'name', 'attrs', 'attr data', 'comp', 'config'],
         'finish': ['id', 'data', 'resources', 'log', 'coverage'],
         'verification': [
             'id', 'parent id', 'name', 'attrs', 'attr data', 'comp', 'resources',
-            'log', 'coverage', 'input files of static verifiers'
+            'log', 'coverage', 'input files of static verifiers', 'config'
         ],
         'job coverage': [
             'id', 'parent id', 'name', 'attrs', 'attr data', 'resources', 'coverage'
