@@ -589,10 +589,6 @@ $(document).ready(function () {
         return true;
     });
 
-    if ($('#show_upload_marks_popup').length) {
-        $('#upload_marks_popup').modal('setting', 'transition', 'vertical flip').modal('attach events', '#show_upload_marks_popup', 'show');
-    }
-
     var upload_btn = $('#show_upload_job_popup');
     if (upload_btn.length && !upload_btn.hasClass('disabled')) {
         $('#upload_job_popup').modal({transition: 'vertical flip', onShow: function () {
@@ -612,54 +608,6 @@ $(document).ready(function () {
             }
         }}).modal('attach events', '#show_upload_jobtree_popup', 'show');
     }
-
-    $('#upload_marks_start').click(function () {
-        var files = $('#upload_marks_file_input')[0].files,
-            data = new FormData();
-        if (files.length <= 0) {
-            err_notify($('#error__no_file_chosen').text());
-            return false;
-        }
-        for (var i = 0; i < files.length; i++) {
-            data.append('file', files[i]);
-        }
-        $('#upload_marks_popup').modal('hide');
-        $('#dimmer_of_page').addClass('active');
-        $.ajax({
-            url: '/marks/upload/',
-            type: 'POST',
-            data: data,
-            dataType: 'json',
-            contentType: false,
-            processData: false,
-            mimeType: 'multipart/form-data',
-            xhr: function() {
-                return $.ajaxSettings.xhr();
-            },
-            success: function (data) {
-                $('#dimmer_of_page').removeClass('active');
-                if ('error' in data) err_notify(data['error']);
-                else if ('id' in data && 'type' in data) window.location.href = "/marks/" + data['type'] + "/" + data['id'] + "/";
-                else success_notify(data.success);
-            }
-        });
-    });
-
-    $('#upload_marks_cancel').click(function () {
-        var file_input = $('#upload_marks_file_input');
-        file_input.replaceWith(file_input.clone(true));
-        $('#upload_marks_filename').empty();
-        $('#upload_marks_popup').modal('hide');
-    });
-
-    $('#upload_marks_file_input').on('fileselect', function () {
-        var files = $(this)[0].files,
-            filename_list = $('<ul>');
-        for (var i = 0; i < files.length; i++) {
-            filename_list.append($('<li>', {text: files[i].name}));
-        }
-        $('#upload_marks_filename').html(filename_list);
-    });
 
     $('#upload_job_file_input').on('fileselect', function () {
         var files = $(this)[0].files,

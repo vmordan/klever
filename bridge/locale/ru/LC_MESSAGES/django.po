@@ -4828,3 +4828,6 @@ msgstr "Конфигурация"
 
 msgid "Long line"
 msgstr "Длинная строка"
+
+msgid "Upload one mark"
+msgstr "Загрузить одну оценку на сервер"

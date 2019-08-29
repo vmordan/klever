@@ -49,6 +49,9 @@
                     <button id="resolve_marks" class="ui teal button">
                         <i class="ui x icon icon"></i>{% trans 'Resolve optimizations for all marks' %}
                     </button>
+                    <button id="show_upload_marks_popup" class="ui teal button">
+                        <i class="ui download icon"></i>{% trans 'Upload one mark' %}
+                    </button>
                     <button id="upload_all_marks" class="ui teal button">
                         <i class="ui download icon"></i>{% trans 'Upload all marks' %}
                     </button>
@@ -241,6 +244,23 @@
         <div class="actions">
             <button id="upload_tags_start" type="button" class="ui positive left button">{% trans 'Upload' %}</button>
             <button id="upload_tags_cancel" type="button" class="ui blue button">{% trans 'Cancel' %}</button>
+        </div>
+    </div>
+    <div id="upload_marks_popup" class="ui modal">
+        <div class="header">{% trans 'Upload marks' %}</div>
+        <div class="content">
+            <div class="ui grid">
+                <div class="four wide column right aligned">
+                    <span class="ui violet button btn-file">{% trans 'Browse' %}<input id="upload_marks_file_input" type="file" multiple></span>
+                </div>
+                <div class="twelve wide column">
+                    <span id="upload_marks_filename"></span>
+                </div>
+            </div>
+        </div>
+        <div class="actions">
+            <button id="upload_marks_start" type="button" class="ui positive left button">{% trans 'Upload' %}</button>
+            <button id="upload_marks_cancel" type="button" class="ui blue button">{% trans 'Cancel' %}</button>
         </div>
     </div>
     <input id="tags_type" hidden>

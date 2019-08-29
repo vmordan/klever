@@ -77,9 +77,6 @@
                         <a class="item" href="{% url 'marks:list' 'unsafe' %}">{% trans 'Unsafes' %}</a>
                         <a class="item" href="{% url 'marks:list' 'unknown' %}">{% trans 'Unknowns' %}</a>
                         <a class="item" href="{% url 'marks:list' 'safe' %}">{% trans 'Safes' %}</a>
-                        {% if user.extended.role == '2' %}
-                            <a class="item" id="show_upload_marks_popup">{% trans 'Upload' %}</a>
-                        {% endif %}
                     </div>
                     <div class="column">
                         <h3 class="ui blue header">{% trans 'Tags' %}</h3>
@@ -110,23 +107,6 @@
         <br>
         {% endif %}
         {% block body_block %}{% endblock %}
-        <div id="upload_marks_popup" class="ui modal">
-            <div class="header">{% trans 'Upload marks' %}</div>
-            <div class="content">
-                <div class="ui grid">
-                    <div class="four wide column right aligned">
-                        <span class="ui violet button btn-file">{% trans 'Browse' %}<input id="upload_marks_file_input" type="file" multiple></span>
-                    </div>
-                    <div class="twelve wide column">
-                        <span id="upload_marks_filename"></span>
-                    </div>
-                </div>
-            </div>
-            <div class="actions">
-                <button id="upload_marks_start" type="button" class="ui positive left button">{% trans 'Upload' %}</button>
-                <button id="upload_marks_cancel" type="button" class="ui blue button">{% trans 'Cancel' %}</button>
-            </div>
-        </div>
         <div id="upload_job_popup" class="ui modal">
             <div class="header">{% trans 'Upload jobs' %}</div>
             <div class="content">
