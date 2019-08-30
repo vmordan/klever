@@ -375,7 +375,7 @@ class ParseErrorTrace:
             color = 'black'
 
         code = '<span style="color:{}">{}</span>'.format(color, code)
-        return '<span class="ETV_CondAss">assume(</span>' + str(code) + '<span class="ETV_CondAss">);</span>'
+        return '<span class="ETV_CondAss">assume(</span>' + str(escape(code)) + '<span class="ETV_CondAss">);</span>'
 
     def __get_invariants_code(self, code):
         self.__is_not_used()
@@ -504,7 +504,6 @@ class GetETV:
     def __get_invariants(self, inv_str):
         results = list()
         cur_str = str(inv_str)
-        print(cur_str)
         while cur_str:
             res = re.search(r'\(([^&]+)\) && (.+)', cur_str)
             if res:
