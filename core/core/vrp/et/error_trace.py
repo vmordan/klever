@@ -104,19 +104,7 @@ class ErrorTrace:
         edge = {}
         self._edges.append(edge)
         if target in self.invariants:
-            invariants = list()
-            for inv in self.invariants[target].split(') && ('):
-                while str(inv).startswith('('):
-                    inv = inv[1:]
-                while str(inv).endswith(')'):
-                    inv = inv[:-1]
-                inv = inv.replace(')) || ((', ' || ')
-                if str(inv).startswith('('):
-                    inv = inv[1:]
-                if str(inv).endswith(')'):
-                    inv = inv[:-1]
-                invariants.append(inv)
-            edge['invariants'] = invariants
+            edge['invariants'] = self.invariants[target]
         return edge
 
     def add_file(self, file_name):

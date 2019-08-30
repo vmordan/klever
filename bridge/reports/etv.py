@@ -379,7 +379,7 @@ class ParseErrorTrace:
 
     def __get_invariants_code(self, code):
         self.__is_not_used()
-        return '<span class="ETV_CondAss">invariant(</span>' + str(escape(code)) + '<span class="ETV_CondAss">);</span>'
+        return '<span class="ETV_CondAss">invariant(</span>' + str(code) + '<span class="ETV_CondAss">);</span>'
 
     def finish_error_lines(self, thread, thread_id):
         self.__return_all()
@@ -501,6 +501,35 @@ class GetETV:
         self.html_trace, self.assumes = self.__html_trace()
         self.attributes = []
 
+    def __get_invariants(self, inv_str):
+        results = list()
+        cur_str = str(inv_str)
+        print(cur_str)
+        while cur_str:
+            res = re.search(r'\(([^&]+)\) && (.+)', cur_str)
+            if res:
+                inv = res.group(1)
+                inv = inv.replace(')) || ((', ' || ')
+                while str(inv).startswith('('):
+                    inv = inv[1:]
+                while str(inv).endswith(')'):
+                    inv = inv[:-1]
+                results.append(inv)
+                cur_str = res.group(2)
+            else:
+                inv = cur_str
+                inv = inv.replace(')) || ((', ' || ')
+                while str(inv).startswith('('):
+                    inv = inv[1:]
+                while str(inv).endswith(')'):
+                    inv = inv[:-1]
+                results.append(inv)
+                break
+        if results:
+            return results
+        else:
+            return [inv_str]
+
     def __process_correctness_witness(self):
         edges = dict()
         start_edge = dict()
@@ -521,7 +550,7 @@ class GetETV:
                     edges[start_line] = list()
                 edges[start_line].append(elem)
             elif 'invariants' in elem:
-                for inv in elem['invariants']:
+                for inv in self.__get_invariants(elem['invariants']):
                     if 'file' in elem and 'thread' in elem and 'start line' in elem:
                         pos = (elem['start line'], elem['file'], elem['thread'])
                     else:
@@ -530,9 +559,9 @@ class GetETV:
                         invariants[pos] = set()
                     invariants[pos].add(inv)
                 if not global_invariants:
-                    global_invariants = set(elem['invariants'])
+                    global_invariants = set(self.__get_invariants(elem['invariants']))
                 else:
-                    global_invariants = global_invariants.intersection(set(elem['invariants']))
+                    global_invariants = global_invariants.intersection(set(self.__get_invariants(elem['invariants'])))
         if not start_edge and self.data['edges']:
             start_edge = self.data['edges'][0]
         if not start_edge:
@@ -626,7 +655,7 @@ class GetETV:
             for pos, selected_invariants in sorted(invariants.items()):
                 sorted_invariants = sorted(selected_invariants)
                 special_invariants_num = len(sorted_invariants) - len(global_invariants)
-                if special_invariants_num == 0:
+                if special_invariants_num <= 0:
                     # Only global invariants here
                     continue
                 if not is_added_invariants:
