@@ -37,21 +37,21 @@
                         <label for="parent_job_id">
                             {% trans 'Job name' %}
                         </label>
-                        <input type="text" id="new_job_name" placeholder="{% trans 'Input new job name' %}">
+                        <input type="text" id="new_job_name" placeholder="{% trans 'Input new job name' %}" value="{{ data.new_job_name }}">
                     </div>
                 </div>
                 <div class="three fields">
                     <div class="field required">
                         <label for="parent_job_id">{% trans 'Parent job identifier or name' %}</label>
-                        <input type="text" id="parent_job_id" placeholder="{% trans 'Input parent job id' %}" value="{{ pk }}">
+                        <input type="text" id="parent_job_id" placeholder="{% trans 'Input parent job id' %}" value="{{ data.parent_job_id }}">
                     </div>
                     <div class="field required">
                         <label for="job_type">
                             {% trans 'Job configuration' %}
-                            <i class="ui icon red eye outline" onclick="show_config()" style="cursor:pointer;" title="{% trans 'Show' %}"></i>
+                            <i id="red_eye" class="ui icon red eye outline" onclick="show_config()" style="cursor:pointer; display:none" title="{% trans 'Show' %}"></i>
                         </label>
                         <select id="job_type" class="ui fluid dropdown">
-                            <option value="">{% trans 'Select' %}</option>
+                            <option value="benchmark">{% trans 'Benchmark' %}</option>
                             {% for config, content in data.preset_configs.items|dictsort:"0.lower" %}
                                 <option value="{{config}}">{{config}}</option>
                             {% endfor %}
@@ -60,16 +60,43 @@
                     </div>
                     <div id="job_type_other" class="field" hidden>
                         <label for="upload_config">{% trans 'Specific configuration file' %}</label>
-                        <span class="ui button basic btn-file">
+                        <span class="ui button basic btn-file fluid">
                             <span id="upload_config_filename">{% trans 'Browse' %}</span>
                             <input id="upload_config" type="file">
                         </span>
                     </div>
                 </div>
+                <div class="four fields" id="default_job_type_section">
+                    <div class="field required">
+                        <label for="upload_benchmark_file">{% trans 'Benchmark file' %}</label>
+                        <span class="ui button basic btn-file fluid">
+                            <span id="upload_benchmark_filename">{% trans 'Browse' %}</span>
+                            <input id="upload_benchmark_file" type="file">
+                        </span>
+                    </div>
+                    <div class="field required">
+                        <label for="upload_verifier">{% trans 'Verifier' %}</label>
+                        <span class="ui button basic btn-file fluid">
+                            <span id="upload_verifier_name">{% trans 'Browse' %}</span>
+                            <input id="upload_verifier" type="file">
+                        </span>
+                    </div>
+                    <div class="field required">
+                        <label for="upload_tasks">{% trans 'Tasks' %}</label>
+                        <span class="ui button basic btn-file fluid">
+                            <span id="upload_tasks_name">{% trans 'Browse' %}</span>
+                            <input id="upload_tasks" type="file">
+                        </span>
+                    </div>
+                    <div class="field">
+                        <label for="upload_aux_files">{% trans 'Auxiliary files' %}</label>
+                        <span class="ui button basic btn-file fluid">{% trans 'Browse' %}<input id="upload_aux_files" type="file" multiple></span>
+                    </div>
+                </div>
                 <div class="fields">
                     <div class="sixteen wide field">
                         <label for="job_desc">{% trans 'Job description' %}</label>
-                        <textarea rows="3" id="job_desc"></textarea>
+                        <textarea rows="3" id="job_desc">{{ data.new_job_desc }}</textarea>
                     </div>
                 </div>
             </div>
@@ -114,7 +141,7 @@
                         <label for="limit_cpu_cores">{% trans 'CPU cores per one verification task' %}</label>
                         <input type="number" id="limit_cpu_cores" value="2" max="8" min="1">
                     </div>
-                    <div class="field">
+                    <div class="field" id="commit_field" hidden>
                         <label for="commit">{% trans 'Sources commit' %}</label>
                         <input type="text" id="commit" placeholder="{% trans 'Full verification' %}">
                     </div>
@@ -122,22 +149,13 @@
                 </div>
             </div>
         </div>
-        <div class="ui segment violet">
+        <div class="ui segment violet" id="developer_settings" hidden>
             <div class="ui styled accordion fluid">
                 <h4 class="title black-link">
                     <i class="cogs icon"></i><i>{% trans 'Developer settings' %}</i>
                 </h4>
                 <div class="content">
                     <div class="ui form">
-                        <!--<div class="four fields">
-                            <div class="field">
-                                <label for="upload_aux">{% trans 'Auxiliary files' %}</label>
-                                <span class="ui violet button basic btn-file">{% trans 'Browse' %}<input id="upload_aux" type="file" multiple></span>
-                            </div>
-                            <div class="field">
-                                <span id="upload_aux_filename"></span>
-                            </div>
-                        </div>-->
                         <div class="ui divider horizontal header">{% trans 'Verification tools' %}</div>
                         <table class="ui selectable attached compact table celled striped violet">
                             <thead class="center aligned" style="background-color:lightgray;">
@@ -155,11 +173,16 @@
                                     <td>{{tool}}</td>
                                     <td>{{branch}}@{{revision}}</td>
                                     <td>
-                                       <div class="field">
-                                            <span class="ui button basic btn-file">
-                                                <span id="upload_verifier_{{property_type}}_filename">{% trans 'Browse' %}</span>
-                                                <input id="upload_verifier_{{property_type}}" type="file">
-                                            </span>
+                                        <div class="two fields">
+                                            <div class="field">
+                                                <span class="ui button basic btn-file fluid">
+                                                    <span id="upload_verifier_{{property_type}}_filename">{% trans 'Select archive' %}</span>
+                                                    <input id="upload_verifier_{{property_type}}" type="file">
+                                                </span>
+                                            </div>
+                                            <div class="field">
+                                                <input id="verifier_version_{{property_type}}" type="text" placeholder="Change version">
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>

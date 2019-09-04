@@ -68,8 +68,8 @@
                     {% endif %}
                     {% if job.status == '0' %}
                     <a href="{% url 'jobs:form' job.id 'copy' %}" class="menu-link item{% if not job_access.can_create %} disabled{% endif %}">{% trans 'Copy' %}</a>
-                    <a href="{% url 'service:launcher' job.id %}" class="item">{% trans 'Launch' %}</a>
                     {% endif %}
+                    <a href="{% url 'service:launcher' job.id %}" class="item">{% trans 'Launch' %}</a>
                 </div>
             </div>
         </div>

@@ -308,7 +308,7 @@ def launcher_view(request, pk=""):
     if request.user.extended.role not in [USER_ROLES[1][0], USER_ROLES[2][0], USER_ROLES[4][0]]:
         return JsonResponse({'error': 'No access'})
     activate(request.user.extended.language)
-    return render(request, 'service/launcher.html', {'data': service.utils.LauncherData(), 'pk': pk})
+    return render(request, 'service/launcher.html', {'data': service.utils.LauncherData(job_id=pk)})
 
 
 @login_required
@@ -316,7 +316,7 @@ def launcher_view(request, pk=""):
 def get_config(request, file):
     if request.user.extended.role not in [USER_ROLES[1][0], USER_ROLES[2][0], USER_ROLES[4][0]]:
         return JsonResponse({'error': 'No access'})
-    data = service.utils.LauncherData(True).preset_configs.get(file)
+    data = service.utils.LauncherData(is_full=True).preset_configs.get(file)
     return JsonResponse({'config': data})
 
 
@@ -376,6 +376,8 @@ def launch_job(request):
     launcher = service.utils.LaunchTask(request)
     if launcher.new_job:
         return JsonResponse({'new_job_id': launcher.new_job.id})
+    elif launcher.parent:
+        return JsonResponse({'new_job_id': launcher.parent.id})
     else:
         return JsonResponse({'error': launcher.error})
 

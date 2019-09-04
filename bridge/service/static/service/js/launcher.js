@@ -76,6 +76,33 @@ $(document).ready(function () {
             err_notify($('#trans__err_config').text());
             return;
         }
+        if (job_type == "benchmark") {
+            files = $('#upload_benchmark_file')[0].files;
+            if (!files.length) {
+                err_notify($('#trans__err_config').text());
+                return;
+            } else {
+                data.append('upload_benchmark_file', files[0]);
+            }
+            files = $('#upload_verifier')[0].files;
+            if (!files.length) {
+                err_notify($('#trans__err_config').text());
+                return;
+            } else {
+                data.append('upload_verifier', files[0]);
+            }
+            files = $('#upload_tasks')[0].files;
+            if (!files.length) {
+                err_notify($('#trans__err_config').text());
+                return;
+            } else {
+                data.append('upload_tasks', files[0]);
+            }
+            files = $('#upload_aux_files')[0].files;
+            for (var i = 0; i < files.length; i++) {
+                data.append('upload_aux_files_' + files[i].name, files[i]);
+            }
+        }
         if (job_type == "other" && !is_specific_config) {
             err_notify($('#trans__err_specific_config').text());
             return;
@@ -113,17 +140,18 @@ $(document).ready(function () {
     $('#upload_config').on('fileselect', function () {
         $('#upload_config_filename').text($(this)[0].files[0].name);
     });
+    $('#upload_benchmark_file').on('fileselect', function () {
+        $('#upload_benchmark_filename').text($(this)[0].files[0].name);
+    });
+    $('#upload_verifier').on('fileselect', function () {
+        $('#upload_verifier_name').text($(this)[0].files[0].name);
+    });
+    $('#upload_tasks').on('fileselect', function () {
+        $('#upload_tasks_name').text($(this)[0].files[0].name);
+    });
     $('input[id^="upload_verifier_"]').on('fileselect', function () {
         var property_type = $(this).attr("id").replace(/^upload_verifier_/,"");
         $('#upload_verifier_' + property_type + '_filename').text($(this)[0].files[0].name);
-    });
-    $('#upload_aux').on('fileselect', function () {
-        var files = $(this)[0].files,
-            filename_list = $('<ul>');
-        for (var i = 0; i < files.length; i++) {
-            filename_list.append($('<li>', {text: files[i].name}));
-        }
-        $('#upload_aux_filename').html(filename_list);
     });
     $('#cancel_show_config').click(function () {
         $('#show_config').modal('hide');
@@ -131,9 +159,20 @@ $(document).ready(function () {
     $('#job_type').change(function () {
         if ($('#job_type').val() == "other") {
             $('#job_type_other').show();
+            $('#red_eye').hide();
+            $('#developer_settings').show();
+        } else if ($('#job_type').val() == "benchmark") {
+            $('#default_job_type_section').show();
+            $('#developer_settings').hide();
+            $('#commit_field').hide();
+            $('#red_eye').hide();
+            $('#job_type_other').hide();
         } else {
+            $('#default_job_type_section').hide();
+            $('#developer_settings').show();
+            $('#commit_field').show();
+            $('#red_eye').show();
             $('#job_type_other').hide();
         }
-
     });
 });

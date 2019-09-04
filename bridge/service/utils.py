@@ -46,6 +46,10 @@ from reports.models import ReportRoot, ReportUnknown, ReportComponent
 from service.models import Scheduler, SolvingProgress, Task, VerificationTool, NodesConfiguration, SchedulerUser, \
     Workload, Solution, Node, JobProgress
 
+DEFAULT_VERIFIER_DIR = "verifier"
+DEFAULT_TASKS_DIR = "tasks"
+DEFAULT_BENCHMARK_FILE = "benchmark.xml"
+
 
 def get_launcher_dir() -> str:
     return os.path.normpath(os.path.join(settings.BASE_DIR, os.pardir, DEFAULT_LAUNCHER_DIR))
@@ -207,16 +211,19 @@ class LaunchTask:
         self.cur_dir = os.getcwd()
         self.error = None
         self.new_job = None
+        self.parent = None
         self.user = request.user
         if not self.__is_good():
             return
         data = dict(request.POST)
         for key, val in data.items():
             data[key] = data[key][0]
+        self.type = data.get('job_type')
         self.new_job = self.__create_job(data)
-        if not self.new_job:
+        if not self.new_job and not self.parent:
             return
-        self.__schedule_job()
+        if not self.__is_benchmark():
+            self.__schedule_job()
         os.makedirs(self.launcher_dir)
         self.__process_files(request)
         self.__solve_job(data)
@@ -229,21 +236,39 @@ class LaunchTask:
                 for file in request.FILES.getlist(file_id):
                     path = default_storage.save('tmp', ContentFile(file.read()))
                     tmp_file = os.path.join(settings.MEDIA_ROOT, path)
+                    stored_file = None
                     if file_id == "upload_config":
                         stored_file = os.path.join(files_dir, "config.json")
                         self.specific_config = stored_file
-                    elif file_id == "upload_aux":
-                        stored_file = os.path.join(files_dir, file.name)
+                    elif file_id == "upload_benchmark_file":
+                        stored_file = os.path.join(self.launcher_dir, DEFAULT_BENCHMARK_FILE)
+                    elif file_id == "upload_verifier":
+                        os.system("unzip {} -d {}".format(tmp_file, os.path.join(self.launcher_dir,
+                                                                                 DEFAULT_VERIFIER_DIR)))
+                    elif file_id == "upload_tasks":
+                        os.system("unzip {} -d {}".format(tmp_file, os.path.join(self.launcher_dir, DEFAULT_TASKS_DIR)))
                     elif str(file_id).startswith('upload_verifier_'):
                         verifier_type = file_id[len('upload_verifier_'):]
                         stored_file = os.path.join(files_dir, verifier_type + ".zip")
                         self.verifiers[verifier_type] = stored_file
+                    elif str(file_id).startswith('upload_aux_files_'):
+                        dst_file = file_id[len('upload_aux_files_'):]
+                        stored_file = os.path.join(files_dir, dst_file)
                     else:
                         logger.warning("Unknown type of uploaded file {}".format(file_id))
                         os.remove(tmp_file)
                         stored_file = None
                     if stored_file:
                         shutil.move(tmp_file, stored_file)
+                    else:
+                        if os.path.exists(tmp_file):
+                            os.remove(tmp_file)
+
+    def __is_benchmark(self):
+        if self.type == 'benchmark':
+            return True
+        else:
+            return False
 
     def __is_good(self) -> bool:
         # check for maximal processed tasks
@@ -272,6 +297,9 @@ class LaunchTask:
         if not JobAccess(self.user, parent_job).can_decide():
             self.error = _('No access')
             return None
+        self.parent = parent_job
+        if self.__is_benchmark():
+            return None
         timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
         new_job_name += ' {}'.format(timestamp)
         return create_job({'name': new_job_name, 'author': self.user, 'parent': parent_job, 'description': job_desc,
@@ -285,7 +313,12 @@ class LaunchTask:
         try:
             os.chdir(self.launcher_dir)
             launcher_env = os.environ.copy()
-            launcher_env["job_id"] = self.new_job.identifier
+            if not self.__is_benchmark():
+                launcher_env["job_id"] = self.new_job.identifier
+            else:
+                launcher_env["job_id"] = self.parent.identifier
+                launcher_env["job_name"] = data['new_job_name']
+            launcher_env["type"] = self.type
             if self.specific_config:
                 launcher_env["specific_config"] = self.specific_config
             for verifier_type, arch in self.verifiers.items():
@@ -303,7 +336,22 @@ class LaunchTask:
 
 
 class LauncherData:
-    def __init__(self, is_full=False):
+    def __init__(self, is_full=False, job_id=None):
+        if job_id:
+            try:
+                job = Job.objects.get(id=job_id)
+                is_internal_node = job.status == JOB_STATUS[0][0]
+                if is_internal_node:
+                    self.parent_job_id = job.id
+                    self.new_job_desc = ""
+                    self.new_job_name = ""
+                else:
+                    if job.parent:
+                        self.parent_job_id = job.parent.id
+                    self.new_job_desc = job.versions.last().description
+                    self.new_job_name = job.name
+            except ObjectDoesNotExist:
+                logger.exception('The job {} does not exist'.format(job_id))
         self.preset_configs = dict()
         launcher_dir = get_launcher_dir()
         configs_dir = os.path.join(launcher_dir, DEFAULT_CONFIGS_DIR)
