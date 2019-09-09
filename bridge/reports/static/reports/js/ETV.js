@@ -67,7 +67,7 @@ $(document).ready(function () {
     }
     last_viewed_src = null;
     function get_source_code_standalone(line, filename) {
-        var file_name = '#src_files' + filename.replace(/\//g, '_').replace(/\./g, '_');
+        var file_name = '#src_files' + filename.replace(/[^a-zA-Z0-9_]/g, '');
         file = $(file_name);
         function select_src_string() {
             var selected_src_line = $(file_name + ' #ETVSrcL_' + line);

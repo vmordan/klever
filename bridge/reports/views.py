@@ -17,6 +17,7 @@
 
 import json
 import os
+import re
 from io import BytesIO
 from wsgiref.util import FileWrapper
 
@@ -33,7 +34,8 @@ from django.views.generic.detail import SingleObjectMixin, DetailView
 import bridge.CustomViews as Bview
 import reports.utils
 from bridge.utils import logger, ArchiveFileContent, BridgeException, BridgeErrorResponse
-from bridge.vars import JOB_STATUS, VIEW_TYPES, LOG_FILE, PROOF_FILE, PROBLEM_DESC_FILE
+from bridge.vars import JOB_STATUS, VIEW_TYPES, LOG_FILE, PROBLEM_DESC_FILE
+from jobs.JobTableProperties import TableTree
 from jobs.ViewJobData import ViewJobData
 from jobs.models import Job
 from jobs.utils import JobAccess
@@ -47,7 +49,6 @@ from reports.models import ReportRoot, Report, ReportComponent, ReportSafe, Repo
 from reports.utils import get_edited_error_trace, get_error_trace_content, modify_error_trace, get_html_error_trace
 from service.models import Task
 from tools.profiling import LoggedCallMixin
-from jobs.JobTableProperties import TableTree
 
 
 # These filters are used for visualization component specific data. They should not be used for any other purposes.
@@ -577,7 +578,7 @@ class DownloadErrorTraceHtml(LoggedCallMixin, SingleObjectMixin, Bview.Streaming
         src = dict()
         etv = GetETV(get_error_trace_content(self.object), self.request.user)
         for file in etv.data['files']:
-            file_prep = str(file).replace('/', '_').replace('.', '_')
+            file_prep = re.sub(r'[^A-Za-z0-9_]+', '', str(file))
             cnt = GetSource(self.object, file).data
             src[file_prep] = cnt
         return get_html_error_trace(etv, src, self.request.user.extended.assumptions)
@@ -607,7 +608,8 @@ class DownloadProofHtml(LoggedCallMixin, SingleObjectMixin, Bview.StreamingRespo
         src = dict()
         etv = GetETV(get_error_trace_content(self.object), self.request.user)
         for file in etv.data['files']:
-            file_prep = str(file).replace('/', '_').replace('.', '_')
+            file_prep = re.sub(r'[^A-Za-z0-9_]+', '', str(file))
+            print(file_prep)
             cnt = GetSource(self.object, file, etv.lines).data
             src[file_prep] = cnt
         return get_html_error_trace(etv, src, self.request.user.extended.assumptions)

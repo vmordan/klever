@@ -936,7 +936,7 @@ def convert_json_trace_to_html(json_trace: str, result_trace_name: str):
     src = dict()
     etv = GetETV(json_trace)
     for file in etv.data['files']:
-        file_prep = str(file).replace('/', '_').replace('.', '_')
+        file_prep = re.sub(r'[^A-Za-z0-9_]+', '', str(file))
         cnt = GetSource(None, file, etv.lines).data
         src[file_prep] = cnt
     save_zip_trace(result_trace_name, etv, src, False)
