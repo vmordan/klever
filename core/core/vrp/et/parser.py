@@ -252,6 +252,8 @@ class ErrorTraceParser:
                             src_file = self.global_program_file
                         elif 'file' in _edge:
                             src_file = self.error_trace.get_file_name(_edge['file'])
+                            if not src_file and self.global_program_file:
+                                src_file = self.global_program_file
                         elif self.global_program_file:
                             src_file = self.global_program_file
                         else:

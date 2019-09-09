@@ -360,7 +360,10 @@ class ErrorTrace:
         return self._funcs[identifier]
 
     def get_file_name(self, identifier: int):
-        return self._files[identifier]
+        if self._files:
+            return self._files[identifier]
+        else:
+            return None
 
 
 def get_original_file(edge):
