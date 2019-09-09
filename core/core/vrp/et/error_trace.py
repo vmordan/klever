@@ -19,7 +19,16 @@ import re
 import os
 import json
 
-import core.utils
+
+# Capitalize first letters of attribute names.
+def capitalize_attr_names(attrs):
+    # Each attribute is dictionary with one element which value is either string or array of subattributes.
+    for attr in attrs:
+        # Does capitalize attribute name.
+        attr['name'] = attr['name'][0].upper() + attr['name'][1:]
+
+        if isinstance(attr['value'], list):
+            capitalize_attr_names(attr['value'])
 
 
 class ErrorTrace:
@@ -74,7 +83,7 @@ class ErrorTrace:
         self._edges = [e for index, e in enumerate(self._edges) if index not in sink_edges]
 
     def serialize(self):
-        core.utils.capitalize_attr_names(self._attrs)
+        capitalize_attr_names(self._attrs)
 
         data = {
             'attrs': self._attrs,

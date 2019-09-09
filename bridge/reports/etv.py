@@ -24,9 +24,6 @@ import zipfile
 
 from django.template.loader import render_to_string
 from django.utils.html import escape
-from django.utils.translation import ugettext_lazy as _
-
-from bridge.utils import ArchiveFileContent, BridgeException
 
 TAB_LENGTH = 4
 MAX_CODE_LINE = 256
@@ -747,6 +744,21 @@ class GetETV:
         )
 
 
+class ArchiveFileContent:
+    def __init__(self, report, field_name, file_name):
+        self._report = report
+        self._field = field_name
+        self._name = file_name
+        self.content = self.__extract_file_content()
+
+    def __extract_file_content(self):
+        with getattr(self._report, '_meta').model.objects.get(id=self._report.id).__getattribute__(self._field) as fp:
+            if os.path.splitext(fp.name)[-1] != '.zip':
+                raise ValueError('Archive type is not supported')
+            with zipfile.ZipFile(fp, 'r') as zfp:
+                return zfp.read(self._name)
+
+
 class GetSource:
     def __init__(self, report, file_name, lines=dict()):
         if report:
@@ -767,7 +779,7 @@ class GetSource:
             try:
                 source_content = ArchiveFileContent(self.report.source, 'archive', file_name).content.decode('utf8', errors="ignore")
             except Exception as e:
-                raise BridgeException(_("Error while extracting source from archive: %(error)s") % {'error': str(e)})
+                raise Exception("Error while extracting source from archive: %(error)s" % {'error': str(e)})
         else:
             if os.path.exists(file_name):
                 with open(file_name, encoding="utf8", errors='ignore') as fd:
