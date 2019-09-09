@@ -609,7 +609,6 @@ class DownloadProofHtml(LoggedCallMixin, SingleObjectMixin, Bview.StreamingRespo
         etv = GetETV(get_error_trace_content(self.object), self.request.user)
         for file in etv.data['files']:
             file_prep = re.sub(r'[^A-Za-z0-9_]+', '', str(file))
-            print(file_prep)
             cnt = GetSource(self.object, file, etv.lines).data
             src[file_prep] = cnt
         return get_html_error_trace(etv, src, self.request.user.extended.assumptions)
