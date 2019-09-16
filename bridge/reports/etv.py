@@ -372,7 +372,11 @@ class ParseErrorTrace:
             color = 'black'
 
         code = '<span style="color:{}">{}</span>'.format(color, code)
-        return '<span class="ETV_CondAss">assume(</span>' + str(code) + '<span class="ETV_CondAss">);</span>'
+        if self.type == 'correctness':
+            display_text = 'condition'
+        else:
+            display_text = 'assume'
+        return '<span class="ETV_CondAss">' + display_text + '(</span>' + str(code) + '<span class="ETV_CondAss">);</span>'
 
     def __get_invariants_code(self, code):
         self.__is_not_used()
@@ -599,8 +603,8 @@ class GetETV:
                         edges[start_line]['condition'] = is_covered
                         continue
 
-        start_edge['source'] = 'assumes'
-        start_edge['enter'] = self.__add_new_func('assumes')
+        start_edge['source'] = 'conditions'
+        start_edge['enter'] = self.__add_new_func('conditions')
         self.data['edges'] = [start_edge]
         for start_line, edge in sorted(edges.items()):
             if isinstance(edge, dict):
@@ -611,9 +615,9 @@ class GetETV:
                     enter_edge = dict(first_edge)
                     del enter_edge['condition']
                     return_edge = dict(enter_edge)
-                    enter_edge['enter'] = self.__add_new_func("multiple assumes")
-                    enter_edge['source'] = "multiple assumes"
-                    return_edge['return'] = self.__add_new_func("multiple assumes")
+                    enter_edge['enter'] = self.__add_new_func("multiple conditions")
+                    enter_edge['source'] = "multiple conditions"
+                    return_edge['return'] = self.__add_new_func("multiple conditions")
                     return_edge['source'] = ""
                     self.data['edges'].append(enter_edge)
                     for single_edge in edge:
@@ -622,7 +626,7 @@ class GetETV:
                     self.data['edges'].append(return_edge)
 
         return_edge = dict(start_edge)
-        return_edge['return'] = self.__add_new_func('assumes')
+        return_edge['return'] = self.__add_new_func('conditions')
         del return_edge['enter']
         del return_edge['start line']
         return_edge['source'] = ""
@@ -656,7 +660,7 @@ class GetETV:
                     continue
                 if not is_added_invariants:
                     is_added_invariants = True
-                new_name = "{} invariants".format(special_invariants_num)
+                new_name = "multiple invariants"
                 start_elem = {
                     'enter': self.__add_new_func(new_name),
                     'source': new_name,
