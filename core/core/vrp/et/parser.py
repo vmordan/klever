@@ -231,6 +231,8 @@ class ErrorTraceParser:
                     end_offset = int(data.text)
                 elif data_key in ('note', 'warning'):
                     _edge[data_key if data_key == 'note' else 'warn'] = self.error_trace.process_comment(data.text)
+                elif data_key == 'env':
+                    _edge['env'] = self.error_trace.process_comment(data.text)
                 elif data_key not in unsupported_edge_data_keys:
                     self._logger.warning('Edge data key {!r} is not supported'.format(data_key))
                     unsupported_edge_data_keys[data_key] = None
