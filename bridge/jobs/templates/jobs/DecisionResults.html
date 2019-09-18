@@ -167,7 +167,7 @@
         <div class="column">
             <h4>
                 {% if coverage %}
-                <a href="{% url 'reports:coverage_light' reportdata.report.id %}" class="ui yellow button fluid">
+                <a href="{% url 'reports:coverage_light' reportdata.report.id %}" class="ui yellow button fluid" style="color: black">
                     {% trans 'Coverage' %}:
                     {% if coverage.union %}
                         {{coverage.union.0}}% {% trans 'by functions' %} / {{coverage.union.1}}% {% trans 'by lines' %}
