@@ -133,6 +133,27 @@
                     <tr>
                         <td class="right aligned">{{ name }}</td>
                         <td>
+                            {% if vals|length == 1 %}
+                                <div class="ui checkbox">
+                                    {% for val in vals %}
+                                    {# One iteration only #}
+                                    <input type="checkbox" id="attr_{{ name }}_{{ val }}" value="{{ val }}"
+                                           {% if name in reportdata.attrs %}
+                                                {% for s_name, s_vals in reportdata.attrs.items %}
+                                                    {% if name == s_name %}
+                                                        {% for s_val in s_vals %}
+                                                            {% if s_val.value == val %}
+                                                                checked
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                    >
+                                    <label>{{ val }}</label>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
                             <div class="ui accordion">
                                 <div class="title"><i class="dropdown icon"></i>{{ vals|length }}
                                     {% if vals|length == 1 %} {% trans 'element' %} {% else %} {% trans 'elements' %} {% endif %}
@@ -159,7 +180,7 @@
                                     {% endfor %}
                                 </div>
                             </div>
-
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
