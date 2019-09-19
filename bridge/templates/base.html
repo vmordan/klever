@@ -50,9 +50,11 @@
 
         <div id="page_header" class="ui inverted menu blue fixed">
         {% if user.is_authenticated %}
-            <div class="item">
+            <div class="item" style="padding: 6px">
                 <a href="{% url 'jobs:tree' %}">
-                    <h1 title="{% trans 'Web-interface for Continuous Verification system' %}"><b>{% trans 'CV' %}</b></h1>
+                    <div title="{% trans 'Web-interface for Continuous Verification system' %}">
+                        <img height="40" src="/static/images/klever.png">
+                    </div>
                 </a>
             </div>
             <a class="browse item">{% trans 'Menu' %}<i class="dropdown icon"></i></a>
