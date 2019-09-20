@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2019 ISP RAS (http://www.ispras.ru)
+ * Klever-CV is a web-interface for continuous verification results visualization.
+ *
+ * Copyright (c) 2018-2019 ISP RAS (http://www.ispras.ru)
  * Ivannikov Institute for System Programming of the Russian Academy of Sciences
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +16,7 @@
  * ee the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 
 function show_config() {
     var preset_config = $('#job_type').val();
