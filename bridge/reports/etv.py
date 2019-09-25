@@ -23,7 +23,6 @@ import uuid
 import zipfile
 
 from django.template.loader import render_to_string
-from django.utils.html import escape
 
 TAB_LENGTH = 4
 MAX_CODE_LINE = 256
@@ -181,7 +180,6 @@ class ParseErrorTrace:
             code = re.sub(r'\s+', ' ', code)
             if len(code) > MAX_CODE_LINE:
                 code = code[:MAX_CODE_LINE - 3] + "..."
-            code = escape(code)
         line_data = {
             'line': line,
             'file': self.curr_file,
@@ -578,7 +576,7 @@ class GetETV:
                     m = re.match('^\s*\[(.*)\]\s*$', str(src_edge))
                     if m is not None:
                         src_edge = m.group(1)
-                    source_code.add(src_edge)
+                    source_code.add(src_edge.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;'))
                 if len(source_code) == 2:
                     cond_1, cond_2 = list(source_code)
                     type_1, type_2 = selected_edges[0]['condition'], selected_edges[1]['condition']
