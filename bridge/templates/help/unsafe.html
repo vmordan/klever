@@ -34,25 +34,25 @@ The main purpose of this page is to allow to the user to analyse this error trac
 <div class="ui list">
     <h5 class="ui header">{%trans 'Error trace views'%}</h5>
     <div class="item">
-        <button class="ui mini orange button icon note-popup" data-content="{% trans 'Toggle functions from call stack' %}">
+        <button class="ui mini red button icon note-popup" data-content="{% trans 'Toggle functions from call stack' %}">
             <i class="ui eye icon"></i>
         </button>-
         {% blocktrans %}show/hide all function bodies from call stack{% endblocktrans %};
     </div>
     <div class="item">
-        <button class="ui mini orange button icon note-popup" id="toggle_functions" data-content="{% trans 'Toggle all functions' %}">
+        <button class="ui mini red button icon note-popup" id="toggle_functions" data-content="{% trans 'Toggle all functions' %}">
             <i class="ui sitemap icon"></i>
         </button>-
         {% blocktrans %}show/hide all functions bodies{% endblocktrans %};
     </div>
     <div class="item">
-        <button class="ui mini orange button icon note-popup" id="toggle_notes" data-content="{% trans 'Toggle notes code' %}">
+        <button class="ui mini red button icon note-popup" id="toggle_notes" data-content="{% trans 'Toggle notes code' %}">
             <i class="ui comments outline icon"></i>
         </button>-
         {% blocktrans %}show/hide code lines, which are replaced by properties checks descriptions{% endblocktrans %};
     </div>
     <div class="item">
-        <button class="ui mini orange button icon note-popup" id="toggle_hidden_notes" data-content="{% trans 'Toggle hidden notes' %}">
+        <button class="ui mini red button icon note-popup" id="toggle_hidden_notes" data-content="{% trans 'Toggle hidden notes' %}">
             <i class="ui comment outline icon"></i>
         </button>-
         {% blocktrans %}show/hide hidden properties checks descriptions, which are located outside function call stack{% endblocktrans %}.
@@ -92,7 +92,7 @@ The main purpose of this page is to allow to the user to analyse this error trac
 
     <h5 class="ui header">{%trans 'Marks control'%}</h5>
     <div class="item">
-        <a class="ui mini red button inverted right aligned"><i class="star icon"></i> {% trans 'Create default mark' %}</a> -
+        <a class="ui mini red button basic right aligned"><i class="star icon"></i> {% trans 'Create default mark' %}</a> -
         {% blocktrans %}create new mark with default settings{% endblocktrans %};
     </div>
     <div class="item">

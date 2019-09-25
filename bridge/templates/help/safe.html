@@ -25,13 +25,43 @@
 {% block general %}
 
 {% blocktrans %}This page shows correctness proof and applied marks.
-Note, that currently correctness proof are not given by the verifier in any readable form and thus cannot be presented.
-Therefore, any information about correctness proof is presented in attributes, and marks are applied only by comparing selected attributes values.{% endblocktrans %}
+Note, that currently correctness proofs cannot be compared here, therefore marks are applied only by comparing selected attributes values.{% endblocktrans %}
 
 {% endblock %}
 {% block actions %}
 
-{% blocktrans %}Similar to the {{unknown_page}} page{% endblocktrans %}.
+<div class="ui list">
+    <h5 class="ui header">{%trans 'Proof views'%}</h5>
+    <div class="item">
+        <button class="ui mini green button icon note-popup" data-content="{% trans 'Toggle top level elements' %}">
+            <i class="ui eye icon"></i>
+        </button>-
+        {% blocktrans %}show/hide all top level proof hints{% endblocktrans %};
+    </div>
+    <div class="item">
+        <button class="ui mini green button icon note-popup" data-content="{% trans 'Toggle all elements' %}">
+            <i class="ui sitemap icon"></i>
+        </button>-
+        {% blocktrans %}show/hide all proof hints{% endblocktrans %}.
+    </div>
+
+    <h5 class="ui header">{%trans 'Proof control'%}</h5>
+    <div class="item">
+        <button class="ui mini button violet icon note-popup" data-content="{% trans 'Download standalone proof' %}">
+            <i class="ui download icon"></i>
+        </button>-
+        {% blocktrans %}download archive with the proof in html view (as presented on this page) for standalone usage{% endblocktrans %};
+    </div>
+    <div class="item">
+        <button class="ui mini button violet icon note-popup" data-content="{% trans 'Download proof internal representation' %}">
+            <i class="ui save outline icon"></i>
+        </button>-
+        {% blocktrans %}download internal representation of the proof (json format){% endblocktrans %}.
+    </div>
+
+    <h5 class="ui header">{%trans 'Marks control'%}</h5>
+    {% blocktrans %}Similar to the {{unsafe_page}} page{% endblocktrans %}.
+</div>
 
 {% endblock %}
 {% block use_cases %}
