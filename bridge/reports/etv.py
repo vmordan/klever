@@ -317,13 +317,13 @@ class ParseErrorTrace:
         new_data = {}
         if warn is not None:
             self.scope.show_current_scope('warning')
-            new_data['warning'] = warn
+            new_data['warning'] = re.sub(r'\s+', ' ', warn)
         elif note is not None:
             self.scope.show_current_scope('note')
-            new_data['note'] = note
+            new_data['note'] = re.sub(r'\s+', ' ', note)
         elif env is not None:
             self.scope.show_current_scope('env')
-            new_data['env'] = env
+            new_data['env'] = re.sub(r'\s+', ' ', env)
         return new_data
 
     def __add_assumptions(self, assumption):
