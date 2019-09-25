@@ -166,7 +166,7 @@ class ParseErrorTrace:
         self.double_return = set()
         self._amp_replaced = False
 
-    def add_line(self, edge):
+    def add_line(self, edge, index):
         line = str(edge['start line']) if 'start line' in edge else None
         code = edge['source'] if 'source' in edge and len(edge['source']) > 0 else None
         if 'file' in edge:
@@ -186,7 +186,7 @@ class ParseErrorTrace:
             'code': code,
             'offset': self.scope.offset(),
             'type': 'normal',
-            'id': edge.get('source node', 0)
+            'id': index
         }
 
         line_data.update(self.__add_assumptions(edge.get('assumption')))
@@ -709,7 +709,7 @@ class GetETV:
             elif curr_t < i:
                 break
             else:
-                parsed_trace.add_line(edge_data)
+                parsed_trace.add_line(edge_data, j)
                 j += 1
         parsed_trace.finish_error_lines(self.__get_thread(i), i)
 
