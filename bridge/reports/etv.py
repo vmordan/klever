@@ -502,31 +502,11 @@ class GetETV:
 
     def __get_invariants(self, inv_str):
         results = list()
-        cur_str = str(inv_str)
-        while cur_str:
-            res = re.search(r'\(([^&]+)\) && (.+)', cur_str)
-            if res:
-                inv = res.group(1)
-                inv = inv.replace(')) || ((', ' || ')
-                while str(inv).startswith('('):
-                    inv = inv[1:]
-                while str(inv).endswith(')'):
-                    inv = inv[:-1]
-                results.append(inv)
-                cur_str = res.group(2)
-            else:
-                inv = cur_str
-                inv = inv.replace(')) || ((', ' || ')
-                while str(inv).startswith('('):
-                    inv = inv[1:]
-                while str(inv).endswith(')'):
-                    inv = inv[:-1]
-                results.append(inv)
-                break
-        if results:
-            return results
-        else:
-            return [inv_str]
+        # TODO: parse as boolean expression.
+        for expr in str(inv_str).split('||'):
+            expr = expr.rstrip().lstrip()
+            results.append(expr)
+        return results
 
     def __process_correctness_witness(self):
         edges = dict()
