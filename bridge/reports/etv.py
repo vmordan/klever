@@ -530,7 +530,7 @@ class GetETV:
             elif 'invariants' in elem:
                 for inv in self.__get_invariants(elem['invariants']):
                     if 'file' in elem and 'thread' in elem and 'start line' in elem:
-                        pos = (elem['start line'], elem['file'], elem['thread'])
+                        pos = (elem['file'], elem['start line'], elem['thread'])
                     else:
                         continue
                     if pos not in invariants:
@@ -642,8 +642,8 @@ class GetETV:
                 start_elem = {
                     'enter': self.__add_new_func(new_name),
                     'source': new_name,
-                    'start line': pos[0],
-                    'file': pos[1],
+                    'start line': pos[1],
+                    'file': pos[0],
                     'thread': pos[2]
                 }
                 self.data['edges'].append(start_elem)
@@ -652,15 +652,15 @@ class GetETV:
                         continue
                     elem = {
                         'invariant': inv,
-                        'start line': pos[0],
-                        'file': pos[1],
+                        'start line': pos[1],
+                        'file': pos[0],
                         'thread': pos[2]
                     }
                     self.data['edges'].append(elem)
                 return_elem = {
                     'return': self.__add_new_func(new_name),
                     'source': '',
-                    'file': pos[1],
+                    'file': pos[0],
                     'thread': pos[2]
                 }
                 self.data['edges'].append(return_elem)
