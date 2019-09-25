@@ -227,7 +227,7 @@ class ParseErrorTrace:
             line_data.update(self.__enter_function(
                 edge['enter'], code=line_data['code'], comment=edge.get('entry_point')
             ))
-            if any(x in edge for x in ['note', 'warn', 'env']):
+            if any(x in edge for x in ['note', 'warn']):
                 self.scope.hide_current_scope()
             if 'return' in edge:
                 if edge['enter'] == edge['return']:
@@ -410,7 +410,7 @@ class ParseErrorTrace:
                         del self.lines[i]['comment']
                     if 'comment_class' in self.lines[i]:
                         del self.lines[i]['comment_class']
-            a = 'warning' in self.lines[i] or 'env' in self.lines[i]
+            a = 'warning' in self.lines[i]
             b = 'note' in self.lines[i]
             c = not self.scope.is_shown(self.lines[i]['scope'])
             d = 'hide_id' not in self.lines[i]
