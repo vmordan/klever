@@ -54,6 +54,11 @@ class ErrorTrace:
         self._threads = list()
         self.witness_type = None
         self.invariants = dict()
+        self._warnings = list()
+        self.is_call_stack = False
+        self.is_main_function = False
+        self.is_conditions = False
+        self.is_notes = False
 
     @property
     def functions(self):
@@ -93,7 +98,8 @@ class ErrorTrace:
             'funcs': self._funcs,
             'actions': self._actions,
             'callback actions': self._callback_actions,
-            'type': self.witness_type
+            'type': self.witness_type,
+            'warnings': self._warnings
         }
         return data
 
@@ -120,7 +126,10 @@ class ErrorTrace:
         file_name = os.path.abspath(file_name)
         if file_name not in self._files:
             if not os.path.isfile(file_name):
-                self._logger.warning("There is no file {!r}".format(file_name))
+                no_file_str = "There is no file {!r}".format(file_name)
+                self._logger.warning(no_file_str)
+                if not no_file_str in self._warnings:
+                    self._warnings.append("There is no file {!r}".format(file_name))
                 raise FileNotFoundError
             self._files.append(file_name)
             return self.resolve_file_id(file_name)
@@ -187,6 +196,8 @@ class ErrorTrace:
         # Get information from sources.
         self.parse_model_comments()
         self._logger.info('Mark witness with model comments')
+        if self._model_funcs or self._notes:
+            self.is_notes = True
 
         warn_edges = list()
         for edge in self._edges:
@@ -345,7 +356,33 @@ class ErrorTrace:
     def add_thread(self, thread_id: str):
         self._threads.append(thread_id)
 
-    def final_checks(self):
+    def final_checks(self, entry_point="main"):
+        # Check for warnings
+        if self.witness_type == 'violation':
+            if not self.is_call_stack:
+                self._warnings.append(
+                    'No call stack (please add tags "enterFunction" and "returnFrom" to improve visualization)')
+            if not self.is_conditions:
+                self._warnings.append('No conditions (please add tags "control" to improve visualization)')
+            if not self.is_main_function:
+                self._warnings.append('No entry point (entry point call was generated)')
+                entry_elem = {
+                    'enter': self.add_function(entry_point),
+                    'start line': 0,
+                    'file': 0,
+                    'env': 'entry point',
+                    'source': "{}()".format(entry_point)
+                }
+                if not self._threads:
+                    entry_elem['thread'] = '1'
+                else:
+                    entry_elem['thread'] = str(self._threads[0])
+                self._edges.insert(0, entry_elem)
+            '''
+            if not self.is_notes:
+                self._warnings.append(
+                    'Optional: no violation hints (please add tags "note" and "warn" to improve visualization)')
+            '''
         if not self._threads:
             is_main_process = False
             for edge in self._edges:

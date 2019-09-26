@@ -491,6 +491,7 @@ class GetETV:
         self.data = json.loads(error_trace)
 
         self.type = self.data.get('type')
+        self.warnings = self.data.get('warnings', [])
         self.lines = dict()
         if self.type == "correctness":
             self.__process_correctness_witness()

@@ -17,9 +17,7 @@
 
 {% load i18n %}
 {% load staticfiles %}
-
-<script type="text/javascript" src="{% static "js/jquery-ui.min.js" %}"></script>
-
+<script type="text/javascript" src="{% static 'js/jquery-ui.min.js' %}"></script>
 {% if standalone_html %}
     <span id="standalone" hidden>true</span>
     <style>
@@ -152,6 +150,26 @@
         <div id="etv-divider-2"></div>
     {% endif %}
 </div>
+
+{% if etv.warnings %}
+<div class="ui red segment fluid">
+    <div class="ui header red" onclick="toggle_by_id('etv_warnings_toggle')" style="cursor:pointer;">
+        <b style="color: red">
+            {% trans 'Warning: some elements are missing' %}
+        </b>
+    </div>
+    <div id="etv_warnings_toggle" hidden>
+        <div class="ui list ordered">
+            {% for warn in etv.warnings %}
+            <div class="item">
+                {{warn}}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+<br>
+{% endif %}
 
 {% if etv %}
     {% if etv.attributes|length %}

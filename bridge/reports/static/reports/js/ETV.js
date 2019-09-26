@@ -15,6 +15,18 @@
  * limitations under the License.
  */
 
+function toggle_by_id(identifier) {
+    element = document.getElementById(identifier);
+    if (!element) {
+        return;
+    }
+    if (element.hidden) {
+        element.hidden = false;
+    } else {
+        element.hidden = true;
+    }
+}
+
 $(document).ready(function () {
     var ready_for_next_string = false, etv_window = $('#ETV_error_trace'), etv_attrs = $('#etv-attributes');
 

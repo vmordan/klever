@@ -27,6 +27,8 @@ class ErrorTraceParser:
 
     def __init__(self, logger, witness):
         self._logger = logger
+        self.entry_point = None
+        self._violation_hints = set()
         self.default_program_file = None  # default source file
         self.global_program_file = None  # ~CIL file
         self.error_trace = ErrorTrace(logger)
@@ -86,6 +88,8 @@ class ErrorTraceParser:
                     if new_name:
                         self.default_program_file = new_name
                         break
+        if not graph:
+            return
         for data in graph.findall('graphml:data', self.WITNESS_NS):
             key = data.attrib.get('key')
             if key == 'programfile':
@@ -104,6 +108,9 @@ class ErrorTraceParser:
                 automaton = data.text
                 for line in automaton.split('\n'):
                     note = None
+                    match = re.search(r'init\(([a-zA-Z0-9_]+)\(\)\)', line)
+                    if match:
+                        self.entry_point = match.group(1)
                     match = re.search(r'ERROR\(\"(.+)"\)', line)
                     if match:
                         note = match.group(1)
@@ -111,10 +118,12 @@ class ErrorTraceParser:
                     if match:
                         func_name = match.group(1)
                         self.error_trace.add_model_function(func_name, note)
+                        self._violation_hints.add(func_name)
                         continue
                     match = re.search(r'MATCH\s*{(\S+)\(.*\)}', line)
                     if match:
                         func_name = match.group(1)
+                        self._violation_hints.add(func_name)
                         self.error_trace.add_model_function(func_name, note)
                         continue
         self.__parse_witness_data(graph)
@@ -205,14 +214,25 @@ class ErrorTraceParser:
                     is_source_file = True
                     _edge['source'] = data.text
                 elif data_key == 'enterFunction' or data_key == 'returnFrom' or data_key == 'assumption.scope':
-                    self.error_trace.add_function(data.text)
+                    function_name = data.text
+                    func_index = self.error_trace.add_function(function_name)
                     if data_key == 'enterFunction':
-                        func_id = self.error_trace.resolve_function_id(data.text)
+                        if func_index - len(self._violation_hints) == 0:
+                            if self.entry_point:
+                                if self.entry_point == function_name:
+                                    self.error_trace.is_main_function = True
+                                    if self.error_trace.witness_type == 'violation':
+                                        _edge['env'] = "entry point"
+                            else:
+                                self.error_trace.is_main_function = True
+                        else:
+                            self.error_trace.is_call_stack = True
+                        func_id = self.error_trace.resolve_function_id(function_name)
                         _edge['enter'] = func_id
                     elif data_key == 'returnFrom':
-                        _edge['return'] = self.error_trace.resolve_function_id(data.text)
+                        _edge['return'] = self.error_trace.resolve_function_id(function_name)
                     else:
-                        _edge['assumption scope'] = self.error_trace.resolve_function_id(data.text)
+                        _edge['assumption scope'] = self.error_trace.resolve_function_id(function_name)
                 elif data_key == 'control':
                     val = data.text
                     condition = val
@@ -220,6 +240,7 @@ class ErrorTraceParser:
                         _edge['condition'] = True
                     elif val == 'condition-false':
                         _edge['condition'] = False
+                    self.error_trace.is_conditions = True
                 elif data_key == 'assumption':
                     _edge['assumption'] = data.text
                 elif data_key == 'threadId':
@@ -231,6 +252,7 @@ class ErrorTraceParser:
                     end_offset = int(data.text)
                 elif data_key in ('note', 'warning'):
                     _edge[data_key if data_key == 'note' else 'warn'] = self.error_trace.process_comment(data.text)
+                    self.error_trace.is_notes = True
                 elif data_key == 'env':
                     _edge['env'] = self.error_trace.process_comment(data.text)
                 elif data_key not in unsupported_edge_data_keys:

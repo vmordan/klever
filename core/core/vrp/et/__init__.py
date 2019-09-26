@@ -37,7 +37,7 @@ def import_error_trace(logger, witness):
     # envmodel_simplifications(logger, trace)
 
     # Do final checks
-    trace.final_checks()
+    trace.final_checks(po.entry_point)
 
     return trace.serialize()
 
