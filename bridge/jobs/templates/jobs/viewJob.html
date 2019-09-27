@@ -31,7 +31,7 @@
     <script src="{% static 'jobs/js/jobtree.js' %}"></script>
 {% endblock %}
 
-{% block title %}{% trans 'Job' %} ({{ job.get_status_display }}){% endblock %}
+{% block title %}{{ job.name }}{% endblock %}
 
 {% block help_link %}job{% endblock %}
 
