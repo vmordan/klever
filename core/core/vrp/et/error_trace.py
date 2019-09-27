@@ -364,7 +364,7 @@ class ErrorTrace:
                     'No call stack (please add tags "enterFunction" and "returnFrom" to improve visualization)')
             if not self.is_conditions:
                 self._warnings.append('No conditions (please add tags "control" to improve visualization)')
-            if not self.is_main_function:
+            if not self.is_main_function and self._edges:
                 self._warnings.append('No entry point (entry point call was generated)')
                 entry_elem = {
                     'enter': self.add_function(entry_point),
