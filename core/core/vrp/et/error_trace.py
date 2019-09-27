@@ -240,7 +240,7 @@ class ErrorTrace:
                             edge['note'] = self.process_comment(note)
                             break
 
-        if not warn_edges:
+        if not warn_edges and self.witness_type == 'violation':
             if self._edges:
                 last_edge = self._edges[-1]
                 if 'note' in last_edge:
