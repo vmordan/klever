@@ -585,26 +585,28 @@ class GetETV:
                         edges[start_line]['condition'] = is_covered
                         continue
                 else:
-                    good_cond = str()
-                    good_type = False
-                    good_edge = selected_edges[0]
+                    not_good_edge_idx = set()
                     for i, sc_1 in enumerate(list_source_code):
+                        found_edge = False
                         type_1 = selected_edges[i]['condition']
                         for j, sc_2 in enumerate(list_source_code):
                             type_2 = selected_edges[j]['condition']
-                            if sc_1 == "!({})".format(sc_2):
-                                good_edge = selected_edges[i]
-                                good_cond = sc_2
-                                good_type = (type_1 != type_2)
-                            elif sc_2 == "!({})".format(sc_1):
-                                good_edge = selected_edges[j]
-                                good_cond = sc_1
-                                good_type = (type_1 != type_2)
+                            if sc_2 == "!({})".format(sc_1):
+                                found_edge = True
+                                not_good_edge_idx.add(j)
+                                selected_edges[i]['condition'] = (type_1 != type_2)
+                                selected_edges[i]['source'] = sc_1
+                                break
                             else:
                                 continue
-                    edges[start_line] = good_edge
-                    edges[start_line]['source'] = good_cond
-                    edges[start_line]['condition'] = good_type
+                        if not found_edge:
+                            selected_edges[i]['condition'] = False
+                            selected_edges[i]['source'] = sc_1
+                    j = 0
+                    for i in not_good_edge_idx:
+                        selected_edges.pop(i-j)
+                        j = j + 1
+                    edges[start_line] = selected_edges
                     continue
 
         start_edge['source'] = 'conditions'
@@ -625,7 +627,7 @@ class GetETV:
                     return_edge['source'] = ""
                     self.data['edges'].append(enter_edge)
                     for single_edge in edge:
-                        single_edge['condition'] = False
+                        #single_edge['condition'] = False
                         self.data['edges'].append(single_edge)
                     self.data['edges'].append(return_edge)
 
