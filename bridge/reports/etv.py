@@ -552,12 +552,15 @@ class GetETV:
                 edges[start_line]['condition'] = False
             else:
                 source_code = set()
+                list_source_code = list()
+                # ???
                 for edge in selected_edges:
                     src_edge = edge['source']
                     m = re.match('^\s*\[(.*)\]\s*$', str(src_edge))
                     if m is not None:
                         src_edge = m.group(1)
                     source_code.add(src_edge.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;'))
+                    list_source_code.append(src_edge.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;'))
                 if len(source_code) == 2:
                     cond_1, cond_2 = list(source_code)
                     type_1, type_2 = selected_edges[0]['condition'], selected_edges[1]['condition']
@@ -581,6 +584,28 @@ class GetETV:
                         edges[start_line]['source'] = cond_1
                         edges[start_line]['condition'] = is_covered
                         continue
+                else:
+                    good_cond = str()
+                    good_type = False
+                    good_edge = selected_edges[0]
+                    for i, sc_1 in enumerate(list_source_code):
+                        type_1 = selected_edges[i]['condition']
+                        for j, sc_2 in enumerate(list_source_code):
+                            type_2 = selected_edges[j]['condition']
+                            if sc_1 == "!({})".format(sc_2):
+                                good_edge = selected_edges[i]
+                                good_cond = sc_2
+                                good_type = (type_1 != type_2)
+                            elif sc_2 == "!({})".format(sc_1):
+                                good_edge = selected_edges[j]
+                                good_cond = sc_1
+                                good_type = (type_1 != type_2)
+                            else:
+                                continue
+                    edges[start_line] = good_edge
+                    edges[start_line]['source'] = good_cond
+                    edges[start_line]['condition'] = good_type
+                    continue
 
         start_edge['source'] = 'conditions'
         start_edge['enter'] = self.__add_new_func('conditions')
