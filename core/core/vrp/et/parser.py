@@ -25,9 +25,10 @@ from core.vrp.et.error_trace import ErrorTrace
 class ErrorTraceParser:
     WITNESS_NS = {'graphml': 'http://graphml.graphdrawing.org/xmlns'}
 
-    def __init__(self, logger, witness):
+    def __init__(self, logger, witness, source_dir=None):
         self._logger = logger
         self.entry_point = None
+        self.source_dir = source_dir
         self._violation_hints = set()
         self.default_program_file = None  # default source file
         self.global_program_file = None  # ~CIL file
@@ -37,7 +38,7 @@ class ErrorTraceParser:
 
     def __check_for_default_file(self, name: str, edge: dict):
         try:
-            identifier = self.error_trace.add_file(name)
+            identifier = self.error_trace.add_file(self.__resolve_src_path(name))
             last_used_file = identifier
             edge['file'] = last_used_file
             return last_used_file
@@ -64,13 +65,26 @@ class ErrorTraceParser:
                 self._logger.warning("There is no source file for edge {}".format(edge))
 
     def __check_file_name(self, name: str):
-        if os.path.exists(name):
-            return name
-        # TODO: workaround for some tools.
-        name = re.sub(r'.+/vcloud-\S+/worker/working_dir_[^/]+/', '', name)
+        name = self.__resolve_src_path(name)
         if os.path.exists(name):
             return name
         return None
+
+    def __resolve_src_path(self, name: str):
+        """
+        This function implements very specific logic.
+        """
+        if os.path.exists(name):
+            return name
+        if self.source_dir:
+            abs_path = os.path.join(self.source_dir, name)
+            if os.path.exists(abs_path):
+                return abs_path
+        # TODO: workaround for some tools.
+        resolved_name = re.sub(r'.+/vcloud-\S+/worker/working_dir_[^/]+/', '', name)
+        if os.path.exists(resolved_name):
+            return resolved_name
+        return name
 
     def _parse_witness(self, witness):
         self._logger.info('Parse witness {!r}'.format(witness))
@@ -202,7 +216,7 @@ class ErrorTraceParser:
                 data_key = data.attrib.get('key')
                 if data_key == 'originfile':
                     try:
-                        identifier = self.error_trace.add_file(data.text)
+                        identifier = self.error_trace.add_file(self.__resolve_src_path(data.text))
                         _edge['file'] = identifier
                     except FileNotFoundError:
                         _edge['file'] = None

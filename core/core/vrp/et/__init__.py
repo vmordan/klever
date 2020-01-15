@@ -20,9 +20,9 @@ from core.vrp.et.parser import ErrorTraceParser
 from core.vrp.et.tmpvars import generic_simplifications
 
 
-def import_error_trace(logger, witness):
+def import_error_trace(logger, witness, source_dir=None):
     # Parse witness
-    po = ErrorTraceParser(logger, witness)
+    po = ErrorTraceParser(logger, witness, source_dir)
     trace = po.error_trace
 
     # Remove ugly code
