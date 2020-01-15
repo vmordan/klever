@@ -123,12 +123,12 @@ class ErrorTrace:
         return edge
 
     def add_file(self, file_name):
-        file_name = os.path.abspath(file_name)
+        file_name = os.path.normpath(os.path.abspath(file_name))
         if file_name not in self._files:
             if not os.path.isfile(file_name):
                 no_file_str = "There is no file {!r}".format(file_name)
                 self._logger.warning(no_file_str)
-                if not no_file_str in self._warnings:
+                if no_file_str not in self._warnings:
                     self._warnings.append("There is no file {!r}".format(file_name))
                 raise FileNotFoundError
             self._files.append(file_name)
