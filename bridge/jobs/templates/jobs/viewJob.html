@@ -195,13 +195,19 @@
                     <tr>
                         <td class="right aligned">{{ name }}</td>
                         <td>
-                            {% if val|length < 64 %}
-                                {{val}}
-                            {% else %}
+                            {% if name == "Options" %}
                                 <div class="ui accordion">
-                                <div class="title"><i class="dropdown icon"></i>{% trans 'Show' %}</div>
-                                <div class="content">{{val}}</div>
-                            </div>
+                                    <div class="title"><i class="dropdown icon"></i>{% trans 'Show' %}</div>
+                                    <div class="content">
+                                        <ul class="ui list">
+                                        {% for op in val %}
+                                            <li class="content" {%if op.1%}title="{{op.1}}{%endif%}">{{op.0}}</li>
+                                        {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                            {% else %}
+                                {{val}}
                             {% endif %}
                         </td>
                     </tr>

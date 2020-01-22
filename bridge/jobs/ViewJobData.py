@@ -35,6 +35,8 @@ COLORS = {
     'purple': '#930BBD',
 }
 
+MAX_OPTION_LEN = 80
+
 
 def update_job_view_attrs(raw_attrs: dict, user, job) -> bool:
     saved_attrs = set()
@@ -81,7 +83,20 @@ class ViewJobData:
     def __get_config(self) -> dict:
         res = dict()
         for name, val in VerifierConfig.objects.filter(report=self.report).values_list('name', 'value'):
-            res[name] = val
+            if name == "Options":
+                options = list()
+                for i, op in enumerate(val.split(" -")):
+                    op = str(op).strip()
+                    if i:
+                        op = "-" + op
+                    full_op = None
+                    if len(op) > MAX_OPTION_LEN:
+                        full_op = op
+                        op = op[:MAX_OPTION_LEN] + "..."
+                    options.append((op, full_op))
+                res[name] = sorted(options)
+            else:
+                res[name] = val
         return res
 
     def __get_attrs(self) -> dict:
