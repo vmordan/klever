@@ -416,12 +416,15 @@ class LCOV:
                     real_file_name = line[len(self.FILENAME_PREFIX):]
                     real_file_name = os.path.normpath(real_file_name)
                     if self.default_file:
+                        # TODO: dirty workaround (required for specific cases).
+                        dw_name = re.sub(r'.+/vcloud-\S+/worker/working_dir_[^/]+/', '', real_file_name)
                         real_file_name = self.default_file
                         for source_dir in self.source_dirs:
-                            tmp_file_name = os.path.join(source_dir, self.default_file)
-                            if os.path.exists(tmp_file_name):
-                                real_file_name = tmp_file_name
-                                break
+                            for tmp_file_name in [self.default_file, dw_name]:
+                                tmp_file_name = os.path.join(source_dir, tmp_file_name)
+                                if os.path.exists(tmp_file_name):
+                                    real_file_name = tmp_file_name
+                                    break
                     file_name = os.path.join(os.path.sep,
                                              core.utils.make_relative_path([self.clade_dir], real_file_name))
                     if os.path.isfile(real_file_name) and \
