@@ -20,6 +20,7 @@ import getpass
 import logging
 import os
 import re
+import time
 # TODO: this is non-standard dependency while it is not required for all users. So, let's create a separate library!
 import requests
 import subprocess
@@ -81,6 +82,7 @@ class Session:
         return host
 
     def __request(self, path_url, data=None, **kwargs):
+        time.sleep(0.01)
         url = self._host + path_url
         method = 'POST' if data else 'GET'
 
