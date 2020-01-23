@@ -26,6 +26,7 @@ parser.add_argument('--copy', action='store_true',
                     help='Set it if you would like to copy verification job before uploading reports.')
 parser.add_argument('--archive', help='ZIP archive name.', required=True)
 parser.add_argument('--name', help='Set it if you would like to set specific name when copying verification job.')
+parser.add_argument('--request-sleep', dest="sleep", help='Add sleep before sending requests.')
 args = parser.parse_args()
 
 if not os.path.exists(args.archive):

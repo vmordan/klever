@@ -20,11 +20,11 @@ import getpass
 import logging
 import os
 import re
-import time
 # TODO: this is non-standard dependency while it is not required for all users. So, let's create a separate library!
 import requests
 import subprocess
 import sys
+import time
 import zipfile
 
 PROMPT = 'Password: '
@@ -82,7 +82,13 @@ class Session:
         return host
 
     def __request(self, path_url, data=None, **kwargs):
-        time.sleep(0.01)
+        sleep_time = self._args.sleep
+        if sleep_time:
+            try:
+                sleep_time = float(sleep_time)
+                time.sleep(sleep_time)
+            except ValueError as e:
+                print("Cannot sleep {}s in request due to '{}'".format(sleep_time, e))
         url = self._host + path_url
         method = 'POST' if data else 'GET'
 
