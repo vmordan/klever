@@ -21,6 +21,10 @@ import re
 import tempfile
 import uuid
 import zipfile
+import pycparser
+from sympy import sympify, symbols
+from sympy.logic import boolalg
+from pycparser import c_parser, c_ast, c_generator
 
 from django.template.loader import render_to_string
 
@@ -378,7 +382,7 @@ class ParseErrorTrace:
 
     def __get_invariants_code(self, code):
         self.__is_not_used()
-        return '<span class="ETV_CondAss">invariant(</span>' + str(code) + '<span class="ETV_CondAss">);</span>'
+        return '<span class="ETV_CondAss">invariant(</span>' + str(code) + '<span class="ETV_CondAss">)</span>'
 
     def finish_error_lines(self, thread, thread_id):
         self.__return_all()
@@ -503,10 +507,107 @@ class GetETV:
 
     def __get_invariants(self, inv_str):
         results = list()
-        # TODO: parse as boolean expression.
-        for expr in str(inv_str).split('||'):
-            expr = expr.rstrip().lstrip()
-            results.append(expr)
+        # Make inv_str readable for C parser
+        parser = c_parser.CParser()
+        inv_str = 'int main() {\n if(' + inv_str + ')\n return 0; }'
+        ast = parser.parse(inv_str, filename='<none>')
+        assign = ast.ext[0].body.block_items[0].cond
+        # Replace functions in parser library so it returns an expression for boolean logic library and simplifies !() expressions
+        def not_handler(cond):
+            if cond.op is '!' and type(cond.expr) == pycparser.c_ast.BinaryOp:
+                new_cond = cond.expr
+                new_op = ''
+                if new_cond.op == '==':
+                    new_op = '!='
+                elif new_cond.op == '!=':
+                    new_op = '=='
+                elif new_cond.op == '>=':
+                    new_op = '<'
+                elif new_cond.op == '<=':
+                    new_op = '>'
+                elif new_cond.op == '>':
+                    new_op = '<='
+                elif new_cond.op == '<':
+                    new_op = '>='
+                if new_op:
+                    new_cond.op = new_op
+                    return new_cond
+                else:
+                    return cond
+            else:
+                return cond
+
+        def sym_visit_BinaryOp(self, n):
+            lval_str = self.visit(n.left)
+            rval_str = self.visit(n.right)
+            if type(lval_str) == str:
+                lval_str = lval_str.replace(' ', '^')
+                lval_str = lval_str.replace(':', '#')
+            if type(rval_str) == str:
+                rval_str = rval_str.replace(' ', '^')
+                rval_str = rval_str.replace(':', '#')
+            if n.op == '&&':
+                return boolalg.And(symbols(lval_str) if type(lval_str) == str else lval_str,
+                                   symbols(rval_str) if type(rval_str) == str else rval_str)
+            elif n.op == '||':
+                return boolalg.Or(symbols(lval_str) if type(lval_str) == str else lval_str,
+                                  symbols(rval_str) if type(rval_str) == str else rval_str)
+            elif n.op == '!=' and type(n.left) == pycparser.c_ast.Constant and type(n.right) == pycparser.c_ast.Constant:
+                    if n.left.value != n.right.value:
+                        return sympify(True)
+                    else:
+                        return sympify(False)
+            elif n.op == '==' and type(n.left) == pycparser.c_ast.Constant and type(n.right) == pycparser.c_ast.Constant:
+                    if n.left.value == n.right.value:
+                        return sympify(True)
+                    else:
+                        return sympify(False)
+            else:
+                return '(%s^%s^%s)' % (lval_str, n.op, rval_str)
+
+        def my_visit_UnaryOp(self, n):
+            n = not_handler(n)
+            if type(n) == pycparser.c_ast.BinaryOp:
+                return self.visit(n)
+            operand = self._parenthesize_unless_simple(n.expr)
+            if n.op == 'p++':
+                return '%s++' % operand
+            elif n.op == 'p--':
+                return '%s--' % operand
+            elif n.op == 'sizeof':
+                return 'sizeof(%s)' % self.visit(n.expr)
+            else:
+                return '%s%s' % (n.op, operand)
+
+        c_generator.CGenerator.visit_BinaryOp = sym_visit_BinaryOp
+        c_generator.CGenerator.visit_UnaryOp = my_visit_UnaryOp
+        gen = c_generator.CGenerator()
+        gen_v = gen.visit(assign)
+        inv_str = str(boolalg.to_dnf(symbols(gen_v) if type(gen_v) == str else gen_v))
+        inv_str = inv_str.replace('#', ':')
+        inv_str = inv_str.replace('&', '&&')
+        inv_str = inv_str.replace('^', ' ')
+        #inv_str is now in DNF
+        mutual_inv = set()
+        t = '|' in inv_str
+        for or_expr in inv_str.split(' | '):
+            or_expr = or_expr.strip()
+            if t and '&&' in or_expr:
+                or_expr = or_expr[1:-1]
+            and_list = list()
+
+            for and_expr in or_expr.split(' && '):
+                if and_expr is not 'True' or '&&' not in or_expr:
+                    and_list.append(and_expr)
+            if not mutual_inv:
+                mutual_inv = set(and_list)
+            else:
+                mutual_inv = mutual_inv.intersection(set(and_list))
+                if not mutual_inv:
+                    mutual_inv = {'none'}
+            results.append(' && '.join(and_list))
+        # results[-1] now contains mutual invariants of current invariants
+        results.append(' && '.join(sorted(mutual_inv)))
         return results
 
     def __process_correctness_witness(self):
@@ -529,18 +630,21 @@ class GetETV:
                     edges[start_line] = list()
                 edges[start_line].append(elem)
             elif 'invariants' in elem:
-                for inv in self.__get_invariants(elem['invariants']):
+                inv_list = self.__get_invariants(elem['invariants'])
+                for inv in inv_list:
                     if 'file' in elem and 'thread' in elem and 'start line' in elem:
                         pos = (elem['file'], elem['start line'], elem['thread'])
                     else:
                         continue
                     if pos not in invariants:
-                        invariants[pos] = set()
-                    invariants[pos].add(inv)
+                        invariants[pos] = list()
+                    invariants[pos].append(inv)
                 if not global_invariants:
-                    global_invariants = set(self.__get_invariants(elem['invariants']))
+                    global_invariants = set(inv_list[-1].split(' && '))
                 else:
-                    global_invariants = global_invariants.intersection(set(self.__get_invariants(elem['invariants'])))
+                    global_invariants = global_invariants.intersection(set(inv_list[-1].split(' && ')))
+                    if not global_invariants:
+                        global_invariants = {'none'}
         if not start_edge and self.data['edges']:
             start_edge = self.data['edges'][0]
         if not start_edge:
@@ -553,7 +657,6 @@ class GetETV:
             else:
                 source_code = set()
                 list_source_code = list()
-                # ???
                 for edge in selected_edges:
                     src_edge = edge['source']
                     m = re.match('^\s*\[(.*)\]\s*$', str(src_edge))
@@ -659,14 +762,20 @@ class GetETV:
             self.data['edges'].append(start_edge)
             is_added_invariants = False
             for pos, selected_invariants in sorted(invariants.items()):
-                sorted_invariants = sorted(selected_invariants)
-                special_invariants_num = len(sorted_invariants) - len(global_invariants)
-                if special_invariants_num <= 0:
-                    # Only global invariants here
-                    continue
+                sorted_invariants = sorted(selected_invariants[:-1])
+                mutual_inv = selected_invariants[-1]
+                mutual_list = list()
+                for mutual_expr in mutual_inv.split(' && '):
+                    if mutual_expr not in global_invariants:
+                        mutual_list.append(mutual_expr)
+                mutual_inv = ' && '.join(mutual_list)
                 if not is_added_invariants:
                     is_added_invariants = True
-                new_name = "multiple invariants"
+                if "True" in mutual_inv:
+                    mutual_inv = mutual_inv.replace("True", "")
+                    mutual_inv = mutual_inv.replace(" &&  && ", "")
+                    mutual_inv = mutual_inv.strip(" && ")
+                new_name = mutual_inv if mutual_inv else "multiple invariants"
                 start_elem = {
                     'enter': self.__add_new_func(new_name),
                     'source': new_name,
@@ -675,23 +784,120 @@ class GetETV:
                     'thread': pos[2]
                 }
                 self.data['edges'].append(start_elem)
+                added_inv = False
+
+                if 'True' in sorted_invariants:
+                    sorted_invariants = []
+                for i in range(0, len(sorted_invariants)):
+                    #removing global invariants from inv
+                    inv = sorted_invariants[i]
+                    expr_list = list()
+                    for and_expr in inv.split(' && '):
+                        if and_expr not in global_invariants and and_expr not in mutual_inv:
+                            expr_list.append(and_expr)
+                    sorted_invariants[i] = ' && '.join(expr_list)
+                while True:
+                    max_int = 0
+                    max_i = 0
+                    max_j = 0
+                    max_k = 0
+                    inter_list = []
+                    for i in range(0, len(sorted_invariants)):
+                        set1 = set(sorted_invariants[i].split(' && '))
+                        for j in range(i + 1, len(sorted_invariants)):
+                            set2 = set(sorted_invariants[j].split(' && '))
+                            set_int = set1.intersection(set2)
+                            if len(set_int) > max_int:
+                                max_int = len(set_int)
+                                max_i = i
+                                max_j = j
+                                inter_list = list(set_int)
+                                max_k = 0
+                                for k in range(j + 1, len(sorted_invariants)):
+                                    set3 = set(sorted_invariants[k].split(' && '))
+                                    set_int = set_int.intersection(set3)
+                                    if len(set_int) == max_int:
+                                        max_k = k
+                    if max_j:
+                        set1 = set(sorted_invariants[max_i].split(' && ')).difference(set(inter_list))
+                        set2 = set(sorted_invariants[max_j].split(' && ')).difference(set(inter_list))
+                        set3 = {}
+                        if max_k:
+                            set3 = set(sorted_invariants[max_k].split(' && ')).difference(set(inter_list))
+                        inter = ' && '.join(inter_list)
+                        del sorted_invariants[max_i]
+                        if set1 and set2:
+                            start_elem = {
+                                'enter': self.__add_new_func(''),
+                                'source': inter,
+                                'start line': pos[1],
+                                'file': pos[0],
+                                'thread': pos[2]
+                            }
+                            self.data['edges'].append(start_elem)
+                            added_inv = True
+                            elem = {
+                                'invariant': ' && '.join(list(set1)),
+                                'start line': pos[1],
+                                'file': pos[0],
+                                'thread': pos[2]
+                            }
+                            self.data['edges'].append(elem)
+                            elem = {
+                                'invariant': ' && '.join(list(set2)),
+                                'start line': pos[1],
+                                'file': pos[0],
+                                'thread': pos[2]
+                            }
+                            self.data['edges'].append(elem)
+                            del sorted_invariants[max_j - 1]
+                            if set3:
+                                elem = {
+                                    'invariant': ' && '.join(list(set3)),
+                                    'start line': pos[1],
+                                    'file': pos[0],
+                                    'thread': pos[2]
+                                }
+                                self.data['edges'].append(elem)
+                                del sorted_invariants[max_k - 2]
+                            return_elem = {
+                                'return': self.__add_new_func(''),
+                                'source': '',
+                                'file': pos[0],
+                                'thread': pos[2]
+                            }
+                            self.data['edges'].append(return_elem)
+                    else:
+                        break
+
                 for inv in sorted_invariants:
-                    if inv in global_invariants:
-                        continue
-                    elem = {
-                        'invariant': inv,
-                        'start line': pos[1],
+                    if inv:
+                        added_inv = True
+                        elem = {
+                            'invariant': inv,
+                            'start line': pos[1],
+                            'file': pos[0],
+                            'thread': pos[2]
+                        }
+                        self.data['edges'].append(elem)
+                if added_inv:
+                    return_elem = {
+                        'return': self.__add_new_func(new_name),
+                        'source': '',
                         'file': pos[0],
                         'thread': pos[2]
                     }
-                    self.data['edges'].append(elem)
-                return_elem = {
-                    'return': self.__add_new_func(new_name),
-                    'source': '',
-                    'file': pos[0],
-                    'thread': pos[2]
-                }
-                self.data['edges'].append(return_elem)
+                    self.data['edges'].append(return_elem)
+                else:
+                    del self.data['edges'][-1]
+                    if new_name is not "multiple invariants":
+                        elem = {
+                            'invariant': new_name,
+                            'start line': pos[1],
+                            'file': pos[0],
+                            'thread': pos[2]
+                        }
+                        self.data['edges'].append(elem)
             if is_added_invariants:
                 return_edge = dict(return_edge)
                 return_edge['return'] = self.__add_new_func('invariants')
@@ -770,7 +976,7 @@ class ArchiveFileContent:
 
 
 class GetSource:
-    def __init__(self, report, file_name, lines=dict()):
+    def __init__(self, report, file_name, lines=dict(), edges = list()):
         if report:
             self.report = report
         else:
@@ -779,6 +985,7 @@ class GetSource:
         self.is_text = False
         self.text_quote = None
         self.__lines = lines
+        self.edges = edges
         self.data = self.__get_source(file_name)
 
     def __get_source(self, file_name):
@@ -802,13 +1009,32 @@ class GetSource:
             line = line.replace('\t', ' ' * TAB_LENGTH).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
             line_num = ' ' * (len(str(len(lines))) - len(str(cnt))) + str(cnt)
             parsed_line = self.__parse_line(line)
+            cur_edges = list(filter(lambda edge: (edge['start line'] == int(line_num) or edge['end line'] == int(line_num)) and edge['condition'] == False, self.edges))
             if cnt in self.__lines:
                 val = self.__lines[cnt]
                 if len(val) == 1:
                     color = '#adebadaa'
+                    #color = '#adeb00'
+                    parsed_line = "<span style=\"background-color: {}\">{}</span>".format(color, parsed_line)
                 else:
-                    color = '#adffadaa'
-                parsed_line = "<span style=\"background-color: {}\">{}</span>".format(color, parsed_line)
+                    #color = '#adffadaa'
+                    color = '#70dc70'
+                    if cur_edges:
+                        for edge in cur_edges:
+                            src = edge['source']
+                            if src[0] == '!':
+                                src = self.__parse_line(src)
+                                src = src[2:-1]
+                            elif ' == 0' in src and line.find(src) == -1:
+                                src = src.replace(' == 0', '')
+                                src = self.__parse_line(src)
+                            else:
+                                src = self.__parse_line(src)
+                            if '512' in src:
+                                src = '((int )prrs->pkt_flag & 512) != 0'
+                                src = self.__parse_line(src)
+                            parsed_line = parsed_line.replace(src, "<span style=\"background-color: {}\">{}</span>".format('#dc7070', src))
+                    parsed_line = "<span style=\"background-color: {}\">{}</span>".format(color, parsed_line)
             src_line = '%s %s' % (self.__wrap_line(line_num, 'line', 'ETVSrcL_%s' % cnt), parsed_line)
             data += '<span>%s</span><br>' % src_line
             cnt += 1
@@ -947,7 +1173,8 @@ def convert_json_trace_to_html(json_trace: str, result_trace_name: str):
     etv = GetETV(json_trace)
     for file in etv.data['files']:
         file_prep = re.sub(r'[^A-Za-z0-9_]+', '', str(file))
-        cnt = GetSource(None, file, etv.lines).data
+        cond_edges = list(filter(lambda edge: 'condition' in edge, etv.data['edges']))
+        cnt = GetSource(None, file, etv.lines, cond_edges).data
         src[file_prep] = cnt
     save_zip_trace(result_trace_name, etv, src, False)
 
