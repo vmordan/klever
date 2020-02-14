@@ -600,6 +600,38 @@ $(document).ready(function () {
         $('.ETV_ShowCode').click();
         $(this).removeClass('disabled');
     });
+    $('#ldv_button').click(function () {
+        if ($(this).hasClass('x')) {
+            var et = document.getElementById('ETV_error_trace');
+            var children = et.children;
+            for (var i = 0; i < children.length; i++) {
+                children[i].style.display = "inline";
+            }
+            $(this).removeClass('x');
+        } else {
+            $(this).addClass('x');
+            var et = document.getElementById('ETV_error_trace');
+            var children = et.children;
+            for (var i = 0; i < children.length; i++) {
+                if (!children[i].className.includes('0_0_0_0')) {
+                    children[i].style.display = "none";
+                }
+                if (!children[i].className.includes('0_0_0_0') && !children[i].className.includes('func_collapsed')) {
+                    var str = children[i].getElementsByClassName('ETV_LC');
+                    for (var j = 0; j < str.length; j++) {
+                        var cd = str[j].getElementsByClassName('ETV_CODE');
+                        for (var k = 0; k < cd.length; k++) {
+                            if (cd[k].children.length > 1) {
+                                if (cd[k].innerHTML.includes('ldv_')) {
+                                    children[i].style.display = "inline";
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
     var toggle_notes_state = true;
     $('#toggle_notes').click(function () {
         $(this).addClass('disabled');
