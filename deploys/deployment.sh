@@ -19,13 +19,13 @@
 #
 
 DEFAULT_DB_NAME=$1
-ADMIN_USER=admin
-ADMIN_PASS=admin
+ADMIN_USER=${2:-admin}
+ADMIN_PASS=${3:-admin}
 CV_DIR=$(pwd)
 
 if [ -z ${DEFAULT_DB_NAME} ];
 then
-    echo "Usage: $0 <database name>"
+    echo "Usage: $0 <database name> [<user> <password>]"
     exit 1
 fi
 
