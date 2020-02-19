@@ -367,6 +367,8 @@ class ReportsData:
         elif isinstance(report, ReportUnsafe):
             data['trace_id'] = report.trace_id
             data['source'] = report.source_id
+        elif isinstance(report, ReportSafe) and report.source_id:
+            data['source'] = report.source_id
         return data
 
     def __reports_data(self):
@@ -580,6 +582,14 @@ class UploadJob:
         versions = self.__get_job_versions()
 
         # Upload 1st version of job (creating new job)
+        if Job.objects.filter(identifier=self._jobdata.get('identifier')).count() > 0:
+            del self._jobdata['identifier']
+        job_name = self._jobdata['name']
+        jobs_counter = Job.objects.filter(name__startswith=job_name).count()
+        if jobs_counter > 0:
+            job_name = "{} ({})".format(job_name, jobs_counter)
+            self._jobdata['name'] = job_name
+
         self.job = JobForm(self._user, None, 'copy').save({
             'identifier': self._jobdata.get('identifier'), 'parent': self._parent_id,
             'name': self._jobdata['name'], 'comment': versions[0]['comment'], 'description': versions[0]['description'],
@@ -726,7 +736,8 @@ class UploadReports:
         if isinstance(self.data, list):
             self.__upload_reports()
             self.__upload_attrs(attr_data)
-            self.__upload_coverage(coverage, cov_archives)
+            # TODO: fix this
+            # self.__upload_coverage(coverage, cov_archives)
             self.__upload_resources_cache(resources)
             Recalculation('for_uploaded', json.dumps([self._job.pk], ensure_ascii=False))
 
@@ -822,10 +833,17 @@ class UploadReports:
 
     @transaction.atomic
     def __upload_safe_reports(self):
+        sources = {}
         for i in self._safes:
+            if self.data[i]['source'] not in sources:
+                source_arch_id = (ErrorTraceSource.__name__, 'source', self.data[i]['source'])
+                new_source = ErrorTraceSource(root=self._job.reportroot)
+                with open(self._files[source_arch_id], mode='rb') as fp:
+                    new_source.add_sources(REPORT_ARCHIVE['sources'], fp, True)
+                sources[self.data[i]['source']] = new_source.id
             report = ReportSafe(
                 root=self._job.reportroot, identifier=self.data[i]['identifier'],
-                parent_id=self._parents[self.data[i]['parent']],
+                parent_id=self._parents[self.data[i]['parent']], source_id=sources[self.data[i]['source']],
                 cpu_time=self.data[i]['cpu_time'], wall_time=self.data[i]['wall_time'], memory=self.data[i]['memory']
             )
             proof_id = (ReportSafe.__name__, 'proof', self.data[i]['pk'])
