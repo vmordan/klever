@@ -600,12 +600,62 @@ $(document).ready(function () {
         $('.ETV_ShowCode').click();
         $(this).removeClass('disabled');
     });
+    var hidden_arr = [];
     $('#ldv_button').click(function () {
         if ($(this).hasClass('x')) {
             var et = document.getElementById('ETV_error_trace');
             var children = et.children;
             for (var i = 0; i < children.length; i++) {
-                children[i].style.display = "inline";
+                if (hidden_arr[i]) {
+                    children[i].style.display = "none";
+                } else {
+                    children[i].style.display = "inline";
+                }
+            }
+            $(this).removeClass('x');
+        } else {
+            $(this).addClass('x');
+            var variable = window.prompt("Enter variable name", "ldv_");
+            if (variable != null && variable != "") {
+                var et = document.getElementById('ETV_error_trace');
+                var children = et.children;
+                for (var i = 0; i < children.length; i++) {
+                    if (children[i].style.display == "none" || children[i].hidden) {
+                        hidden_arr[i] = true;
+                    } else {
+                        hidden_arr[i] = false;
+                    }
+                    if (!children[i].className.includes('0_0_0_0')) {
+                        children[i].style.display = "none";
+                    }
+                    if (!children[i].className.includes('0_0_0_0') && !children[i].className.includes('func_collapsed')) {
+                        var str = children[i].getElementsByClassName('ETV_LC');
+                        for (var j = 0; j < str.length; j++) {
+                            var cd = str[j].getElementsByClassName('ETV_CODE');
+                            for (var k = 0; k < cd.length; k++) {
+                                if (cd[k].children.length > 1) {
+                                    if (cd[k].innerHTML.includes(variable)) {
+                                        children[i].style.display = "inline";
+                                        str[j].innerHTML = '     ' + str[j].innerHTML.trimStart();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
+    $('#false_cond_button').click(function () {
+        if ($(this).hasClass('x')) {
+            var et = document.getElementById('ETV_error_trace');
+            var children = et.children;
+            for (var i = 0; i < children.length; i++) {
+                if (hidden_arr[i]) {
+                    children[i].style.display = "none";
+                } else {
+                    children[i].style.display = "inline";
+                }
             }
             $(this).removeClass('x');
         } else {
@@ -613,6 +663,11 @@ $(document).ready(function () {
             var et = document.getElementById('ETV_error_trace');
             var children = et.children;
             for (var i = 0; i < children.length; i++) {
+                if (children[i].style.display == "none" || children[i].hidden) {
+                    hidden_arr[i] = true;
+                } else {
+                    hidden_arr[i] = false;
+                }
                 if (!children[i].className.includes('0_0_0_0')) {
                     children[i].style.display = "none";
                 }
@@ -622,8 +677,10 @@ $(document).ready(function () {
                         var cd = str[j].getElementsByClassName('ETV_CODE');
                         for (var k = 0; k < cd.length; k++) {
                             if (cd[k].children.length > 1) {
-                                if (cd[k].innerHTML.includes('ldv_')) {
+                                if (cd[k].innerHTML.includes('red')) {
+                                    console.log(cd[k]);
                                     children[i].style.display = "inline";
+                                    str[j].innerHTML = '     ' + str[j].innerHTML.trimStart();
                                 }
                             }
                         }

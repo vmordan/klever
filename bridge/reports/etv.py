@@ -173,6 +173,7 @@ class ParseErrorTrace:
     def add_line(self, edge, index):
         line = str(edge['start line']) if 'start line' in edge else None
         code = edge['source'] if 'source' in edge and len(edge['source']) > 0 else None
+
         if 'file' in edge:
             try:
                 self.curr_file = self.files[edge['file']]
@@ -202,11 +203,12 @@ class ParseErrorTrace:
                 line_data.update(self.__get_comment(edge.get('note'), edge.get('warn'), edge.get('env')))
                 self.global_lines.append(line_data)
             return
-
         if 'condition' in edge:
             line_data['code'] = self.__get_condition_code(line_data['code'], edge['condition'])
         if 'invariant' in edge:
-            line_data['code'] = self.__get_invariants_code(edge['invariant'])
+            line_data['code'] = self.__get_invariants_code(edge['invariant'], edge.get('pref', ''))
+        if 'global_invariant' in edge:
+            line_data['code'] = self.__get_global_invariants_code(edge['global_invariant'], edge.get('pref', ''))
 
         curr_action = self.scope.current_action()
         new_action = edge.get('action')
@@ -229,7 +231,7 @@ class ParseErrorTrace:
 
         if 'enter' in edge:
             line_data.update(self.__enter_function(
-                edge['enter'], code=line_data['code'], comment=edge.get('entry_point')
+                edge['enter'], code=line_data['code'], comment=edge.get('entry_point'), prefix=edge.get('pref')
             ))
             if any(x in edge for x in ['note', 'warn']):
                 self.scope.hide_current_scope()
@@ -273,7 +275,7 @@ class ParseErrorTrace:
         self.lines.append(enter_action_data)
         return {'offset': self.scope.offset(), 'scope': self.scope.current()}
 
-    def __enter_function(self, func_id, code=None, comment=None):
+    def __enter_function(self, func_id, code=None, comment=None, prefix=None):
         self.scope.add(func_id, self.thread_id, (code is None))
         enter_data = {'type': 'enter', 'hide_id': self.scope.current()}
         if code is not None:
@@ -284,11 +286,15 @@ class ParseErrorTrace:
                 self.scope.show_current_scope('entry_point')
                 enter_data['comment'] = comment
                 enter_data['comment_class'] = 'ETV_Fcomment'
-            enter_data['code'] = re.sub(
-                '(^|\W)' + self.functions[func_id] + '(\W|$)',
-                '\g<1><span class="ETV_Fname">' + self.functions[func_id] + '</span>\g<2>',
-                code
-            )
+            f = self.functions[func_id] if not prefix else prefix
+            if not prefix:
+                enter_data['code'] = re.sub(
+                    '(^|\W)' + self.functions[func_id] + '(\W|$)',
+                    '\g<1><span class="ETV_Fname">' + self.functions[func_id] + '</span>\g<2>',
+                    code
+                )
+            else:
+                enter_data['code'] = '<span class="ETV_Fname">' + prefix + '</span>' + code
         return enter_data
 
     def __triangle_line(self, return_scope):
@@ -380,9 +386,19 @@ class ParseErrorTrace:
             display_text = 'assume'
         return '<span class="ETV_CondAss">' + display_text + '(</span>' + str(code) + '<span class="ETV_CondAss">);</span>'
 
-    def __get_invariants_code(self, code):
+    def __get_invariants_code(self, code, pref):
         self.__is_not_used()
-        return '<span class="ETV_CondAss">invariant(</span>' + str(code) + '<span class="ETV_CondAss">)</span>'
+        if pref:
+            new_pref = pref[:-1] if '^' in pref else pref
+            closing_bracket = '<span class="ETV_CondAss">)</span>' if '^' in pref else ''
+            if '         || ' in pref:
+                return '<span class="ETV_CondAss">' + new_pref + '</span>' + str(code) + '<span class="ETV_CondAss">)</span>' + closing_bracket
+            return '<span class="ETV_CondAss">' + new_pref + '</span>' + str(code) + closing_bracket
+        return '<span class="ETV_CondAss">' + pref + '(</span>' + str(code) + '<span class="ETV_CondAss">)</span>'
+
+    def __get_global_invariants_code(self, code, pref):
+        self.__is_not_used()
+        return '<span class="ETV_CondAss">' + pref + '(</span>' + str(code) + '<span class="ETV_CondAss">)</span>'
 
     def finish_error_lines(self, thread, thread_id):
         self.__return_all()
@@ -748,10 +764,14 @@ class GetETV:
             self.data['edges'].append(start_edge)
             new_elem = dict(start_edge)
             del new_elem['enter']
+            tmp0 = 0
             for inv in sorted(global_invariants):
                 elem = dict(new_elem)
-                elem['invariant'] = inv
+                elem['global_invariant'] = inv
+                if tmp0 > 0:
+                    elem['pref'] = '&& '
                 self.data['edges'].append(elem)
+                tmp0 += 1
             return_edge = dict(return_edge)
             return_edge['return'] = self.__add_new_func('global invariants')
             self.data['edges'].append(return_edge)
@@ -796,6 +816,7 @@ class GetETV:
                         if and_expr not in global_invariants and and_expr not in mutual_inv:
                             expr_list.append(and_expr)
                     sorted_invariants[i] = ' && '.join(expr_list)
+                tmp1= 0
                 while True:
                     max_int = 0
                     max_i = 0
@@ -834,6 +855,18 @@ class GetETV:
                                 'file': pos[0],
                                 'thread': pos[2]
                             }
+                            pref = ''
+                            if new_name is "multiple invariants":
+                                if tmp1 == 0:
+                                    pref = '('
+                                else:
+                                    pref = ' || '
+                            else:
+                                if tmp1== 0:
+                                    pref = '&& ('
+                                else:
+                                    pref = '    || '
+                            start_elem['pref'] = pref
                             self.data['edges'].append(start_elem)
                             added_inv = True
                             elem = {
@@ -842,6 +875,7 @@ class GetETV:
                                 'file': pos[0],
                                 'thread': pos[2]
                             }
+                            elem['pref'] = "     && ("
                             self.data['edges'].append(elem)
                             elem = {
                                 'invariant': ' && '.join(list(set2)),
@@ -849,6 +883,7 @@ class GetETV:
                                 'file': pos[0],
                                 'thread': pos[2]
                             }
+                            elem['pref'] = "         || "
                             self.data['edges'].append(elem)
                             del sorted_invariants[max_j - 1]
                             if set3:
@@ -858,6 +893,7 @@ class GetETV:
                                     'file': pos[0],
                                     'thread': pos[2]
                                 }
+                                elem['pref'] = "         || "
                                 self.data['edges'].append(elem)
                                 del sorted_invariants[max_k - 2]
                             return_elem = {
@@ -867,9 +903,10 @@ class GetETV:
                                 'thread': pos[2]
                             }
                             self.data['edges'].append(return_elem)
+                            tmp1 += 1
                     else:
                         break
-
+                tmp2 = 0
                 for inv in sorted_invariants:
                     if inv:
                         added_inv = True
@@ -879,7 +916,13 @@ class GetETV:
                             'file': pos[0],
                             'thread': pos[2]
                         }
+                        if (tmp2 == 0 and tmp1 == 0 and new_name is "multiple invariants"):
+                            elem['pref'] = '('
+                        elif tmp2 > 0 or tmp1 > 0:
+                            elem['pref'] = ' ||  '
+
                         self.data['edges'].append(elem)
+                        tmp2 += 1
                 if added_inv:
                     return_elem = {
                         'return': self.__add_new_func(new_name),
@@ -898,6 +941,16 @@ class GetETV:
                             'thread': pos[2]
                         }
                         self.data['edges'].append(elem)
+
+                if tmp2 == 0 and tmp1 > 0:
+                    p = self.data['edges'][-3].get('pref')
+                    if p:
+                        self.data['edges'][-3]['pref'] = p + '^'
+                elif tmp2 > 0:
+                    p = self.data['edges'][-2].get('pref')
+                    if p:
+                        self.data['edges'][-2]['pref'] = p + '^'
+
             if is_added_invariants:
                 return_edge = dict(return_edge)
                 return_edge['return'] = self.__add_new_func('invariants')
@@ -1014,7 +1067,6 @@ class GetSource:
                 val = self.__lines[cnt]
                 if len(val) == 1:
                     color = '#adebadaa'
-                    #color = '#adeb00'
                     parsed_line = "<span style=\"background-color: {}\">{}</span>".format(color, parsed_line)
                 else:
                     #color = '#adffadaa'
