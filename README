@@ -34,6 +34,8 @@ sudo pip3 install --upgrade setuptools
 sudo pip3 install --upgrade pip
 sudo pip3 install requests ujson graphviz django==2.1 psycopg2 pluggy py attrs six more-itertools ply pytest atomicwrites
 
+Package python-psycopg2 is not required on Ubuntu 18 and Ubuntu 20.
+
 Deployment
 ----------
 
