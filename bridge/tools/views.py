@@ -257,7 +257,7 @@ def clear_all_cet(request):
         return JsonResponse({'error': 'Unknown error'})
 
     all_records = ErrorTraceConvertionCache.objects.count()
-    ErrorTraceConvertionCache.objects.delete()
+    ErrorTraceConvertionCache.objects.all().delete()
 
     return JsonResponse({'message': str(all_records) + _(' converted error traces have been deleted')})
 
