@@ -414,7 +414,15 @@ def __compare_skip(edited_error_trace: dict, compared_error_trace: dict) -> int:
 
 
 def __compare_equal(edited_error_trace: dict, compared_error_trace: dict) -> int:
-    equal_threads = len(set(edited_error_trace.values()) & set(compared_error_trace.values()))
+    equal_threads = 0
+    for thread_1 in edited_error_trace.values():
+        result = False
+        for thread_2 in compared_error_trace.values():
+            if thread_1 == thread_2:
+                result = True
+                break
+        if result:
+            equal_threads += 1
     return equal_threads
 
 
