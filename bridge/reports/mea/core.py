@@ -191,34 +191,43 @@ def __convert_model_functions(error_trace: dict, args: dict = {}) -> list:
     additional_model_functions = set(args.get(TAG_ADDITIONAL_MODEL_FUNCTIONS, []))
     model_functions = __get_model_functions(error_trace, additional_model_functions)
     converted_error_trace = __convert_call_tree_filter(error_trace, args)
-    while True:
-        counter = 0
-        is_break = False
-        for item in converted_error_trace:
-            op = item[CET_OP]
-            thread = item[CET_THREAD]
-            name = item[CET_DISPLAY_NAME]
-            if op == CET_OP_CALL:
-                is_save = False
-                remove_items = 0
-                for checking_elem in converted_error_trace[counter:]:
-                    remove_items += 1
-                    checking_op = checking_elem[CET_OP]
-                    checking_name = checking_elem[CET_DISPLAY_NAME]
-                    checking_thread = checking_elem[CET_THREAD]
-                    if checking_op == CET_OP_RETURN and checking_name == name or checking_thread != thread:
-                        break
-                    elif checking_op == CET_OP_CALL:
-                        if checking_name in model_functions:
-                            is_save = True
-                if not is_save:
-                    del converted_error_trace[counter:(counter + remove_items)]
-                    is_break = True
+    removed_indexes = set()
+    thread_start_indexes = set()
+    cur_thread = -1
+    for counter, item in enumerate(converted_error_trace):
+        op = item[CET_OP]
+        thread = item[CET_THREAD]
+        name = item[CET_DISPLAY_NAME]
+        if cur_thread != thread:
+            thread_start_indexes.add(counter)
+            cur_thread = thread
+        if counter in removed_indexes:
+            continue
+        if op == CET_OP_CALL:
+            is_save = False
+            remove_items = 0
+            for checking_elem in converted_error_trace[counter:]:
+                remove_items += 1
+                checking_op = checking_elem[CET_OP]
+                checking_name = checking_elem[CET_DISPLAY_NAME]
+                checking_thread = checking_elem[CET_THREAD]
+                if checking_op == CET_OP_RETURN and checking_name == name:
                     break
-            counter += 1
-        if not is_break:
-            break
-    return converted_error_trace
+                if checking_thread != thread:
+                    remove_items -= 1
+                    break
+                if checking_op == CET_OP_CALL:
+                    if checking_name in model_functions:
+                        is_save = True
+                        break
+            if not is_save:
+                for x in range(counter, counter + remove_items):
+                    removed_indexes.add(x)
+    resulting_error_trace = list()
+    for counter, item in enumerate(converted_error_trace):
+        if counter not in removed_indexes or counter in thread_start_indexes:
+            resulting_error_trace.append(item)
+    return resulting_error_trace
 
 
 def __filter_functions(converted_error_trace: list, filtered_functions: set) -> list:
