@@ -33,10 +33,10 @@ from django.utils.translation import ugettext_lazy as _
 from bridge.ZipGenerator import ZipStream
 from bridge.tableHead import Header
 from bridge.utils import ArchiveFileContent, logger, extract_archive, BridgeException
-from bridge.vars import ERROR_TRACE_FILE, UNSAFE_VERDICTS, SAFE_VERDICTS
+from bridge.vars import ERROR_TRACE_FILE, UNSAFE_VERDICTS, SAFE_VERDICTS, MARK_STATUS
 from jobs.utils import get_resource_data, get_user_time, get_user_memory
-from marks.models import UnknownProblem, SafeTag, UnsafeTag
-from marks.utils import SAFE_COLOR, UNSAFE_COLOR, SAFE_LINK_CLASS, UNSAFE_LINK_CLASS
+from marks.models import UnknownProblem, SafeTag, UnsafeTag, MarkUnsafeReport
+from marks.utils import SAFE_COLOR, UNSAFE_COLOR, SAFE_LINK_CLASS, UNSAFE_LINK_CLASS, STATUS_COLOR
 from reports.etv import save_zip_trace
 from reports.models import ReportComponent, AttrFile, Attr, AttrName, ReportAttr, ReportUnsafe, ReportSafe, \
     ReportUnknown, ReportRoot
@@ -405,7 +405,7 @@ class SafesTable:
 
 
 class UnsafesTable:
-    columns_list = ['marks_number', 'report_verdict',
+    columns_list = ['marks_number', 'report_verdict', 'mark_status',
                     'tags', 'verifiers:cpu', 'verifiers:wall', 'verifiers:memory']
     columns_set = set(columns_list)
 
@@ -502,6 +502,16 @@ class UnsafesTable:
                 unsafe_data['marks_number'] = 0
             if 'confirmed' in unsafe_data and unsafe_data['confirmed'] is None:
                 unsafe_data['confirmed'] = 0
+            if 'mark_status' in columns:
+                marks = list(set(v_id for v_id, in MarkUnsafeReport.objects.filter(
+                    report__id=unsafe_data['id']).values_list("mark__status")))
+                number_of_applied_marks = len(marks)
+                if number_of_applied_marks == 0:
+                    unsafe_data['mark_status'] = '-'
+                elif number_of_applied_marks == 1:
+                    unsafe_data['mark_status'] = marks[0]
+                else:
+                    unsafe_data['mark_status'] = _('Multiple')
 
         if 'tag' in self._kwargs and self._kwargs['tag'] == -1:
             new_ids = []
@@ -540,6 +550,13 @@ class UnsafesTable:
                         val = '%s (%s)' % (unsafes[rep_id]['confirmed'], unsafes[rep_id]['marks_number'])
                     else:
                         val = str(unsafes[rep_id]['marks_number'])
+                elif col == 'mark_status':
+                    val = unsafes[rep_id]['mark_status']
+                    for u in MARK_STATUS:
+                        if u[0] == val:
+                            val = u[1]
+                            color = STATUS_COLOR[u[0]]
+                            break
                 elif col == 'total_similarity':
                     val = '%d%%' % (unsafes[rep_id]['total_similarity'] * 100)
                 elif col == 'report_verdict':
