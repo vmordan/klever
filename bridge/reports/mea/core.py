@@ -423,29 +423,25 @@ def __compare_skip(edited_error_trace: dict, compared_error_trace: dict) -> int:
 
 
 def __compare_equal(edited_error_trace: dict, compared_error_trace: dict) -> int:
-    equal_threads = 0
-    for thread_1 in edited_error_trace.values():
-        result = False
-        for thread_2 in compared_error_trace.values():
+    result = {}
+    for id_1, thread_1 in edited_error_trace.items():
+        for id_2, thread_2 in compared_error_trace.items():
             if thread_1 == thread_2:
-                result = True
-                break
-        if result:
-            equal_threads += 1
-    return equal_threads
+                if id_1 not in result:
+                    result[id_1] = list()
+                result[id_1].append(id_2)
+    return __convert_to_number_of_compared_threads(result)
 
 
 def __compare_include(edited_error_trace: dict, compared_error_trace: dict) -> int:
-    equal_threads = 0
-    for thread_1 in edited_error_trace.values():
-        result = False
-        for thread_2 in compared_error_trace.values():
+    result = {}
+    for id_1, thread_1 in edited_error_trace.items():
+        for id_2, thread_2 in compared_error_trace.items():
             if __sublist(thread_1, thread_2):
-                result = True
-                break
-        if result:
-            equal_threads += 1
-    return equal_threads
+                if id_1 not in result:
+                    result[id_1] = list()
+                result[id_1].append(id_2)
+    return __convert_to_number_of_compared_threads(result)
 
 
 def __compare_include_with_error(edited_error_trace: dict, compared_error_trace: dict) -> int:
@@ -455,24 +451,44 @@ def __compare_include_with_error(edited_error_trace: dict, compared_error_trace:
     return __compare_include(edited_error_trace, compared_error_trace)
 
 
+def __convert_to_number_of_compared_threads(result: dict) -> int:
+    used_transitions = set()
+    max_number_of_threads = 0
+    print(result)
+    while True:
+        used_ids_2 = set()
+        number_of_threads = 0
+        for id_1, ids_2 in result.items():
+            for id_2 in ids_2:
+                id_str = "{}_{}".format(id_1, id_2)
+                if id_2 not in used_ids_2 and id_str not in used_transitions:
+                    used_ids_2.add(id_2)
+                    used_transitions.add(id_str)
+                    number_of_threads += 1
+                    break
+        if number_of_threads > max_number_of_threads:
+            max_number_of_threads = number_of_threads
+
+        if number_of_threads == 0:
+            break
+    return max_number_of_threads
+
+
 def __compare_include_partial(edited_error_trace: dict, compared_error_trace: dict) -> int:
-    equal_threads = 0
-    for thread_1 in edited_error_trace.values():
-        result = False
-        for thread_2 in compared_error_trace.values():
+    result = {}
+    for id_1, thread_1 in edited_error_trace.items():
+        for id_2, thread_2 in compared_error_trace.items():
             if all(elem in thread_2 for elem in thread_1):
-                result = True
-                break
-        if result:
-            equal_threads += 1
-    return equal_threads
+                if id_1 not in result:
+                    result[id_1] = list()
+                result[id_1].append(id_2)
+    return __convert_to_number_of_compared_threads(result)
 
 
 def __compare_include_partial_ordered(edited_error_trace: dict, compared_error_trace: dict) -> int:
-    equal_threads = 0
-    for thread_1 in edited_error_trace.values():
-        result = False
-        for thread_2 in compared_error_trace.values():
+    result = {}
+    for id_1, thread_1 in edited_error_trace.items():
+        for id_2, thread_2 in compared_error_trace.items():
             last_index = 0
             is_eq = True
             for elem in thread_1:
@@ -482,11 +498,10 @@ def __compare_include_partial_ordered(edited_error_trace: dict, compared_error_t
                     is_eq = False
                     break
             if is_eq:
-                result = True
-                break
-        if result:
-            equal_threads += 1
-    return equal_threads
+                if id_1 not in result:
+                    result[id_1] = list()
+                result[id_1].append(id_2)
+    return __convert_to_number_of_compared_threads(result)
 
 
 def __get_similarity_coefficient(l1: dict, l2: dict, common_elements: int) -> float:
