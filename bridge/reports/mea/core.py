@@ -454,7 +454,6 @@ def __compare_include_with_error(edited_error_trace: dict, compared_error_trace:
 def __convert_to_number_of_compared_threads(result: dict) -> int:
     used_transitions = set()
     max_number_of_threads = 0
-    print(result)
     while True:
         used_ids_2 = set()
         number_of_threads = 0
