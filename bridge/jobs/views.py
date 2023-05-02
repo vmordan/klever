@@ -230,6 +230,14 @@ class RemoveJobsView(LoggedCallMixin, Bview.JsonView):
         return {}
 
 
+class ClearJobsView(LoggedCallMixin, Bview.JsonView):
+    unparallel = [Job]
+
+    def get_context_data(self, **kwargs):
+        jobs.utils.clear_jobs_by_id(self.request.user, json.loads(self.request.POST.get('jobs', '[]')))
+        return {}
+
+
 class SaveJobCopyView(LoggedCallMixin, Bview.JsonDetailPostView):
     model = Job
     unparallel = [Job]

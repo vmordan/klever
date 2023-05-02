@@ -59,6 +59,7 @@
                 <div class="menu">
                     <a id="download_job_btn" href="{% url 'jobs:download' job.id %}" class="item{% if not job_access.can_download %} disabled{% endif %}">{% trans 'Download' %}</a>
                     <a href="{% url 'jobs:form' job.id 'edit' %}" class="menu-link item{% if not job_access.can_edit %} disabled{% endif %}">{% trans 'Edit' %}</a>
+                    <a id="clear_job_btn" class="item{% if not job_access.can_download %} disabled{% endif %}" style="">{% trans 'Clear' %}</a>
                     {% if not children %}
                     <a id="remove_job_btn" class="item{% if not job_access.can_delete %} disabled{% endif %}" style="">{% trans 'Delete' %}</a>
                     <a id="upload_reports_btn" class="item{% if not job_access.can_upload_reports %} disabled{% endif %}">{% trans 'Upload' %}</a>
@@ -307,6 +308,7 @@
 
     <span id="warn__decide_job">{% trans 'All existing reports of this job will be deleted' %}!</span>
     <span id="warn__remove_job">{% trans 'All versions and all data of this job will be deleted' %}!</span>
+    <span id="warn__clear_job">{% trans 'Job content will be cleared' %}!</span>
     <span id="warn__collapse">{% trans 'There is no reverse of this action' %}!</span>
     <span id="warn__has_children">{% trans 'The job has children, and all of them will be deleted' %}!</span>
     <span id="warn__clear_files">{% trans 'Files of verification reports will be deleted' %}!</span>

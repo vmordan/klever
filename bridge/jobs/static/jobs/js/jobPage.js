@@ -201,6 +201,18 @@ function remove_job() {
     );
 }
 
+function clear_job() {
+    $('#dimmer_of_page').addClass('active');
+    $.post(
+        '/jobs/clear/',
+        {jobs: JSON.stringify([$('#job_id').val()])},
+        function (data) {
+            $('#dimmer_of_page').removeClass('active');
+            data.error ? err_notify(data.error) : window.location.replace('/jobs/' + $('#job_id').val());
+        }, 'json'
+    );
+}
+
 function check_children() {
     $.post('/jobs/do_job_has_children/' + $('#job_id').val() + '/', {}, function (data) {
         if (data.error) {
@@ -277,6 +289,7 @@ $(document).ready(function () {
     $('#warn_modal').modal({transition: 'fade in', autofocus: false, closable: false});
     $('#warn_close_btn').click(function () { $('#warn_modal').modal('hide') });
     $('#remove_job_btn').click(function () { show_warn_modal($(this), 'warn__remove_job', check_children) });
+    $('#clear_job_btn').click(function () { show_warn_modal($(this), 'warn__clear_job', clear_job) });
     $('#decide_job_btn').click(function () { show_warn_modal($(this), 'warn__decide_job', function () { window.location.href = '/jobs/prepare_run/' + $('#job_id').val() + '/' }) });
     $('#fast_decide_job_btn').click(function () { show_warn_modal($(this), 'warn__decide_job', fast_run_decision) });
     $('#last_decide_job_btn').click(function () { show_warn_modal($(this), 'warn__decide_job', lastconf_run_decision) });

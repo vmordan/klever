@@ -33,6 +33,7 @@ urlpatterns = [
 
     # Main actions with jobs
     path('remove/', views.RemoveJobsView.as_view()),
+    path('clear/', views.ClearJobsView.as_view()),
     path('save_job_copy/<int:pk>/', views.SaveJobCopyView.as_view()),
     path('decision_results_json/<int:pk>/', views.DecisionResultsJson.as_view()),
     path('set_attrs/<int:pk>/', views.SetJobViewAttrs.as_view()),

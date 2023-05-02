@@ -33,7 +33,7 @@ from bridge.vars import JOB_STATUS, USER_ROLES, JOB_ROLES, JOB_WEIGHT, SAFE_VERD
 from jobs.models import Job, JobHistory, FileSystem, UserRole, JobFile
 from marks.models import MarkSafeReport, MarkSafeTag, MarkUnsafeReport, MarkUnsafeTag, MarkUnknownReport
 from reports.models import ComponentResource, ReportComponent, ReportSafe, ReportUnsafe, ReportUnknown, ReportAttr, \
-    Resources
+    Resources, ReportRoot
 from users.notifications import Notify
 
 # List of available types of 'safe' column class.
@@ -735,6 +735,12 @@ def save_job_copy(user, job, name=None):
         job.save()
         raise
     return newjob
+
+
+def clear_jobs_by_id(user, job_ids):
+    for job_id in job_ids:
+        job_id = int(job_id)
+        ReportRoot.objects.filter(job__id=job_id).delete()
 
 
 def remove_jobs_by_id(user, job_ids):
