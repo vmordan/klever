@@ -40,16 +40,12 @@
                         <button class="ui tiny button icon note-popup" id="toggle_functions" data-content="{% trans 'Toggle all elements' %}">
                             <i class="ui sitemap icon"></i>
                         </button>
-                    </div>
-                    <div class="ui buttons icon tiny orange">
-                         <button class="ui tiny button icon note-popup" id="ldv_button" data-content="{% trans 'Search for variables' %}">
-                             <i class="ui search icon"></i>
-                         </button>
-                    </div>
-                    <div class="ui buttons icon tiny orange">
-                         <button class="ui tiny button icon note-popup" id="false_cond_button" data-content="{% trans 'Show only red conditions' %}">
-                             <i class="ui ban icon"></i>
-                         </button>
+                        <button class="ui tiny button icon note-popup" id="toggle_specific_funcs" data-content="{% trans 'Show only specified variable usages' %}">
+                            <i class="ui search icon"></i>
+                        </button>
+                        <button class="ui tiny button icon note-popup" id="toggle_partial_cond" data-content="{% trans 'Show only partially covered conditions' %}">
+                            <i class="ui compress icon"></i>
+                        </button>
                     </div>
                     {% else %}
                     <div class="ui buttons icon tiny red">
@@ -216,3 +212,21 @@
     <span id="error___no_selected_line" hidden>{% trans 'Please, select the line first' %}</span>
     <span id="witness_type" hidden>{{etv.type}}</span>
 {% endif %}
+
+<div id="form_toggle_specific_funcs" class="ui modal">
+    <h3 class="ui header center aligned">{% trans 'Show only specified variable usages' %}</h3>
+    <div class="content">
+        <div class="ui form">
+            <div class="fields">
+                <div class="eight wide field">
+                    <label for="form_specific_funcs">{% trans 'Enter variable name fragment' %}</label>
+                    <input id="form_specific_funcs" type="text">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="actions">
+        <button id="form_toggle_specific_funcs_ok" type="button" class="ui positive left button">{% trans 'OK' %}</button>
+        <button id="form_toggle_specific_funcs_cancel" type="button" class="ui blue button">{% trans 'Cancel' %}</button>
+    </div>
+</div>
