@@ -600,6 +600,75 @@ $(document).ready(function () {
         $('.ETV_ShowCode').click();
         $(this).removeClass('disabled');
     });
+    var hidden_arr = [];
+    function check_proof_state(elem) {
+        if (elem.hasClass('x')) {
+            var et = document.getElementById('ETV_error_trace');
+            var children = et.children;
+            for (var i = 0; i < children.length; i++) {
+                if (hidden_arr[i]) {
+                    children[i].style.display = "none";
+                } else {
+                    children[i].style.display = "inline";
+                }
+            }
+            elem.removeClass('x');
+            return false;
+        } else {
+            elem.addClass('x');
+            return true;
+        }
+    }
+    function filter_trace_by_name(variable) {
+        var et = document.getElementById('ETV_error_trace');
+        var children = et.children;
+        for (var i = 0; i < children.length; i++) {
+            if (children[i].style.display == "none" || children[i].hidden) {
+                hidden_arr[i] = true;
+            } else {
+                hidden_arr[i] = false;
+            }
+            if (!children[i].className.includes('0_0_0_0')) {
+                children[i].style.display = "none";
+            }
+            if (!children[i].className.includes('0_0_0_0') && !children[i].className.includes('func_collapsed')) {
+                var str = children[i].getElementsByClassName('ETV_LC');
+                for (var j = 0; j < str.length; j++) {
+                    var cd = str[j].getElementsByClassName('ETV_CODE');
+                    for (var k = 0; k < cd.length; k++) {
+                        if (cd[k].children.length > 1) {
+                            if (cd[k].innerHTML.includes(variable)) {
+                                children[i].style.display = "inline";
+                                str[j].innerHTML = '     ' + str[j].innerHTML.trimStart();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    $('#toggle_specific_funcs').click(function () {
+        if (check_proof_state($(this))) {
+            $('#form_toggle_specific_funcs').show();
+        }
+    });
+    $('#toggle_partial_cond').click(function () {
+        if (check_proof_state($(this))) {
+            filter_trace_by_name('red');
+        }
+    });
+    $('#form_toggle_specific_funcs_ok').click(function(event) {
+        var variable = $('#form_specific_funcs').val();
+        if (variable != null && variable != "") {
+            filter_trace_by_name(variable);
+        }
+        $('#form_toggle_specific_funcs').hide();
+        return false;
+    });
+    $('#form_toggle_specific_funcs_cancel').click(function(event) {
+        $('#form_toggle_specific_funcs').hide();
+        return false;
+    });
     var toggle_notes_state = true;
     $('#toggle_notes').click(function () {
         $(this).addClass('disabled');
