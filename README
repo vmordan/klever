@@ -25,7 +25,9 @@ Python modules:
 - setuptools;
 - six;
 - django (2.1);
-- psycopg2.
+- psycopg2;
+- pycparser;
+- sympy.
 
 All requirements can be installed on Ubuntu 16.04 with the following commands:
 
